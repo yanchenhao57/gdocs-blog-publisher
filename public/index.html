@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>Google Docs 转换与发布工具</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .step {
+        margin-bottom: 20px;
+        padding: 20px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .step.active {
+        opacity: 1;
+        pointer-events: auto;
+        border-color: #4caf50;
+        background: #f9f9f9;
+      }
+      .step-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .step-number {
+        width: 30px;
+        height: 30px;
+        background: #4caf50;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        font-weight: bold;
+      }
+      .step-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+      .input-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+      }
+      input[type="text"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      }
+      button {
+        background: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+      }
+      #richtext-preview {
+        background: #f8f8f8;
+        padding: 15px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        max-height: 400px;
+        overflow: auto;
+      }
+      #log-output {
+        background: #2b2b2b;
+        color: #fff;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        max-height: 200px;
+        overflow: auto;
+      }
+      .log-entry {
+        margin: 5px 0;
+        padding: 5px;
+        border-bottom: 1px solid #444;
+      }
+      .success {
+        color: #4caf50;
+      }
+      .error {
+        color: #f44336;
+      }
+      .info {
+        color: #2196f3;
+      }
+      .preview-field {
+        background: #f5f5f5;
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+      .preview-field span {
+        color: #666;
+        font-size: 0.9em;
+      }
+
+      /* 成功状态样式 */
+      .success-info {
+        background: #f0f9f0;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+      .link-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 5px;
+      }
+      .link-group a {
+        color: #4caf50;
+        text-decoration: none;
+        word-break: break-all;
+      }
+      .link-group a:hover {
+        text-decoration: underline;
+      }
+      .small-btn {
+        padding: 5px 10px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .primary-btn {
+        background: #2196f3;
+        width: 100%;
+        margin-top: 20px;
+      }
+      .primary-btn:hover {
+        background: #1976d2;
+      }
+      #step4 .step-number {
+        background: #4caf50;
+        font-size: 16px;
+      }
+      .copy-success {
+        animation: fadeOut 2s forwards;
+      }
+      @keyframes fadeOut {
+        0% {
+          opacity: 1;
+        }
+        70% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      /* 添加平滑滚动效果 */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* 确保每个步骤有足够的上下边距 */
+      .step {
+        margin: 30px 0;
+        padding: 20px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        opacity: 0.5;
+        pointer-events: none;
+        transition: all 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Google Docs 转换与发布工具</h1>
+
+      <!-- 步骤1：输入文档链接 -->
+      <div class="step active" id="step1">
+        <div class="step-header">
+          <div class="step-number">1</div>
+          <div class="step-title">输入 Google Docs 文档链接</div>
+        </div>
+        <div class="input-group">
+          <input
+            type="text"
+            id="doc-id"
+            placeholder="例如：https://docs.google.com/document/d/1HBWkPDoWzQdQ7wU7hooLGgoVK5SEYWl5xvX_3s_2RzM/edit"
+            onpaste="handleDocLinkPaste(event)"
+          />
+          <button id="convert-btn" onclick="handleConvert()">拉取并转换</button>
+        </div>
+      </div>
+
+      <!-- 步骤2：确认文章信息 -->
+      <div class="step" id="step2">
+        <div class="step-header">
+          <div class="step-number">2</div>
+          <div class="step-title">确认文章信息</div>
+        </div>
+        <div class="input-group">
+          <label for="blog-language">博客语言：</label>
+          <select id="blog-language" onchange="handleLanguageChange()">
+            <option value="en">English</option>
+            <option value="jp">日本語</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="seo-title">SEO 标题：</label>
+          <input type="text" id="seo-title" />
+        </div>
+        <div class="input-group">
+          <label for="seo-description">SEO 描述：</label>
+          <textarea id="seo-description" rows="2"></textarea>
+        </div>
+        <div class="input-group">
+          <label for="heading-h1">文章标题：</label>
+          <input type="text" id="heading-h1" />
+        </div>
+        <div class="input-group">
+          <label for="slug">Slug：</label>
+          <input
+            type="text"
+            id="slug"
+            onchange="updateCanonical()"
+            oninput="updateCanonical()"
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="reading-time">阅读时间（分钟）：</label>
+          <input type="number" id="reading-time" min="1" />
+        </div>
+        <div class="input-group">
+          <label for="cover-url">封面图链接：</label>
+          <input type="text" id="cover-url" />
+          <a
+            href="https://notta-manager.notta.io/tools/assetsManage/"
+            target="_blank"
+            class="button"
+            style="
+              margin-left: 10px;
+              text-decoration: none;
+              padding: 4px 8px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          >
+            上传封面图
+          </a>
+        </div>
+        <div class="input-group">
+          <label for="cover-alt">封面图 Alt Text：</label>
+          <input type="text" id="cover-alt" placeholder="图片的替代文本描述" />
+        </div>
+        <div class="input-group">
+          <label for="author">作者：</label>
+          <select id="author"></select>
+        </div>
+        <div class="input-group">
+          <label>Canonical 链接预览：</label>
+          <div class="preview-field" id="canonical-preview">
+            <span>等待生成...</span>
+          </div>
+          <input type="hidden" id="canonical" />
+        </div>
+        <button onclick="goToStep(3)">下一步</button>
+      </div>
+
+      <!-- 步骤3：预览和保存草稿 -->
+      <div class="step" id="step3">
+        <div class="step-header">
+          <div class="step-number">3</div>
+          <div class="step-title">预览和保存草稿</div>
+        </div>
+        <div class="preview-section">
+          <h3>文章预览</h3>
+          <div class="preview-field">
+            <label>SEO 标题：</label>
+            <span id="preview-seo-title"></span>
+          </div>
+          <div class="preview-field">
+            <label>SEO 描述：</label>
+            <span id="preview-seo-description"></span>
+          </div>
+          <div class="preview-field">
+            <label>文章标题：</label>
+            <span id="preview-heading-h1"></span>
+          </div>
+          <div class="preview-field">
+            <label>Slug：</label>
+            <span id="preview-slug"></span>
+          </div>
+
+          <div class="preview-field">
+            <label>阅读时间：</label>
+            <span id="preview-reading-time"></span>
+          </div>
+          <div class="preview-field">
+            <label>Canonical：</label>
+            <span id="preview-canonical"></span>
+          </div>
+          <h3>Richtext 预览</h3>
+          <pre id="richtext-preview">等待转换...</pre>
+        </div>
+        <div class="button-group">
+          <button onclick="goToStep(2)">上一步</button>
+          <button id="publish-btn" onclick="handlePublish()" disabled>
+            保存草稿
+          </button>
+        </div>
+      </div>
+
+      <!-- 步骤4：保存成功 -->
+      <div class="step" id="step4">
+        <div class="step-header">
+          <div class="step-number">✓</div>
+          <div class="step-title">保存成功</div>
+        </div>
+        <div class="success-info">
+          <p style="margin-bottom: 15px; color: #666">
+            文章已保存为草稿，请在 Storyblok 中审核后发布。
+          </p>
+          <div class="preview-field">
+            <label>预览链接：</label>
+            <div class="link-group">
+              <a id="preview-link" href="#" target="_blank"></a>
+              <button onclick="copyLink('preview-link')" class="small-btn">
+                复制链接
+              </button>
+            </div>
+          </div>
+          <div class="preview-field">
+            <label>发布后链接：</label>
+            <div class="link-group">
+              <a id="article-link" href="#" target="_blank"></a>
+              <button onclick="copyLink('article-link')" class="small-btn">
+                复制链接
+              </button>
+            </div>
+          </div>
+          <div class="button-group">
+            <button onclick="resetAndStartNew()" class="primary-btn">
+              继续添加新文章
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 日志输出 -->
+      <div class="section">
+        <h2>日志输出</h2>
+        <div id="log-output"></div>
+      </div>
+    </div>
+
+    <script>
+      // API 配置
+      const API_BASE = "http://localhost:3000/api";
+      const NOTTA_BASE = "https://www.notta.ai";
+      const JP_AUTHOR_MAP = {
+        "satou-mitsuru": "佐藤　ミツル",
+        anna: "Anna",
+        sann: "サン",
+        aoi: "あおい",
+        "shi-esu": "しーえす",
+        takowasa: "たこわさ",
+        yamashita: "ヤマシタ",
+        gon: "Gon",
+        zero: "Zero",
+        "sagou-masayuki": "佐合将之",
+        matsui: "松井 清（スラチャイ）",
+        kanezaki: "金崎",
+        tubasa: "tubasa",
+        rina: "Rina",
+        sai: "Sai",
+        terawakikazuki: "寺脇和輝",
+        murada: "村田ユウジ",
+        "notta-kun-1": "Nottaくん",
+      };
+      const EN_AUTHOR_MAP = {
+        "notta-team": "Notta Team",
+        "viraj-mahajan": "Viraj Mahajan",
+        "thomas-boldt": "Thomas Boldt",
+        "ranee-zhang": "Ranee Zhang",
+        "tobi-agbede": "Tobi Agbede",
+        "joseph-buzhardt": "Joseph Buzhardt",
+        "andre-walker": "Andre Walker",
+        "rivi-richards": "Rivi Richards",
+        "francesca-harrall": "Francesca Harrall",
+        "andjela-vasic": "Andjela Vasic",
+      };
+      let currentRichtext = null;
+      let currentStep = 1;
+      let currentDocId = null; // 存储当前文档ID
+
+      // 从链接中提取 Google Docs ID
+      function extractDocId(link) {
+        if (!link) return null;
+
+        // 尝试匹配不同格式的Google Docs链接
+        const patterns = [
+          /\/document\/d\/([a-zA-Z0-9-_]+)/, // 标准格式
+          /\/document\/u\/\d+\/d\/([a-zA-Z0-9-_]+)/, // 带用户ID的格式
+          /^([a-zA-Z0-9-_]+)$/, // 直接输入ID的格式
+        ];
+
+        for (const pattern of patterns) {
+          const match = link.match(pattern);
+          if (match) {
+            return match[1];
+          }
+        }
+
+        return null;
+      }
+
+      // 处理链接粘贴
+      function handleDocLinkPaste(event) {
+        const input = event.target;
+
+        // 使用 setTimeout 确保在粘贴完成后获取值
+        setTimeout(() => {
+          const pastedText = input.value.trim();
+          const docId = extractDocId(pastedText);
+
+          if (docId) {
+            currentDocId = docId; // 保存文档ID
+            // 如果是直接粘贴的ID，转换为完整链接格式
+            if (pastedText === docId) {
+              input.value = `https://docs.google.com/document/d/${docId}`;
+            }
+          }
+        }, 0);
+      }
+
+      // 更新 Canonical 链接
+      function updateCanonical() {
+        const language = document.getElementById("blog-language").value;
+        const slug = document.getElementById("slug").value;
+        if (slug) {
+          const prefix = language === "en" ? "en/blog/" : "blog/";
+          const canonical = `${NOTTA_BASE}/${prefix}${slug}`;
+          document.getElementById("canonical-preview").innerHTML = canonical;
+          document.getElementById("canonical").value = canonical;
+        }
+      }
+
+      // 更新作者下拉框选项
+      function updateAuthorOptions() {
+        const language = document.getElementById("blog-language").value;
+        const authorSelect = document.getElementById("author");
+        const authorMap = language === "en" ? EN_AUTHOR_MAP : JP_AUTHOR_MAP;
+
+        // 清空现有选项
+        authorSelect.innerHTML = "";
+
+        // 添加新选项
+        Object.entries(authorMap).forEach(([id, name]) => {
+          const option = document.createElement("option");
+          option.value = id;
+          option.textContent = name;
+          authorSelect.appendChild(option);
+        });
+
+        // 随机选择一个作者
+        const authorIds = Object.keys(authorMap);
+        const randomAuthorId =
+          authorIds[Math.floor(Math.random() * authorIds.length)];
+        authorSelect.value = randomAuthorId;
+      }
+
+      // 处理语言变化
+      function handleLanguageChange() {
+        updateCanonical();
+        updateAuthorOptions();
+        console.log(
+          "语言切换为：",
+          document.getElementById("blog-language").value
+        );
+      }
+
+      // 更新预览内容
+      function updatePreview() {
+        document.getElementById("preview-seo-title").textContent =
+          document.getElementById("seo-title").value;
+        document.getElementById("preview-seo-description").textContent =
+          document.getElementById("seo-description").value;
+        document.getElementById("preview-heading-h1").textContent =
+          document.getElementById("heading-h1").value;
+        document.getElementById("preview-slug").textContent =
+          document.getElementById("slug").value;
+        document.getElementById("preview-reading-time").textContent =
+          document.getElementById("reading-time").value + " 分钟";
+        document.getElementById("preview-canonical").textContent =
+          document.getElementById("canonical").value;
+      }
+
+      // 切换步骤
+      function goToStep(step) {
+        if (step === 3) {
+          updatePreview();
+        }
+
+        // 更新步骤状态
+        document.querySelectorAll(".step").forEach((el, index) => {
+          el.classList.toggle("active", index + 1 === step);
+        });
+        currentStep = step;
+
+        // 获取目标步骤元素
+        const targetStep = document.getElementById(`step${step}`);
+        if (targetStep) {
+          // 计算滚动位置（考虑一些上边距）
+          const offset = 30;
+          const targetPosition = targetStep.offsetTop - offset;
+
+          // 平滑滚动到目标位置
+          window.scrollTo({
+            top: targetPosition,
+            behavior: "smooth",
+          });
+        }
+      }
+
+      // 日志输出函数
+      function log(message, type = "info") {
+        const logOutput = document.getElementById("log-output");
+        const entry = document.createElement("div");
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        logOutput.insertBefore(entry, logOutput.firstChild);
+      }
+
+      // 处理转换请求
+      async function handleConvert() {
+        const input = document.getElementById("doc-id");
+        const docId = currentDocId || extractDocId(input.value);
+
+        if (!docId) {
+          log("请输入有效的 Google Docs 链接", "error");
+          return;
+        }
+
+        const convertBtn = document.getElementById("convert-btn");
+
+        try {
+          convertBtn.disabled = true;
+          log("开始转换...", "info");
+
+          const response = await fetch(`${API_BASE}/convert-doc`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ docId }),
+          });
+
+          if (!response.ok) throw new Error("转换请求失败");
+
+          const data = await response.json();
+
+          // 更新表单字段
+          document.getElementById("seo-title").value =
+            data.aiMeta.seo_title || "";
+          document.getElementById("seo-description").value =
+            data.aiMeta.seo_description || "";
+          document.getElementById("heading-h1").value =
+            data.aiMeta.heading_h1 || "";
+          document.getElementById("slug").value = data.aiMeta.slug || "";
+          document.getElementById("reading-time").value =
+            data.aiMeta.reading_time || "";
+          document.getElementById("cover-alt").value =
+            data.aiMeta.cover_alt || "";
+
+          // 设置语言并触发更新
+          const languageSelect = document.getElementById("blog-language");
+          languageSelect.value = data.aiMeta.language || "en";
+          handleLanguageChange();
+
+          // 更新 Canonical
+          updateCanonical();
+
+          // 更新 richtext 预览
+          currentRichtext = data.richtext;
+          document.getElementById("richtext-preview").textContent =
+            JSON.stringify(data.richtext, null, 2);
+
+          // 启用发布按钮
+          document.getElementById("publish-btn").disabled = false;
+
+          // 转到第二步（等待当前操作完成后再滚动）
+          setTimeout(() => {
+            goToStep(2);
+          }, 100);
+
+          log("转换成功！", "success");
+        } catch (error) {
+          log(`转换失败: ${error.message}`, "error");
+        } finally {
+          convertBtn.disabled = false;
+        }
+      }
+
+      // 处理发布请求
+      async function handlePublish() {
+        if (!currentRichtext) {
+          log("请先转换文档", "error");
+          return;
+        }
+
+        const publishBtn = document.getElementById("publish-btn");
+
+        try {
+          publishBtn.disabled = true;
+          log("正在保存草稿...", "info");
+
+          // 获取并转换阅读时间为数字
+          const readingTime = parseInt(
+            document.getElementById("reading-time").value,
+            10
+          );
+          if (isNaN(readingTime) || readingTime <= 0) {
+            throw new Error("阅读时间必须是大于0的数字");
+          }
+
+          const blogData = {
+            seo_title: document.getElementById("seo-title").value,
+            seo_description: document.getElementById("seo-description").value,
+            heading_h1: document.getElementById("heading-h1").value,
+            slug: document.getElementById("slug").value,
+            description: document.getElementById("seo-description").value, // 兼容后端
+            title: document.getElementById("heading-h1").value, // 兼容后端
+            reading_time: readingTime,
+            coverUrl: document.getElementById("cover-url").value,
+            coverAlt: document.getElementById("cover-alt").value,
+            canonical: document.getElementById("canonical").value,
+            body: currentRichtext,
+            date: new Date().toISOString().split("T")[0] + " 00:00",
+            author_id: document.getElementById("author").value,
+            language: document.getElementById("blog-language").value,
+            is_show_newsletter_dialog: false,
+          };
+
+          // 验证必填字段
+          if (!blogData.title || !blogData.slug || !blogData.description) {
+            throw new Error("标题、Slug和描述为必填字段");
+          }
+
+          const response = await fetch(`${API_BASE}/publish`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...blogData,
+              coverAlt: document.getElementById("cover-alt").value, // 添加 alt text
+            }),
+          });
+
+          if (!response.ok) throw new Error("发布请求失败");
+
+          const result = await response.json();
+
+          // 生成预览和正式链接
+          const language = document.getElementById("blog-language").value;
+          const slug = document.getElementById("slug").value;
+          const prefix = language === "en" ? "en/blog/" : "blog/";
+
+          // 设置正式访问链接
+          const articleLink = `${NOTTA_BASE}/${prefix}${slug}`;
+
+          // 设置 Storyblok 预览链接（使用 Dashboard 格式）
+          const previewLink = `https://app.storyblok.com/#/me/spaces/${result.spaceId}/stories/0/0/${result.storyId}`;
+
+          document.getElementById("article-link").href = articleLink;
+          document.getElementById("article-link").textContent = articleLink;
+          document.getElementById("preview-link").href = previewLink;
+          document.getElementById("preview-link").textContent =
+            "在 Storyblok 中审核";
+
+          // 转到成功步骤（等待链接设置完成后再滚动）
+          setTimeout(() => {
+            goToStep(4);
+          }, 100);
+
+          log(`草稿保存成功！请在 Storyblok 中审核后发布`, "success");
+        } catch (error) {
+          log(`发布失败: ${error.message}`, "error");
+        } finally {
+          publishBtn.disabled = false;
+        }
+      }
+
+      // 复制链接到剪贴板
+      async function copyLink(elementId) {
+        const link = document.getElementById(elementId).href;
+        try {
+          await navigator.clipboard.writeText(link);
+          const btn = event.target;
+          const originalText = btn.textContent;
+          btn.textContent = "已复制！";
+          btn.classList.add("copy-success");
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.classList.remove("copy-success");
+          }, 2000);
+        } catch (err) {
+          log("复制链接失败", "error");
+        }
+      }
+
+      // 发布成功后的处理
+      function handlePublishSuccess(result) {
+        // 生成预览和正式链接
+        const language = document.getElementById("blog-language").value;
+        const slug = document.getElementById("slug").value;
+        const prefix = language === "en" ? "en/blog/" : "blog/";
+
+        // 设置正式访问链接
+        const articleLink = `${NOTTA_BASE}/${prefix}${slug}`;
+
+        // 设置 Storyblok 预览链接（使用 Dashboard 格式）
+        const previewLink = `https://app.storyblok.com/#/me/spaces/${result.spaceId}/stories/0/0/${result.storyId}`;
+
+        document.getElementById("article-link").href = articleLink;
+        document.getElementById("article-link").textContent = articleLink;
+        document.getElementById("preview-link").href = previewLink;
+        document.getElementById("preview-link").textContent =
+          "在 Storyblok 中打开";
+
+        // 转到成功步骤（等待链接设置完成后再滚动）
+        setTimeout(() => {
+          goToStep(4);
+        }, 100);
+
+        log(`发布成功！文章链接: ${articleLink}`, "success");
+      }
+
+      // 重置并开始新文章
+      function resetAndStartNew() {
+        // 清空所有输入
+        document.getElementById("doc-id").value = "";
+        currentDocId = null; // 重置当前文档ID
+        document.getElementById("seo-title").value = "";
+        document.getElementById("seo-description").value = "";
+        document.getElementById("heading-h1").value = "";
+        document.getElementById("slug").value = "";
+        document.getElementById("reading-time").value = "";
+        document.getElementById("cover-url").value = "";
+        document.getElementById("cover-alt").value = ""; // 清空 alt text
+        document.getElementById("canonical").value = "";
+        document.getElementById("richtext-preview").textContent = "等待转换...";
+        document.getElementById("canonical-preview").innerHTML =
+          "<span>等待生成...</span>";
+
+        // 重置发布按钮状态
+        document.getElementById("publish-btn").disabled = true;
+
+        // 返回第一步（等待重置完成后再滚动）
+        setTimeout(() => {
+          goToStep(1);
+        }, 100);
+
+        // 添加日志
+        log("已重置，可以开始新文章", "info");
+      }
+
+      // 初始化
+      document.addEventListener("DOMContentLoaded", () => {
+        log("工具已就绪", "info");
+        updateAuthorOptions();
+      });
+    </script>
+  </body>
+</html>

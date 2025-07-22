@@ -1,0 +1,7 @@
+const BLOG_JP_COMPONENT_TYPE = "blog";
+const BLOG_EN_COMPONENT_TYPE = "blog_en";
+
+export {
+  BLOG_JP_COMPONENT_TYPE,
+  BLOG_EN_COMPONENT_TYPE,
+};
