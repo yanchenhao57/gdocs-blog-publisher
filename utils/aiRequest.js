@@ -65,6 +65,7 @@ const aiRequest = async (messages, options = {}) => {
 
   // 发送请求（带重试）
   const response = await sendRequestWithRetry(requestBody, config, apiKey);
+  console.log("🚀 ~ aiRequest ~ response:", response);
 
   // 如果启用结构化输出，尝试解析 JSON
   if (config.structuredOutput) {
@@ -138,6 +139,24 @@ ${schemaDescription}
 };
 
 /**
+ * 安全解析 JSON 字符串，自动修复常见格式错误
+ * @param {string} str - JSON 字符串
+ * @returns {Object|null}
+ */
+function safeJsonParse(str) {
+  try {
+    // 1. 去除多余的逗号（如最后一个键值对后面多了逗号）
+    let fixed = str.replace(/,([\s\n\r]*[}\]])/g, '$1');
+    // 2. 去除非 JSON 允许的字符（如全角句号）
+    fixed = fixed.replace(/[。]/g, '');
+    // 3. 解析
+    return JSON.parse(fixed);
+  } catch (e) {
+    throw new Error('JSON 解析失败: ' + e.message);
+  }
+}
+
+/**
  * 解析结构化输出
  * @param {string} content - AI 返回的内容
  * @returns {Object} 解析后的结构化数据
@@ -149,11 +168,8 @@ const parseStructuredOutput = (content) => {
     throw new Error("未找到有效的 JSON 格式");
   }
 
-  try {
-    return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    throw new Error(`JSON 解析失败: ${error.message}`);
-  }
+  // 使用安全解析
+  return safeJsonParse(jsonMatch[0]);
 };
 
 /**

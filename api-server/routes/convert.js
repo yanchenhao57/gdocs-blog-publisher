@@ -9,15 +9,18 @@ import { aiStructuredRequest } from "../../utils/aiRequest.js";
 const router = express.Router();
 
 router.post("/", async (req, res) => {
+  console.log("🚀 ~ router.post ~ e:", req.body);
   try {
     const { docId } = req.body;
     if (!docId) return res.status(400).json({ error: "docId is required" });
 
     // 1. Google Docs → HTML
     const html = await fetchGoogleDocAsHtml(docId);
+    console.log("🚀 ~ router.post ~ html: success");
 
     // 2. HTML → Markdown
     const markdown = htmlToMarkdown(html);
+    console.log("🚀 ~ router.post ~ markdown: success");
 
     // 3. Google Docs → Richtext
     const docJson = await fetchGoogleDoc(docId);

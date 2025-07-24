@@ -9,13 +9,17 @@ import { getAuthClient } from "./googleAuth.js";
 export async function fetchGoogleDocAsHtml(docId) {
   const auth = getAuthClient();
   const drive = google.drive({ version: "v3", auth });
-
-  const res = await drive.files.export(
-    {
-      fileId: docId,
-      mimeType: "text/html",
-    },
-    { responseType: "text" }
-  );
-  return res.data;
+  try {
+    const res = await drive.files.export(
+      {
+        fileId: docId,
+        mimeType: "text/html",
+      },
+      { responseType: "text" }
+    );
+    return res.data;
+  } catch (err) {
+    console.error("🚀 ~ fetchGoogleDocAsHtml ~ err:", err);
+    throw err;
+  }
 }

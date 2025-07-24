@@ -12,5 +12,6 @@ export async function fetchGoogleDoc(documentId) {
   const auth = getAuthClient();
   const docs = google.docs({ version: "v1", auth });
   const res = await docs.documents.get({ documentId });
+  console.log("🚀 ~ fetchGoogleDoc success");
   return res.data;
 }
