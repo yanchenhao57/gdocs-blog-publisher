@@ -8,6 +8,53 @@ import { aiStructuredRequest } from "../../utils/aiRequest.js";
 
 const router = express.Router();
 
+// 辅助函数：递归提取节点中的纯文本
+function extractTextFromNode(node) {
+  if (!node) return "";
+  if (typeof node === "string") return node;
+  if (node.type === "text") return node.text || "";
+  if (Array.isArray(node.content)) {
+    return node.content.map(extractTextFromNode).join("");
+  }
+  return "";
+}
+
+// 一次递归同时提取并移除第一个H1
+function extractAndRemoveFirstH1(content) {
+  let firstH1Title = "";
+  let removed = false;
+  function helper(arr) {
+    if (removed) return arr;
+    return arr.filter((node) => {
+      if (!removed && node.type === "heading" && node.attrs?.level === 1) {
+        firstH1Title = extractTextFromNode(node);
+        removed = true;
+        return false;
+      }
+      if (Array.isArray(node.content)) {
+        node.content = helper(node.content);
+      }
+      return true;
+    });
+  }
+  const newContent = helper(content);
+  return { firstH1Title, newContent };
+}
+
+// 提取第一个图片的 src
+function extractFirstImageSrc(content) {
+  for (const node of content) {
+    if (node.type === "image" && node.attrs?.src) {
+      return node.attrs.src;
+    }
+    if (Array.isArray(node.content)) {
+      const found = extractFirstImageSrc(node.content);
+      if (found) return found;
+    }
+  }
+  return "";
+}
+
 router.post("/", async (req, res) => {
   console.log("🚀 ~ router.post ~ e:", req.body);
   try {
@@ -25,6 +72,13 @@ router.post("/", async (req, res) => {
     // 3. Google Docs → Richtext
     const docJson = await fetchGoogleDoc(docId);
     const richtext = await convertGoogleDocsToStoryblok(docJson, imageUploader);
+
+    // 新实现：一次递归提取并移除第一个H1
+    const result = extractAndRemoveFirstH1(richtext.content || []);
+    richtext.content = result.newContent;
+    const firstH1Title = result.firstH1Title;
+    // 新增：提取第一个图片src作为封面图
+    const coverImage = extractFirstImageSrc(richtext.content || []);
 
     // 4. AI结构化元数据
     const messages = [
@@ -80,6 +134,8 @@ router.post("/", async (req, res) => {
       markdown,
       richtext,
       aiMeta,
+      firstH1Title, // 新增字段
+      coverImage, // 新增字段
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

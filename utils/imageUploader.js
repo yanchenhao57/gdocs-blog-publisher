@@ -3,6 +3,7 @@ import mime from "mime";
 import { v4 as uuidv4 } from "uuid";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
+import { compressImageBuffer } from "./compressImageBuffer.js";
 dotenv.config();
 
 const bucketName = process.env.AWS_BUCKET_NAME;
@@ -32,11 +33,16 @@ export async function imageUploader(contentUri, alt) {
   if (!response.ok) throw new Error("图片下载失败");
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
+  const compressedBuffer = await compressImageBuffer(buffer, {
+    format: "jpeg",
+    width: 1200,
+    quality: 70,
+  });
 
   // 2. 生成唯一文件名
   const ext =
     mime.getExtension(response.headers.get("content-type") || "") || "jpg";
-  const fileName = `${uuidv4()}.${ext}`;
+  const fileName = `notta-blog-${uuidv4()}.${ext}`;
   const fileKey = `${s3FolderPath}${fileName}`;
 
   // 3. 上传到S3
@@ -44,7 +50,7 @@ export async function imageUploader(contentUri, alt) {
     .upload({
       Bucket: bucketName,
       Key: fileKey,
-      Body: buffer,
+      Body: compressedBuffer,
       ContentType:
         response.headers.get("content-type") || "application/octet-stream",
       StorageClass: "INTELLIGENT_TIERING",

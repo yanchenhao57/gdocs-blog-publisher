@@ -246,6 +246,24 @@
           <label for="seo-description">SEO 描述：</label>
           <textarea id="seo-description" rows="2"></textarea>
         </div>
+        <!-- 新增：标题选择radio组 -->
+        <div class="input-group">
+          <label>选择文章标题：</label>
+          <div id="title-options">
+            <label>
+              <input type="radio" name="title-source" value="ai" checked />
+              <span id="radio-ai-title">AI 生成标题</span>
+            </label>
+            <label>
+              <input type="radio" name="title-source" value="h1" />
+              <span id="radio-h1-title">第一个 H1</span>
+            </label>
+            <label>
+              <input type="radio" name="title-source" value="custom" />
+              <span>自定义</span>
+            </label>
+          </div>
+        </div>
         <div class="input-group">
           <label for="heading-h1">文章标题：</label>
           <input type="text" id="heading-h1" />
@@ -281,6 +299,13 @@
           >
             上传封面图
           </a>
+          <!-- 新增：封面图预览 -->
+          <img
+            id="cover-preview"
+            src=""
+            alt="封面图预览"
+            style="max-width: 500px; display: block; margin-top: 8px"
+          />
         </div>
         <div class="input-group">
           <label for="cover-alt">封面图 Alt Text：</label>
@@ -426,6 +451,10 @@
       let currentRichtext = null;
       let currentStep = 1;
       let currentDocId = null; // 存储当前文档ID
+
+      // 新增全局变量
+      let aiTitle = "";
+      let h1Title = "";
 
       // 从链接中提取 Google Docs ID
       function extractDocId(link) {
@@ -598,13 +627,52 @@
             data.aiMeta.seo_title || "";
           document.getElementById("seo-description").value =
             data.aiMeta.seo_description || "";
-          document.getElementById("heading-h1").value =
-            data.aiMeta.heading_h1 || "";
+          // 新增：保存AI和H1标题
+          aiTitle = data.aiMeta.heading_h1 || "";
+          h1Title = data.firstH1Title || "";
+          // 设置radio文本
+          document.getElementById(
+            "radio-ai-title"
+          ).textContent = `AI 生成标题：${aiTitle}`;
+          document.getElementById(
+            "radio-h1-title"
+          ).textContent = `第一个 H1：${h1Title}`;
+          // 默认选中AI标题
+          document.querySelector(
+            'input[name="title-source"][value="ai"]'
+          ).checked = true;
+          document.getElementById("heading-h1").value = aiTitle;
+          document.getElementById("heading-h1").readOnly = true;
+          // 绑定radio事件
+          document
+            .querySelectorAll('input[name="title-source"]')
+            .forEach((radio) => {
+              radio.addEventListener("change", function () {
+                if (this.value === "ai") {
+                  document.getElementById("heading-h1").value = aiTitle;
+                  document.getElementById("heading-h1").readOnly = true;
+                } else if (this.value === "h1") {
+                  document.getElementById("heading-h1").value = h1Title;
+                  document.getElementById("heading-h1").readOnly = true;
+                } else {
+                  document.getElementById("heading-h1").readOnly = false;
+                  document.getElementById("heading-h1").focus();
+                }
+              });
+            });
           document.getElementById("slug").value = data.aiMeta.slug || "";
           document.getElementById("reading-time").value =
             data.aiMeta.reading_time || "";
           document.getElementById("cover-alt").value =
             data.aiMeta.cover_alt || "";
+          // 新增：封面图链接和预览
+          document.getElementById("cover-url").value = data.coverImage || "";
+          document.getElementById("cover-preview").src = data.coverImage || "";
+          document
+            .getElementById("cover-url")
+            .addEventListener("input", function () {
+              document.getElementById("cover-preview").src = this.value;
+            });
 
           // 设置语言并触发更新
           const languageSelect = document.getElementById("blog-language");
