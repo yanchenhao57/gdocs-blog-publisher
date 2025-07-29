@@ -33,24 +33,40 @@ export async function imageUploader(contentUri, alt) {
   if (!response.ok) throw new Error("图片下载失败");
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  const compressedBuffer = await compressImageBuffer(buffer, {
-    format: "jpeg",
-    width: 1200,
-    quality: 70,
-  });
+  
+  // 2. 检查图片大小，小于200KB不压缩
+  const imageSizeKB = buffer.length / 1024;
+  const shouldCompress = imageSizeKB > 200;
+  
+  console.log(`📸 图片大小: ${imageSizeKB.toFixed(2)}KB, 是否需要压缩: ${shouldCompress ? '是' : '否'}`);
+  
+  let finalBuffer;
+  if (shouldCompress) {
+    // 压缩图片
+    finalBuffer = await compressImageBuffer(buffer, {
+      format: "jpeg",
+      width: 1200,
+      quality: 70,
+    });
+    console.log(`📸 压缩后大小: ${(finalBuffer.length / 1024).toFixed(2)}KB`);
+  } else {
+    // 不压缩，直接使用原图
+    finalBuffer = buffer;
+    console.log(`📸 图片较小，跳过压缩`);
+  }
 
-  // 2. 生成唯一文件名
+  // 3. 生成唯一文件名
   const ext =
     mime.getExtension(response.headers.get("content-type") || "") || "jpg";
   const fileName = `notta-blog-${uuidv4()}.${ext}`;
   const fileKey = `${s3FolderPath}${fileName}`;
 
-  // 3. 上传到S3
+  // 4. 上传到S3
   await s3
     .upload({
       Bucket: bucketName,
       Key: fileKey,
-      Body: compressedBuffer,
+      Body: finalBuffer,
       ContentType:
         response.headers.get("content-type") || "application/octet-stream",
       StorageClass: "INTELLIGENT_TIERING",
@@ -58,6 +74,6 @@ export async function imageUploader(contentUri, alt) {
     })
     .promise();
 
-  // 4. 返回CDN URL
+  // 5. 返回CDN URL
   return `${assetsCDN}${fileKey}`;
 }

@@ -1,26 +1,275 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* 自定义基础样式 */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  body {
+    background-color: #ffffff;
+    color: #000000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* 滚动条样式 */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: #fafafa;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #e5e5e5;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #d0d0d0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* 自定义组件样式 */
+@layer components {
+  .btn-primary {
+    background-color: #000000;
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background-color: #333333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary:active {
+    background-color: #666666;
+    transform: translateY(0);
+  }
+
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #000000, 0 0 0 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-secondary {
+    background-color: #fafafa;
+    color: #000000;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    border: 1px solid #e5e5e5;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover {
+    background-color: #f5f5f5;
+    border-color: #d0d0d0;
+  }
+
+  .btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #000000, 0 0 0 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    color: #000000;
+    transition: all 0.2s;
+    font-size: 1rem;
+  }
+
+  .input-field::placeholder {
+    color: #999999;
+  }
+
+  .input-field:hover {
+    border-color: #d0d0d0;
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: #000000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .input-field:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* 验证状态样式 */
+  .input-field.error-border {
+    border-color: #ff0000;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.1);
+  }
+
+  .input-field.error-border:focus {
+    border-color: #ff0000;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+  }
+
+  .input-field.valid-border {
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+  }
+
+  .input-field.valid-border:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  }
+
+  .card {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .step-indicator {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: #000000;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.875rem;
+  }
+
+  .step-indicator.completed {
+    background-color: #10b981;
+  }
+
+  .step-indicator.active {
+    background-color: #000000;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* 错误状态样式 */
+  .error {
+    color: #ff0000;
+  }
+
+  .error-border {
+    border-color: #ff0000;
+  }
+
+  .error-focus:focus {
+    border-color: #ff0000;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+  }
+
+  /* 成功状态样式 */
+  .success {
+    color: #10b981;
+  }
+
+  .success-border {
+    border-color: #10b981;
+  }
+
+  .success-focus:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  }
+
+  /* 消息动画 */
+  .error-message,
+  .success-message {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Lucide React 图标动画 */
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 图标悬停效果 */
+  .icon-hover {
+    transition: all 0.2s ease;
+  }
+
+  .icon-hover:hover {
+    transform: scale(1.1);
+  }
+}
+
+/* 暗色模式样式 */
+@layer utilities {
+  .dark {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  .dark .card {
+    background-color: #111111;
+    border-color: #333333;
+  }
+
+  .dark .input-field {
+    background-color: #111111;
+    border-color: #333333;
+    color: #ffffff;
+  }
+
+  .dark .input-field::placeholder {
+    color: #888888;
+  }
+
+  .dark .btn-secondary {
+    background-color: #111111;
+    border-color: #333333;
+    color: #ffffff;
+  }
+
+  .dark .btn-secondary:hover {
+    background-color: #1a1a1a;
+  }
 }
