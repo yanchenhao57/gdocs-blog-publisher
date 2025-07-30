@@ -51,7 +51,7 @@ io.on("connection", (socket) => {
 app.set("io", io);
 
 // API 路由
-app.use("/api/convert-doc", convertRouter);
+app.use("/api/convert", convertRouter);
 app.use("/api/publish", publishRouter);
 
 const PORT = process.env.PORT || 3000;

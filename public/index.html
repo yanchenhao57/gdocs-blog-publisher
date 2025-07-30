@@ -160,6 +160,14 @@
         font-size: 14px;
         white-space: nowrap;
       }
+
+      /* AI生成标识样式 */
+      .ai-label {
+        color: #007bff;
+        font-size: 12px;
+        font-weight: normal;
+        margin-left: 5px;
+      }
       .primary-btn {
         background: #2196f3;
         width: 100%;
@@ -239,11 +247,15 @@
           </select>
         </div>
         <div class="input-group">
-          <label for="seo-title">SEO 标题：</label>
+          <label for="seo-title"
+            >SEO 标题：<span class="ai-label">(AI生成)</span></label
+          >
           <input type="text" id="seo-title" />
         </div>
         <div class="input-group">
-          <label for="seo-description">SEO 描述：</label>
+          <label for="seo-description"
+            >SEO 描述：<span class="ai-label">(AI生成)</span></label
+          >
           <textarea id="seo-description" rows="2"></textarea>
         </div>
         <!-- 新增：标题选择radio组 -->
@@ -269,7 +281,7 @@
           <input type="text" id="heading-h1" />
         </div>
         <div class="input-group">
-          <label for="slug">Slug：</label>
+          <label for="slug">Slug：<span class="ai-label">(AI生成)</span></label>
           <input
             type="text"
             id="slug"
@@ -279,7 +291,9 @@
         </div>
 
         <div class="input-group">
-          <label for="reading-time">阅读时间（分钟）：</label>
+          <label for="reading-time"
+            >阅读时间（分钟）：<span class="ai-label">(AI生成)</span></label
+          >
           <input type="number" id="reading-time" min="1" />
         </div>
         <div class="input-group">
@@ -308,7 +322,9 @@
           />
         </div>
         <div class="input-group">
-          <label for="cover-alt">封面图 Alt Text：</label>
+          <label for="cover-alt"
+            >封面图 Alt Text：<span class="ai-label">(AI生成)</span></label
+          >
           <input type="text" id="cover-alt" placeholder="图片的替代文本描述" />
         </div>
         <div class="input-group">
@@ -322,6 +338,42 @@
           </div>
           <input type="hidden" id="canonical" />
         </div>
+
+        <!-- AI内容重新生成按钮 -->
+        <div
+          class="input-group"
+          style="
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+          "
+        >
+          <label style="font-size: 16px; color: #495057; margin-bottom: 15px"
+            >AI内容重新生成</label
+          >
+          <p style="color: #6c757d; margin-bottom: 15px; font-size: 14px">
+            如果对AI生成的内容不满意，可以点击下方按钮重新生成所有AI内容
+          </p>
+          <button
+            onclick="regenerateAiContent()"
+            id="regenerate-btn"
+            style="
+              background: #007bff;
+              color: white;
+              padding: 12px 24px;
+              border: none;
+              border-radius: 6px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: 500;
+            "
+          >
+            🔄 重新生成AI内容
+          </button>
+        </div>
+
         <button onclick="goToStep(3)">下一步</button>
       </div>
 
@@ -455,6 +507,7 @@
       // 新增全局变量
       let aiTitle = "";
       let h1Title = "";
+      let currentMarkdown = ""; // 存储当前的markdown内容
 
       // 从链接中提取 Google Docs ID
       function extractDocId(link) {
@@ -610,7 +663,7 @@
           convertBtn.disabled = true;
           log("开始转换...", "info");
 
-          const response = await fetch(`${API_BASE}/convert-doc`, {
+          const response = await fetch(`${API_BASE}/convert`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -621,6 +674,9 @@
           if (!response.ok) throw new Error("转换请求失败");
 
           const data = await response.json();
+
+          // 保存markdown内容用于重新生成
+          currentMarkdown = data.markdown || "";
 
           // 更新表单字段
           document.getElementById("seo-title").value =
@@ -637,11 +693,11 @@
           document.getElementById(
             "radio-h1-title"
           ).textContent = `第一个 H1：${h1Title}`;
-          // 默认选中AI标题
+          // 默认选中H1标题
           document.querySelector(
-            'input[name="title-source"][value="ai"]'
+            'input[name="title-source"][value="h1"]'
           ).checked = true;
-          document.getElementById("heading-h1").value = aiTitle;
+          document.getElementById("heading-h1").value = h1Title;
           document.getElementById("heading-h1").readOnly = true;
           // 绑定radio事件
           document
@@ -838,11 +894,85 @@
         log(`发布成功！文章链接: ${articleLink}`, "success");
       }
 
+      // 重新生成AI内容
+      async function regenerateAiContent() {
+        if (!currentDocId || !currentMarkdown) {
+          log("请先转换文档后再重新生成", "error");
+          return;
+        }
+
+        const regenerateBtn = document.getElementById("regenerate-btn");
+
+        try {
+          regenerateBtn.disabled = true;
+          regenerateBtn.textContent = "🔄 生成中...";
+          log("开始重新生成AI内容...", "info");
+
+          const response = await fetch(`${API_BASE}/convert/regenerate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              docId: currentDocId,
+              markdown: currentMarkdown,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "重新生成请求失败");
+          }
+
+          const data = await response.json();
+
+          // 更新AI生成的内容
+          document.getElementById("seo-title").value =
+            data.aiMeta.seo_title || "";
+          document.getElementById("seo-description").value =
+            data.aiMeta.seo_description || "";
+
+          // 更新AI标题
+          aiTitle = data.aiMeta.heading_h1 || "";
+          document.getElementById(
+            "radio-ai-title"
+          ).textContent = `AI 生成标题：${aiTitle}`;
+
+          // 根据当前选中的标题类型更新标题字段
+          const selectedTitleSource = document.querySelector(
+            'input[name="title-source"]:checked'
+          ).value;
+          if (selectedTitleSource === "ai") {
+            document.getElementById("heading-h1").value = aiTitle;
+          } else if (selectedTitleSource === "h1") {
+            document.getElementById("heading-h1").value = h1Title;
+          }
+          // 如果是自定义，保持用户输入的内容不变
+
+          document.getElementById("slug").value = data.aiMeta.slug || "";
+          document.getElementById("reading-time").value =
+            data.aiMeta.reading_time || "";
+          document.getElementById("cover-alt").value =
+            data.aiMeta.cover_alt || "";
+
+          // 更新Canonical链接
+          updateCanonical();
+
+          log("AI内容重新生成成功！", "success");
+        } catch (error) {
+          log(`重新生成失败: ${error.message}`, "error");
+        } finally {
+          regenerateBtn.disabled = false;
+          regenerateBtn.textContent = "🔄 重新生成AI内容";
+        }
+      }
+
       // 重置并开始新文章
       function resetAndStartNew() {
         // 清空所有输入
         document.getElementById("doc-id").value = "";
         currentDocId = null; // 重置当前文档ID
+        currentMarkdown = ""; // 重置markdown内容
         document.getElementById("seo-title").value = "";
         document.getElementById("seo-description").value = "";
         document.getElementById("heading-h1").value = "";

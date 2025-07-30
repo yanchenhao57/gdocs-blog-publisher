@@ -3,7 +3,6 @@ import { fetchGoogleDocAsHtml } from "../../utils/fetchHtmlFromGoogleDoc.js";
 import { htmlToMarkdown } from "../../utils/htmlToMarkdown.js";
 import { fetchGoogleDoc } from "../../utils/googleDocs.js";
 import { convertGoogleDocsToStoryblok } from "../../utils/googleDocsToStoryblok.js";
-import { imageUploader } from "../../utils/imageUploader.js";
 import { aiStructuredRequest } from "../../utils/aiRequest.js";
 
 const router = express.Router();
@@ -66,6 +65,77 @@ function sendSocketNotification(io, event, data) {
   }
 }
 
+// 封装AI结构化分析函数
+async function generateAiStructuredData(
+  markdown,
+  io,
+  docId,
+  eventPrefix = "ai"
+) {
+  const messages = [
+    {
+      role: "system",
+      content: `你是一个内容分析助手。请从用户提供的 Markdown 文档中提取以下字段，并返回 JSON 格式：
+                  {
+                      "seo_title": string,          // SEO 优化的标题，简短有力，包含关键词，用于 meta title, 语言与文章内容一致
+                      "seo_description": string,    // SEO 优化的描述，100字以内，包含关键词，用于 meta description, 语言与文章内容一致 
+                      "heading_h1": string,         // 文章页面显示的主标题，可以更具描述性和吸引力, 语言与文章内容一致
+                      "slug": string,               // 用于URL的路径，比如 "my-blog-post"，要求小写字母，单词用连字符连接，请你根据文章内容，用简洁、清晰、SEO 友好的英文单词来生成一个 URL slug，不要音译日文内容，不要使用中文
+                      "reading_time": number,       // 阅读时间，单位为分钟，必须是数字类型，不要超过12分钟
+                      "language": string,           // 根据文章内容判断语言，返回 "en" 或 "jp"。如果主要是日文返回"jp"，否则返回"en"
+                      "cover_alt": string           // 封面图 Alt text，描述图片内容，有助于 SEO 和无障碍访问, 语言与文章内容一致
+                  }
+                  请只返回纯 JSON（不要有额外说明或代码块）。`,
+    },
+    {
+      role: "user",
+      content: `以下是 Markdown 文档内容：\n\n${markdown}`,
+    },
+  ];
+
+  const schema = {
+    type: "object",
+    properties: {
+      seo_title: { type: "string" },
+      seo_description: { type: "string" },
+      heading_h1: { type: "string" },
+      slug: { type: "string" },
+      reading_time: { type: "number" },
+      language: { type: "string", enum: ["en", "jp"] },
+      cover_alt: { type: "string" },
+    },
+    required: [
+      "seo_title",
+      "seo_description",
+      "heading_h1",
+      "slug",
+      "reading_time",
+      "language",
+      "cover_alt",
+    ],
+  };
+
+  // 通知：开始AI结构化分析
+  sendSocketNotification(io, `${eventPrefix}:analysis:start`, {
+    docId,
+    message: "开始AI结构化分析...",
+  });
+
+  const aiMeta = await aiStructuredRequest(messages, schema, {
+    max_tokens: 500,
+    temperature: 0.8,
+  });
+
+  // 通知：AI分析完成
+  sendSocketNotification(io, `${eventPrefix}:analysis:success`, {
+    docId,
+    message: "AI结构化分析完成",
+    aiMeta,
+  });
+
+  return aiMeta;
+}
+
 // 创建带Socket通知的图片上传器
 function createImageUploaderWithNotifications(io, docId) {
   return async (contentUri, alt) => {
@@ -74,23 +144,23 @@ function createImageUploaderWithNotifications(io, docId) {
       sendSocketNotification(io, "image:process:start", {
         docId,
         imageUrl: contentUri,
-        message: "开始处理图片..."
+        message: "开始处理图片...",
       });
-      
+
       // 导入原始图片上传器
       const { imageUploader } = await import("../../utils/imageUploader.js");
-      
+
       // 调用原始上传器
       const result = await imageUploader(contentUri, alt);
-      
+
       // 通知：图片处理完成
       sendSocketNotification(io, "image:process:success", {
         docId,
         imageUrl: contentUri,
         resultUrl: result,
-        message: "图片处理完成"
+        message: "图片处理完成",
       });
-      
+
       return result;
     } catch (error) {
       // 通知：图片处理失败
@@ -98,7 +168,7 @@ function createImageUploaderWithNotifications(io, docId) {
         docId,
         imageUrl: contentUri,
         message: "图片处理失败",
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -143,7 +213,10 @@ router.post("/", async (req, res) => {
 
     // 3. Google Docs → Richtext
     const docJson = await fetchGoogleDoc(docId);
-    const richtext = await convertGoogleDocsToStoryblok(docJson, createImageUploaderWithNotifications(io, docId));
+    const richtext = await convertGoogleDocsToStoryblok(
+      docJson,
+      createImageUploaderWithNotifications(io, docId)
+    );
 
     // 通知：Storyblok转换完成
     sendSocketNotification(io, "storyblok:convert:success", {
@@ -159,66 +232,7 @@ router.post("/", async (req, res) => {
     const coverImage = extractFirstImageSrc(richtext.content || []);
 
     // 通知：开始AI结构化分析
-    sendSocketNotification(io, "ai:analysis:start", {
-      docId,
-      message: "开始AI结构化分析...",
-    });
-
-    // 4. AI结构化元数据
-    const messages = [
-      {
-        role: "system",
-        content: `你是一个内容分析助手。请从用户提供的 Markdown 文档中提取以下字段，并返回 JSON 格式：
-                    {
-                        "seo_title": string,          // SEO 优化的标题，简短有力，包含关键词，用于 meta title
-                        "seo_description": string,    // SEO 优化的描述，100字以内，包含关键词，用于 meta description
-                        "heading_h1": string,         // 文章页面显示的主标题，可以更具描述性和吸引力
-                        "slug": string,               // 用于URL的路径，比如 "my-blog-post"，要求小写字母，单词用连字符连接，请你根据文章内容，用简洁、清晰、SEO 友好的英文单词来生成一个 URL slug，不要音译日文内容，不要使用中文
-                        "reading_time": number,       // 阅读时间，单位为分钟，必须是数字类型，不要超过12分钟
-                        "language": string,           // 根据文章内容判断语言，返回 "en" 或 "jp"。如果主要是日文返回"jp"，否则返回"en"
-                        "cover_alt": string           // 封面图 Alt text，描述图片内容，有助于 SEO 和无障碍访问
-                    }
-                    请只返回纯 JSON（不要有额外说明或代码块）。`,
-      },
-      {
-        role: "user",
-        content: `以下是 Markdown 文档内容：\n\n${markdown}`,
-      },
-    ];
-
-    const schema = {
-      type: "object",
-      properties: {
-        seo_title: { type: "string" },
-        seo_description: { type: "string" },
-        heading_h1: { type: "string" },
-        slug: { type: "string" },
-        reading_time: { type: "number" },
-        language: { type: "string", enum: ["en", "jp"] },
-        cover_alt: { type: "string" },
-      },
-      required: [
-        "seo_title",
-        "seo_description",
-        "heading_h1",
-        "slug",
-        "reading_time",
-        "language",
-        "cover_alt",
-      ],
-    };
-
-    const aiMeta = await aiStructuredRequest(messages, schema, {
-      max_tokens: 500,
-      temperature: 0.8,
-    });
-
-    // 通知：AI分析完成
-    sendSocketNotification(io, "ai:analysis:success", {
-      docId,
-      message: "AI结构化分析完成",
-      aiMeta,
-    });
+    const aiMeta = await generateAiStructuredData(markdown, io, docId);
 
     // 通知：整个转换流程完成
     sendSocketNotification(io, "convert:complete", {
@@ -247,6 +261,43 @@ router.post("/", async (req, res) => {
     sendSocketNotification(io, "convert:error", {
       docId: req.body.docId,
       message: "转换过程中出现错误",
+      error: err.message,
+    });
+
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 新增：regenerate接口 - 重新生成AI结构化数据
+router.post("/regenerate", async (req, res) => {
+  console.log("🔄 ~ router.post /regenerate ~ req.body:", req.body);
+
+  // 获取Socket.io实例
+  const io = req.app.get("io");
+
+  try {
+    const { docId, markdown } = req.body;
+    if (!docId) return res.status(400).json({ error: "docId is required" });
+    if (!markdown)
+      return res.status(400).json({ error: "markdown is required" });
+
+    // 使用相同的AI提示重新生成结构化数据
+    const aiMeta = await generateAiStructuredData(
+      markdown,
+      io,
+      docId,
+      "ai:regenerate"
+    );
+
+    res.json({
+      aiMeta,
+      message: "AI结构化数据重新生成成功",
+    });
+  } catch (err) {
+    // 通知：重新生成过程中出现错误
+    sendSocketNotification(io, "ai:regenerate:error", {
+      docId: req.body.docId,
+      message: "重新生成AI结构化数据时出现错误",
       error: err.message,
     });
 
