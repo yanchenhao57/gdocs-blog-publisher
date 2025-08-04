@@ -36,7 +36,7 @@ const aiRequest = async (messages, options = {}) => {
   const defaultOptions = {
     model: "mercury-coder-small",
     max_tokens: 1000,
-    temperature: 0.7,
+    temperature: 0,
     timeout: 30000,
     retries: 3,
     retryDelay: 1000,
@@ -61,6 +61,7 @@ const aiRequest = async (messages, options = {}) => {
     messages: formattedMessages,
     max_tokens: config.max_tokens,
     temperature: config.temperature,
+    response_format: { type: "json_object" },
   };
 
   // 发送请求（带重试）
@@ -121,21 +122,39 @@ const formatMessages = (messages, config) => {
 };
 
 /**
- * 生成结构化输出的提示词
- * @param {Object} schema - 输出数据结构定义
- * @returns {string} 格式化的提示词
+ * Generates a prompt for structured JSON output
+ * @param {Object} schema - The definition of the output data structure
+ * @returns {string} The formatted prompt string
  */
 const generateSchemaPrompt = (schema) => {
   const schemaDescription = JSON.stringify(schema, null, 2);
-  return `请严格按照以下 JSON 格式返回结果，不要包含任何其他文本：
+  return `Please strictly return the result in the following JSON format without including any other text:
 
 ${schemaDescription}
 
-请确保：
-1. 返回的是有效的 JSON 格式
-2. 所有必需字段都已包含
-3. 数据类型正确
-4. 不要添加任何解释或额外文本`;
+Formatting rules:
+1. Return only valid JSON.
+2. Do not add any other text, comments, explanations, or notes.
+3. Do not insert unrelated words or broken characters inside string values.
+4. Do not output the "�" character or any mojibake (garbled text).
+5. All text must be valid UTF-8 characters.
+6. For Japanese content:
+   - Keep text in correct Japanese characters only.
+   - Do not mix romaji, Chinese, or other languages unless required by the schema.
+   - Do not insert symbols or invisible characters.
+7. For the "slug" field:
+   - Always output in **lowercase English letters, numbers, and hyphens only**.
+   - Do not include Japanese characters, spaces, or underscores.
+   - If the title is in Japanese, generate an SEO-friendly slug in **English** that describes the topic.
+8. All string values must be enclosed in double quotes.
+9. Do not insert any keys or values that are not in the schema.
+10. If you are unsure about a value, use an empty string "" or null.
+
+Make sure that:
+- All required fields are included.
+- Data types are correct.
+- No trailing commas in the JSON.
+- Output must be a valid JSON object.`;
 };
 
 /**
@@ -146,41 +165,62 @@ ${schemaDescription}
 function safeJsonParse(str) {
   try {
     // 1. 去除多余的逗号（如最后一个键值对后面多了逗号）
-    let fixed = str.replace(/,([\s\n\r]*[}\]])/g, '$1');
-    
+    let fixed = str.replace(/,([\s\n\r]*[}\]])/g, "$1");
+
     // 2. 清理字符串值中的特殊字符
     // 处理字符串值中的日文字符和其他特殊字符
     fixed = fixed.replace(/"([^"]*[^\x00-\x7F][^"]*)"/g, (match, content) => {
       // 清理内容中的特殊字符，但保留基本的日文字符
       const cleaned = content
-        .replace(/[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uFF00-\uFFEF]/g, '') // 保留ASCII、平假名、片假名、汉字、全角字符
-        .replace(/[。、，；：！？]/g, '') // 移除中文标点
-        .replace(/[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uFF00-\uFFEF\s\-_]/g, '') // 最终清理
+        .replace(
+          /[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uFF00-\uFFEF]/g,
+          ""
+        ) // 保留ASCII、平假名、片假名、汉字、全角字符
+        .replace(/[。、，；：！？]/g, "") // 移除中文标点
+        .replace(
+          /[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uFF00-\uFFEF\s\-_]/g,
+          ""
+        ) // 最终清理
         .trim();
       return `"${cleaned}"`;
     });
-    
+
     // 3. 解析
     return JSON.parse(fixed);
   } catch (e) {
     // 如果第一次解析失败，尝试更激进的清理
     try {
-      let aggressiveFixed = str.replace(/,([\s\n\r]*[}\]])/g, '$1');
-      
+      let aggressiveFixed = str.replace(/,([\s\n\r]*[}\]])/g, "$1");
+
       // 更激进的字符清理
-      aggressiveFixed = aggressiveFixed.replace(/"([^"]*)"/g, (match, content) => {
-        const cleaned = content
-          .replace(/[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\s\-_]/g, '') // 只保留ASCII、日文字符、汉字、空格、连字符、下划线
-          .replace(/[。、，；：！？]/g, '') // 移除中文标点
-          .trim();
-        return `"${cleaned}"`;
-      });
-      
+      aggressiveFixed = aggressiveFixed.replace(
+        /"([^"]*)"/g,
+        (match, content) => {
+          const cleaned = content
+            .replace(
+              /[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\s\-_]/g,
+              ""
+            ) // 只保留ASCII、日文字符、汉字、空格、连字符、下划线
+            .replace(/[。、，；：！？]/g, "") // 移除中文标点
+            .trim();
+          return `"${cleaned}"`;
+        }
+      );
+
       return JSON.parse(aggressiveFixed);
     } catch (e2) {
-      throw new Error('JSON 解析失败: ' + e.message + ' (清理后: ' + e2.message + ')');
+      throw new Error(
+        "JSON 解析失败: " + e.message + " (清理后: " + e2.message + ")"
+      );
     }
   }
+}
+
+function cleanInvalidChars(str) {
+  // 删除 JSON 中无法显示或无效的字符，包括 U+0000-U+001F 控制符 和 U+FFFD
+  return str
+    .replace(/[\u0000-\u001F\uFFFD]/g, "") // 删除控制符和 replacement char
+    .replace(/\s+$/g, ""); // 去掉尾部空白
 }
 
 /**
@@ -189,8 +229,11 @@ function safeJsonParse(str) {
  * @returns {Object} 解析后的结构化数据
  */
 const parseStructuredOutput = (content) => {
+  // 清理无效字符
+  const cleanedContent = cleanInvalidChars(content);
+
   // 尝试提取 JSON 部分
-  const jsonMatch = content.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  const jsonMatch = cleanedContent.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
   if (!jsonMatch) {
     throw new Error("未找到有效的 JSON 格式");
   }

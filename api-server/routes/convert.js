@@ -4,6 +4,8 @@ import { htmlToMarkdown } from "../../utils/htmlToMarkdown.js";
 import { fetchGoogleDoc } from "../../utils/googleDocs.js";
 import { convertGoogleDocsToStoryblok } from "../../utils/googleDocsToStoryblok.js";
 import { aiStructuredRequest } from "../../utils/aiRequest.js";
+import { generateAiStructuredData } from "../../utils/convertAiStructuredData.js";
+import { sendSocketNotification } from "../../utils/socketIO.js";
 
 const router = express.Router();
 
@@ -54,87 +56,88 @@ function extractFirstImageSrc(content) {
   return "";
 }
 
-// Socket通知辅助函数
-function sendSocketNotification(io, event, data) {
-  if (io) {
-    io.emit(event, {
-      timestamp: new Date().toISOString(),
-      ...data,
-    });
-    console.log(`🔌 Socket通知: ${event}`, data);
-  }
-}
-
 // 封装AI结构化分析函数
-async function generateAiStructuredData(
-  markdown,
-  io,
-  docId,
-  eventPrefix = "ai"
-) {
-  const messages = [
-    {
-      role: "system",
-      content: `你是一个内容分析助手。请从用户提供的 Markdown 文档中提取以下字段，并返回 JSON 格式：
-                  {
-                      "seo_title": string,          // SEO 优化的标题，简短有力，包含关键词，用于 meta title, 语言与文章内容一致
-                      "seo_description": string,    // SEO 优化的描述，100字以内，包含关键词，用于 meta description, 语言与文章内容一致 
-                      "heading_h1": string,         // 文章页面显示的主标题，可以更具描述性和吸引力, 语言与文章内容一致
-                      "slug": string,               // 用于URL的路径，比如 "my-blog-post"，要求小写字母，单词用连字符连接，请你根据文章内容，用简洁、清晰、SEO 友好的英文单词来生成一个 URL slug，不要音译日文内容，不要使用中文
-                      "reading_time": number,       // 阅读时间，单位为分钟，必须是数字类型，不要超过12分钟
-                      "language": string,           // 根据文章内容判断语言，返回 "en" 或 "jp"。如果主要是日文返回"jp"，否则返回"en"
-                      "cover_alt": string           // 封面图 Alt text，描述图片内容，有助于 SEO 和无障碍访问, 语言与文章内容一致
-                  }
-                  请只返回纯 JSON（不要有额外说明或代码块）。`,
-    },
-    {
-      role: "user",
-      content: `以下是 Markdown 文档内容：\n\n${markdown}`,
-    },
-  ];
+// async function generateAiStructuredData(
+//   markdown,
+//   io,
+//   docId,
+//   eventPrefix = "ai"
+// ) {
+//   const messages = [
+//     {
+//       role: "system",
+//       content: `You are a content analysis assistant. Analyze the provided Markdown document and extract the following fields.
+//   Return the result as **valid raw JSON only** — without explanations, comments, or code blocks.
 
-  const schema = {
-    type: "object",
-    properties: {
-      seo_title: { type: "string" },
-      seo_description: { type: "string" },
-      heading_h1: { type: "string" },
-      slug: { type: "string" },
-      reading_time: { type: "number" },
-      language: { type: "string", enum: ["en", "jp"] },
-      cover_alt: { type: "string" },
-    },
-    required: [
-      "seo_title",
-      "seo_description",
-      "heading_h1",
-      "slug",
-      "reading_time",
-      "language",
-      "cover_alt",
-    ],
-  };
+//   {
+//     "seo_title": string,       // SEO-optimized title. Short, impactful, contains relevant keywords, matches the article's language. Used for the meta title.
+//     "seo_description": string, // SEO-optimized description. Under 100 characters, contains relevant keywords, matches the article's language. Used for the meta description.
+//     "heading_h1": string,      // Main heading (H1) for the article page. Can be longer/more descriptive than seo_title. Must match the article's language.
+//     "slug": string,            // URL-friendly path in lowercase English only. Use a–z, 0–9, and hyphens (-) only.
+//                                // No spaces, underscores, or non-English characters.
+//                                // If the article is in Japanese, generate a concise English slug that reflects the topic.
+//     "reading_time": number,    // Estimated reading time in minutes. Integer value, maximum 12.
+//     "language": string,        // Main language of the article: "en" for English, "jp" for Japanese.
+//     "cover_alt": string        // Alt text for the cover image. Describe the image for SEO and accessibility. Must match the article's language.
+//   }
 
-  // 通知：开始AI结构化分析
-  sendSocketNotification(io, `${eventPrefix}:analysis:start`, {
-    docId,
-    message: "开始AI结构化分析...",
-  });
+//   Formatting rules:
+//   1. Return only valid JSON, with double quotes around all keys and string values.
+//   2. Do not include trailing commas.
+//   3. Do not add any extra fields.
+//   4. Do not output broken characters or the "�" symbol.
+//   5. All values must match the specified type.
+//   6. If unsure about a value, return an empty string "".
+//   `,
+//     },
+//     {
+//       role: "user",
+//       content: `Here is the Markdown document content:\n\n${markdown}`,
+//     },
+//   ];
 
-  const aiMeta = await aiStructuredRequest(messages, schema, {
-    max_tokens: 500,
-    temperature: 0.8,
-  });
+//   const schema = {
+//     type: "object",
+//     properties: {
+//       seo_title: { type: "string" },
+//       seo_description: { type: "string" },
+//       heading_h1: { type: "string" },
+//       slug: { type: "string" },
+//       reading_time: { type: "number" },
+//       language: { type: "string", enum: ["en", "jp"] },
+//       cover_alt: { type: "string" },
+//     },
+//     required: [
+//       "seo_title",
+//       "seo_description",
+//       "heading_h1",
+//       "slug",
+//       "reading_time",
+//       "language",
+//       "cover_alt",
+//     ],
+//   };
 
-  // 通知：AI分析完成
-  sendSocketNotification(io, `${eventPrefix}:analysis:success`, {
-    docId,
-    message: "AI结构化分析完成",
-    aiMeta,
-  });
+//   // 通知：开始AI结构化分析
+//   sendSocketNotification(io, `${eventPrefix}:analysis:start`, {
+//     docId,
+//     message: "开始AI结构化分析...",
+//   });
 
-  return aiMeta;
-}
+//   const aiMeta = await aiStructuredRequest(messages, schema, {
+//     max_tokens: 500,
+//     temperature: 0,
+//   });
+
+//   // 通知：AI分析完成
+//   sendSocketNotification(io, `${eventPrefix}:analysis:success`, {
+//     docId,
+//     message: "AI结构化分析完成",
+//     aiMeta,
+//   });
+
+//   return aiMeta;
+// }
 
 // 创建带Socket通知的图片上传器
 function createImageUploaderWithNotifications(io, docId) {
@@ -206,29 +209,30 @@ router.post("/", async (req, res) => {
     console.log("🚀 ~ router.post ~ markdown: success");
 
     // 3. AI结构化分析（先进行，避免图片上传后AI失败）
-    let aiMeta;
-    try {
-      aiMeta = await generateAiStructuredData(markdown, io, docId);
-    } catch (error) {
-      console.log("⚠️ AI分析失败，使用默认值:", error.message);
-      // AI失败时使用默认空值
-      aiMeta = {
-        seo_title: "",
-        seo_description: "",
-        heading_h1: "",
-        slug: "",
-        reading_time: 1,
-        language: "en",
-        cover_alt: "",
-      };
+    const aiMeta = await generateAiStructuredData(markdown, io, docId);
+    // let aiMeta;
+    // try {
+    //   aiMeta = await generateAiStructuredData(markdown, io, docId);
+    // } catch (error) {
+    //   console.log("⚠️ AI分析失败，使用默认值:", error.message);
+    //   // AI失败时使用默认空值
+    //   aiMeta = {
+    //     seo_title: "",
+    //     seo_description: "",
+    //     heading_h1: "",
+    //     slug: "",
+    //     reading_time: 1,
+    //     language: "en",
+    //     cover_alt: "",
+    //   };
 
-      // 通知AI分析失败
-      sendSocketNotification(io, "ai:analysis:error", {
-        docId,
-        message: "AI分析失败，使用默认值",
-        error: error.message,
-      });
-    }
+    //   // 通知AI分析失败
+    //   sendSocketNotification(io, "ai:analysis:error", {
+    //     docId,
+    //     message: "AI分析失败，使用默认值",
+    //     error: error.message,
+    //   });
+    // }
 
     // 通知：开始转换Google Docs到Storyblok
     sendSocketNotification(io, "storyblok:convert:start", {
