@@ -20,6 +20,23 @@ const SPACE_ID = "159374";
 
 router.post("/", async (req, res) => {
   try {
+    // 打印请求数据大小
+    const requestBodyString = JSON.stringify(req.body);
+    const requestSizeInBytes = Buffer.byteLength(requestBodyString, "utf8");
+    const requestSizeInKB = (requestSizeInBytes / 1024).toFixed(2);
+    const requestSizeInMB = (requestSizeInBytes / (1024 * 1024)).toFixed(2);
+
+    console.log(`📊 发布请求数据大小:`);
+    console.log(`   - 字节数: ${requestSizeInBytes.toLocaleString()} bytes`);
+    console.log(`   - KB: ${requestSizeInKB} KB`);
+    console.log(`   - MB: ${requestSizeInMB} MB`);
+
+    // 如果数据太大，给出警告
+    if (requestSizeInBytes > 1024 * 1024 * 5) {
+      // 5MB
+      console.log(`⚠️  警告: 请求数据超过5MB，可能导致请求失败`);
+    }
+
     const {
       seo_title,
       seo_description,

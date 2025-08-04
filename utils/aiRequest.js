@@ -147,12 +147,39 @@ function safeJsonParse(str) {
   try {
     // 1. 去除多余的逗号（如最后一个键值对后面多了逗号）
     let fixed = str.replace(/,([\s\n\r]*[}\]])/g, '$1');
-    // 2. 去除非 JSON 允许的字符（如全角句号）
-    fixed = fixed.replace(/[。]/g, '');
+    
+    // 2. 清理字符串值中的特殊字符
+    // 处理字符串值中的日文字符和其他特殊字符
+    fixed = fixed.replace(/"([^"]*[^\x00-\x7F][^"]*)"/g, (match, content) => {
+      // 清理内容中的特殊字符，但保留基本的日文字符
+      const cleaned = content
+        .replace(/[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uFF00-\uFFEF]/g, '') // 保留ASCII、平假名、片假名、汉字、全角字符
+        .replace(/[。、，；：！？]/g, '') // 移除中文标点
+        .replace(/[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uFF00-\uFFEF\s\-_]/g, '') // 最终清理
+        .trim();
+      return `"${cleaned}"`;
+    });
+    
     // 3. 解析
     return JSON.parse(fixed);
   } catch (e) {
-    throw new Error('JSON 解析失败: ' + e.message);
+    // 如果第一次解析失败，尝试更激进的清理
+    try {
+      let aggressiveFixed = str.replace(/,([\s\n\r]*[}\]])/g, '$1');
+      
+      // 更激进的字符清理
+      aggressiveFixed = aggressiveFixed.replace(/"([^"]*)"/g, (match, content) => {
+        const cleaned = content
+          .replace(/[^\x00-\x7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\s\-_]/g, '') // 只保留ASCII、日文字符、汉字、空格、连字符、下划线
+          .replace(/[。、，；：！？]/g, '') // 移除中文标点
+          .trim();
+        return `"${cleaned}"`;
+      });
+      
+      return JSON.parse(aggressiveFixed);
+    } catch (e2) {
+      throw new Error('JSON 解析失败: ' + e.message + ' (清理后: ' + e2.message + ')');
+    }
   }
 }
 

@@ -205,13 +205,38 @@ router.post("/", async (req, res) => {
     const markdown = htmlToMarkdown(html);
     console.log("🚀 ~ router.post ~ markdown: success");
 
+    // 3. AI结构化分析（先进行，避免图片上传后AI失败）
+    let aiMeta;
+    try {
+      aiMeta = await generateAiStructuredData(markdown, io, docId);
+    } catch (error) {
+      console.log("⚠️ AI分析失败，使用默认值:", error.message);
+      // AI失败时使用默认空值
+      aiMeta = {
+        seo_title: "",
+        seo_description: "",
+        heading_h1: "",
+        slug: "",
+        reading_time: 1,
+        language: "en",
+        cover_alt: "",
+      };
+
+      // 通知AI分析失败
+      sendSocketNotification(io, "ai:analysis:error", {
+        docId,
+        message: "AI分析失败，使用默认值",
+        error: error.message,
+      });
+    }
+
     // 通知：开始转换Google Docs到Storyblok
     sendSocketNotification(io, "storyblok:convert:start", {
       docId,
       message: "开始转换Google Docs到Storyblok格式...",
     });
 
-    // 3. Google Docs → Richtext
+    // 4. Google Docs → Richtext（包含图片上传）
     const docJson = await fetchGoogleDoc(docId);
     const richtext = await convertGoogleDocsToStoryblok(
       docJson,
@@ -230,9 +255,6 @@ router.post("/", async (req, res) => {
     const firstH1Title = result.firstH1Title;
     // 新增：提取第一个图片src作为封面图
     const coverImage = extractFirstImageSrc(richtext.content || []);
-
-    // 通知：开始AI结构化分析
-    const aiMeta = await generateAiStructuredData(markdown, io, docId);
 
     // 通知：整个转换流程完成
     sendSocketNotification(io, "convert:complete", {
@@ -282,17 +304,45 @@ router.post("/regenerate", async (req, res) => {
       return res.status(400).json({ error: "markdown is required" });
 
     // 使用相同的AI提示重新生成结构化数据
-    const aiMeta = await generateAiStructuredData(
-      markdown,
-      io,
-      docId,
-      "ai:regenerate"
-    );
+    let aiMeta;
+    try {
+      aiMeta = await generateAiStructuredData(
+        markdown,
+        io,
+        docId,
+        "ai:regenerate"
+      );
 
-    res.json({
-      aiMeta,
-      message: "AI结构化数据重新生成成功",
-    });
+      res.json({
+        aiMeta,
+        message: "AI结构化数据重新生成成功",
+      });
+    } catch (error) {
+      console.log("⚠️ AI重新生成失败:", error.message);
+      // AI失败时使用默认空值
+      aiMeta = {
+        seo_title: "",
+        seo_description: "",
+        heading_h1: "",
+        slug: "",
+        reading_time: 1,
+        language: "en",
+        cover_alt: "",
+      };
+
+      // 通知AI重新生成失败
+      sendSocketNotification(io, "ai:regenerate:error", {
+        docId,
+        message: "AI重新生成失败，使用默认值",
+        error: error.message,
+      });
+
+      res.json({
+        aiMeta,
+        message: "AI重新生成失败，使用默认值",
+        error: error.message,
+      });
+    }
   } catch (err) {
     // 通知：重新生成过程中出现错误
     sendSocketNotification(io, "ai:regenerate:error", {
