@@ -354,7 +354,10 @@
             >AI内容重新生成</label
           >
           <p style="color: #6c757d; margin-bottom: 15px; font-size: 14px">
-            如果对AI生成的内容不满意，可以点击下方按钮重新生成所有AI内容
+            如果对AI生成的内容不满意，或者切换了博客语言，可以点击下方按钮重新生成所有AI内容
+          </p>
+          <p style="color: #007bff; margin-bottom: 15px; font-size: 13px; font-style: italic;">
+            💡 提示：切换博客语言后重新生成AI内容，可以获得更准确的对应语言内容
           </p>
           <button
             onclick="regenerateAiContent()"
@@ -587,12 +590,20 @@
 
       // 处理语言变化
       function handleLanguageChange() {
+        const newLanguage = document.getElementById("blog-language").value;
         updateCanonical();
         updateAuthorOptions();
-        console.log(
-          "语言切换为：",
-          document.getElementById("blog-language").value
-        );
+        console.log("语言切换为：", newLanguage);
+        
+        // 如果已经转换过文档，提示用户是否需要重新生成AI内容
+        if (currentDocId && currentMarkdown) {
+          const currentLanguage = document.getElementById("seo-title").value ? 
+            (document.getElementById("seo-title").value.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/) ? "jp" : "en") : null;
+          
+          if (currentLanguage && currentLanguage !== newLanguage) {
+            log(`检测到语言从 ${currentLanguage} 切换到 ${newLanguage}，建议重新生成AI内容以获得更好的效果`, "info");
+          }
+        }
       }
 
       // 更新预览内容
@@ -908,6 +919,10 @@
           regenerateBtn.textContent = "🔄 生成中...";
           log("开始重新生成AI内容...", "info");
 
+          // 获取用户当前选择的语言
+          const userLanguage = document.getElementById("blog-language").value;
+          log(`使用用户指定语言重新生成: ${userLanguage}`, "info");
+
           const response = await fetch(`${API_BASE}/convert/regenerate`, {
             method: "POST",
             headers: {
@@ -916,6 +931,7 @@
             body: JSON.stringify({
               docId: currentDocId,
               markdown: currentMarkdown,
+              userLanguage: userLanguage, // 发送用户选择的语言
             }),
           });
 

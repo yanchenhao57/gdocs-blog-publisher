@@ -33,6 +33,61 @@ function detectLanguage(markdown) {
 }
 
 /**
+ * 使用AI检测文档语言
+ * @param {string} markdown - Markdown 内容
+ * @returns {Promise<string>} 语言代码 'en' 或 'jp'
+ */
+async function detectLanguageWithAI(markdown) {
+  const messages = [
+    {
+      role: "system",
+      content: `你是一个语言检测专家。分析提供的Markdown文档内容，判断其主要语言。
+
+请只返回以下JSON格式的结果，不要包含任何其他内容：
+
+{
+  "language": "en" | "jp"
+}
+
+判断标准：
+- 如果文档主要使用英文，返回 "en"
+- 如果文档主要使用日文（包含平假名、片假名、汉字），返回 "jp"
+- 如果文档包含多种语言，以主要语言为准
+
+只返回JSON，不要解释。`,
+    },
+    {
+      role: "user",
+      content: `请分析以下文档的语言：
+
+\`\`\`
+${markdown.substring(0, 2000)}${markdown.length > 2000 ? "..." : ""}
+\`\`\``,
+    },
+  ];
+
+  const schema = {
+    type: "object",
+    properties: {
+      language: { type: "string", enum: ["en", "jp"] },
+    },
+    required: ["language"],
+  };
+
+  try {
+    const result = await aiStructuredRequest(messages, schema, {
+      max_tokens: 100,
+      temperature: 0,
+    });
+    return result.language;
+  } catch (error) {
+    console.error("AI语言检测失败，使用传统方法:", error);
+    // 如果AI检测失败，回退到传统方法
+    return detectLanguage(markdown);
+  }
+}
+
+/**
  * 生成英文 slug
  * @param {string} title - 标题
  * @param {string} language - 语言
@@ -140,15 +195,30 @@ function validateAndFixResult(aiResult, detectedLanguage, markdown) {
 
 /**
  * 优化后的 AI 结构化数据生成函数
+ * @param {string} markdown - Markdown 内容
+ * @param {Object} io - Socket.io 实例
+ * @param {string} docId - 文档ID
+ * @param {string} eventPrefix - 事件前缀
+ * @param {string} userLanguage - 用户指定的语言（可选）
+ * @returns {Promise<Object>} AI生成的结构化数据
  */
 async function generateAiStructuredData(
   markdown,
   io,
   docId,
-  eventPrefix = "ai"
+  eventPrefix = "ai",
+  userLanguage = null
 ) {
-  // 1. 首先检测文档语言
-  const detectedLanguage = detectLanguage(markdown);
+  // 1. 语言检测：优先使用用户指定语言，否则使用AI检测
+  let detectedLanguage;
+  if (userLanguage && (userLanguage === "en" || userLanguage === "jp")) {
+    detectedLanguage = userLanguage;
+    console.log(`使用用户指定语言: ${userLanguage}`);
+  } else {
+    // 使用AI检测语言
+    detectedLanguage = await detectLanguageWithAI(markdown);
+    console.log(`AI检测到语言: ${detectedLanguage}`);
+  }
 
   // 2. 根据检测到的语言调整提示词
   const languageInstructions =
@@ -204,7 +274,7 @@ async function generateAiStructuredData(
   1. Return only valid JSON, with double quotes around all keys and string values.
   2. Do not include trailing commas.
   3. Do not add any extra fields.
-  4. Do not output broken characters or the "�" symbol.
+  4. Do not output broken characters or the "" symbol.
   5. All text fields MUST be in ${
     detectedLanguage === "jp" ? "Japanese" : "English"
   } (except slug which is always English lowercase).
@@ -340,6 +410,7 @@ function generateFallbackMeta(markdown, language) {
 export {
   generateAiStructuredData,
   detectLanguage,
+  detectLanguageWithAI,
   generateSlug,
   validateAndFixResult,
 };

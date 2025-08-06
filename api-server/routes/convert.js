@@ -302,19 +302,20 @@ router.post("/regenerate", async (req, res) => {
   const io = req.app.get("io");
 
   try {
-    const { docId, markdown } = req.body;
+    const { docId, markdown, userLanguage } = req.body;
     if (!docId) return res.status(400).json({ error: "docId is required" });
     if (!markdown)
       return res.status(400).json({ error: "markdown is required" });
 
-    // 使用相同的AI提示重新生成结构化数据
+    // 使用相同的AI提示重新生成结构化数据，支持用户指定语言
     let aiMeta;
     try {
       aiMeta = await generateAiStructuredData(
         markdown,
         io,
         docId,
-        "ai:regenerate"
+        "ai:regenerate",
+        userLanguage // 传递用户指定的语言
       );
 
       res.json({
@@ -330,7 +331,7 @@ router.post("/regenerate", async (req, res) => {
         heading_h1: "",
         slug: "",
         reading_time: 1,
-        language: "en",
+        language: userLanguage || "en", // 使用用户指定语言或默认英文
         cover_alt: "",
       };
 
