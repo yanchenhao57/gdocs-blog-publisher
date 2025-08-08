@@ -668,6 +668,9 @@
           return;
         }
 
+        // 保存文档ID用于重新生成
+        currentDocId = docId;
+
         const convertBtn = document.getElementById("convert-btn");
 
         try {
@@ -688,6 +691,7 @@
 
           // 保存markdown内容用于重新生成
           currentMarkdown = data.markdown || "";
+          log(`调试信息 - 已保存 currentDocId: ${currentDocId}, currentMarkdown长度: ${currentMarkdown.length}`, "info");
 
           // 更新表单字段
           document.getElementById("seo-title").value =
@@ -909,6 +913,7 @@
       async function regenerateAiContent() {
         if (!currentDocId || !currentMarkdown) {
           log("请先转换文档后再重新生成", "error");
+          log(`调试信息 - currentDocId: ${currentDocId}, currentMarkdown长度: ${currentMarkdown ? currentMarkdown.length : 0}`, "info");
           return;
         }
 
