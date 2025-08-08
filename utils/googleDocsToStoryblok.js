@@ -123,10 +123,10 @@ class GoogleDocsToStoryblokConverter {
 
     if (headingLevel) {
       // 如果是 H2，添加锚点块
-      if (headingLevel === 2) {
-        // 获取标题文本
-        const headingText = content.map((item) => item.text).join("");
+      // 获取标题文本
+      const headingText = content.map((item) => item.text).join("");
 
+      if (headingLevel === 2 && headingText.trim() !== "") {
         return [
           {
             type: "blok",
