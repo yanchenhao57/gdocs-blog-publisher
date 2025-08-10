@@ -9,21 +9,17 @@ import {
   Loader2,
   Rocket,
 } from "lucide-react";
-import { useAppContext } from "@/contexts/AppContext";
 
 interface DocInputProps {
   onConvert: (docId: string) => void;
 }
 
 const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
-  const {
-    state: { docLink, error, isValid, isLoading },
-    setDocLink,
-    setError,
-    setValid,
-    setDocId,
-    startConversion,
-  } = useAppContext();
+  const [docLink, setDocLink] = useState("");
+  const [error, setError] = useState("");
+  const [isValid, setIsValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [docId, setDocId] = useState<string | null>(null);
 
   // 从链接中提取 Google Docs ID
   const extractDocId = (link: string): string | null => {
@@ -50,7 +46,7 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
   const validateInput = (value: string) => {
     if (!value.trim()) {
       setError("");
-      setValid(false);
+      setIsValid(false);
       return false;
     }
 
@@ -58,7 +54,7 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
     const urlPattern = /^https?:\/\/.+/;
     if (!urlPattern.test(value) && !/^[a-zA-Z0-9-_]+$/.test(value)) {
       setError("Please enter a valid Google Docs URL or document ID");
-      setValid(false);
+      setIsValid(false);
       return false;
     }
 
@@ -66,7 +62,7 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
     if (value.includes("docs.google.com")) {
       if (!value.includes("/document/")) {
         setError("Please enter a valid Google Docs document link");
-        setValid(false);
+        setIsValid(false);
         return false;
       }
     }
@@ -75,24 +71,24 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
     const docId = extractDocId(value);
     if (!docId) {
       setError("Could not extract document ID from the provided link");
-      setValid(false);
+      setIsValid(false);
       return false;
     }
 
     // 验证文档ID格式
     if (docId.length < 10 || docId.length > 50) {
       setError("Document ID appears to be invalid");
-      setValid(false);
+      setIsValid(false);
       return false;
     }
 
     setError("");
-    setValid(true);
+    setIsValid(true);
     return true;
   };
 
   // 处理转换按钮点击
-  const handleConvert = () => {
+  const handleConvert = async () => {
     if (!isValid) {
       setError("Please enter a valid Google Docs document link");
       return;
@@ -101,12 +97,9 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
     const docId = extractDocId(docLink);
     if (docId) {
       setDocId(docId);
-      startConversion();
-      
-      // 模拟转换过程
-      setTimeout(() => {
-        onConvert(docId);
-      }, 2000);
+      setIsLoading(true);
+      await onConvert(docId);
+      setIsLoading(false);
     }
   };
 
@@ -193,9 +186,8 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="e.g., https://docs.google.com/document/d/1HBWkPDoWzQdQ7wU7hooLGgoVK5SEYWl5xvX_3s_2RzM/edit"
-              className={`input-field ${error ? "error-border" : ""} ${
-                isValid ? "valid-border" : ""
-              }`}
+              className={`input-field ${error ? "error-border" : ""} ${isValid ? "valid-border" : ""
+                }`}
               disabled={isLoading}
               style={{
                 width: "100%",
@@ -203,8 +195,8 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
                 border: error
                   ? "2px solid #ff0000"
                   : isValid
-                  ? "2px solid #10b981"
-                  : "2px solid #e5e5e5",
+                    ? "2px solid #10b981"
+                    : "2px solid #e5e5e5",
                 borderRadius: "0.75rem",
                 backgroundColor: "#ffffff",
                 color: "#000000",

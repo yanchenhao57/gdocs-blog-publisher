@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api-server/server.js"
+    "start": "node api-server/server.js",
+    "start:dev": "node api-server/server.js",
+    "start:smart": "node api-server/server.js",
+    "start:skip-upload": "SKIP_IMAGE_UPLOAD=true node api-server/server.js"
   },
   "type": "module",
   "keywords": [],
@@ -19,6 +22,7 @@
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "googleapis": "^153.0.0",
+    "https-proxy-agent": "^7.0.6",
     "lodash": "^4.17.21",
     "mime": "^4.0.7",
     "node-fetch": "^3.3.2",
