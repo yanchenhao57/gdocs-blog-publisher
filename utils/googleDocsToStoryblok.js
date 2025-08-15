@@ -491,12 +491,20 @@ class GoogleDocsToStoryblokConverter {
 
     // 链接
     if (textStyle.link) {
+      const url = textStyle.link.url;
+      const linkAttrs = {
+        href: url,
+        target: "_blank",
+      };
+      
+      // 检查是否为外链（非 notta.ai 域名）
+      if (this.isExternalLink(url)) {
+        linkAttrs.rel = "nofollow noreferrer";
+      }
+      
       marks.push({
         type: "link",
-        attrs: {
-          href: textStyle.link.url,
-          target: "_blank",
-        },
+        attrs: linkAttrs,
       });
     }
 
@@ -527,6 +535,32 @@ class GoogleDocsToStoryblokConverter {
     }
 
     return marks;
+  }
+
+  /**
+   * 判断是否为外链（非 notta.ai 域名）
+   * @param {string} url - 链接URL
+   * @returns {boolean} 是否为外链
+   */
+  isExternalLink(url) {
+    if (!url) return false;
+    
+    try {
+      // 处理相对链接，视为内链
+      if (url.startsWith('/') || url.startsWith('#') || !url.includes('://')) {
+        return false;
+      }
+      
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase();
+      
+      // 检查是否为 notta.ai 或其子域名
+      return !hostname.endsWith('notta.ai');
+    } catch (error) {
+      // 如果URL格式错误，默认视为外链以保证安全
+      console.warn('Invalid URL format:', url);
+      return true;
+    }
   }
 
   /**
