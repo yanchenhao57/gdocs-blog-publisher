@@ -30,6 +30,20 @@ async function checkProxy(proxyUrl) {
 
 // 自动检测可用的代理
 export async function autoDetectProxy() {
+  // 检查是否禁用了自动检测
+  if (process.env.DISABLE_PROXY_AUTO_DETECT === 'true') {
+    console.log('🚫 代理自动检测已禁用 (DISABLE_PROXY_AUTO_DETECT=true)');
+    
+    // 仍然检查环境变量中是否有手动设置的代理
+    if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+      const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+      console.log(`✅ 使用环境变量代理: ${proxy}`);
+      return proxy;
+    }
+    
+    return null;
+  }
+  
   console.log('🔍 自动检测代理配置...');
   
   // 优先使用环境变量中的代理

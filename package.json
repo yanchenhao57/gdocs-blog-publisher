@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api-server/server.js",
-    "start:dev": "node api-server/server.js",
+    "start": "DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
+    "start:dev": "DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
     "start:smart": "node api-server/server.js",
-    "start:skip-upload": "SKIP_IMAGE_UPLOAD=true node api-server/server.js"
+    "start:skip-upload": "SKIP_IMAGE_UPLOAD=true DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js"
   },
   "type": "module",
   "keywords": [],

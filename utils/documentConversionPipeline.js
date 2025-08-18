@@ -24,10 +24,10 @@ export async function executeDocumentConversion(docId, io) {
       docId,
       message: "开始拉取Google Docs文档信息...",
     });
-    
+
     const html = await fetchGoogleDocAsHtml(docId);
     console.log("🚀 ~ HTML转换成功");
-    
+
     await sendSocketNotification(io, "googleDocs:fetch:success", {
       docId,
       message: "Google Docs文档信息拉取成功",
@@ -45,7 +45,7 @@ export async function executeDocumentConversion(docId, io) {
       docId,
       message: "开始转换Google Docs到Storyblok格式...",
     });
-    
+
     const docJson = await fetchGoogleDoc(docId);
     const richtext = await convertGoogleDocsToStoryblok(
       docJson,
@@ -123,4 +123,4 @@ function createImageUploaderWithNotifications(io, docId) {
       throw error;
     }
   };
-} 
+}

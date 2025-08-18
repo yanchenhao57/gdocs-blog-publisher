@@ -1,5 +1,7 @@
 import { aiStructuredRequest } from "./aiRequest.js";
 import { sendSocketNotification } from "./socketIO.js";
+import { estimateTokenCount } from "./tokenUtils.js";
+import { processLargeMarkdown, extractKeyInfo } from "./markdownProcessor.js";
 
 /**
  * 优化后的 AI 结构化数据生成函数
@@ -38,6 +40,9 @@ function detectLanguage(markdown) {
  * @returns {Promise<string>} 语言代码 'en' 或 'jp'
  */
 async function detectLanguageWithAI(markdown) {
+  // 对于语言检测，只使用前2000字符就足够了
+  const sampleText = markdown.substring(0, 2000);
+
   const messages = [
     {
       role: "system",
@@ -61,7 +66,7 @@ async function detectLanguageWithAI(markdown) {
       content: `请分析以下文档的语言：
 
 \`\`\`
-${markdown.substring(0, 2000)}${markdown.length > 2000 ? "..." : ""}
+${sampleText}${markdown.length > 2000 ? "..." : ""}
 \`\`\``,
     },
   ];
@@ -209,15 +214,79 @@ async function generateAiStructuredData(
   eventPrefix = "ai",
   userLanguage = null
 ) {
-  // 1. 语言检测：优先使用用户指定语言，否则使用AI检测
+  console.log(`🚀 开始智能处理文档: ${markdown.length} 字符`);
+
+  // 通知开始处理
+  sendSocketNotification(io, `${eventPrefix}:analysis:start`, {
+    docId,
+    message: `开始智能文档分析...`,
+    originalLength: markdown.length,
+  });
+
+  try {
+    // 使用新的智能处理系统
+    const result = await processLargeMarkdown(
+      markdown,
+      async (content) => {
+        // 这里是传递给 processLargeMarkdown 的 AI 调用函数
+        return await performAiAnalysis(content, userLanguage);
+      },
+      {
+        directProcessLimit: 10000,
+        summaryProcessLimit: 100000,
+        maxRetries: 2,
+      }
+    );
+
+    // 通知处理完成
+    sendSocketNotification(io, `${eventPrefix}:analysis:success`, {
+      docId,
+      message: `智能文档分析完成 (${result.processingMethod})`,
+      processingMethod: result.processingMethod,
+      qualityScore: result.qualityScore,
+      originalLength: result.originalLength,
+      processedLength: result.processedLength,
+      aiMeta: result,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("🔥 智能文档分析失败:", error);
+
+    // 降级处理：使用基于关键信息的默认值
+    const keyInfo = extractKeyInfo(markdown);
+    const fallbackMeta = generateFallbackMetaFromKeyInfo(keyInfo, markdown);
+
+    sendSocketNotification(io, `${eventPrefix}:analysis:fallback`, {
+      docId,
+      message: "智能分析失败，使用基于文档结构的默认值",
+      aiMeta: fallbackMeta,
+      error: error.message,
+    });
+
+    return fallbackMeta;
+  }
+}
+
+/**
+ * 执行 AI 分析（核心分析函数）
+ * @param {string} content - 要分析的内容
+ * @param {string} userLanguage - 用户指定的语言
+ * @returns {Promise<Object>} AI 分析结果
+ */
+async function performAiAnalysis(content, userLanguage = null) {
+  // 1. 语言检测：优先使用用户指定语言，否则基于内容检测
   let detectedLanguage;
   if (userLanguage && (userLanguage === "en" || userLanguage === "jp")) {
     detectedLanguage = userLanguage;
     console.log(`使用用户指定语言: ${userLanguage}`);
   } else {
-    // 使用AI检测语言
-    detectedLanguage = await detectLanguageWithAI(markdown);
-    console.log(`AI检测到语言: ${detectedLanguage}`);
+    // 提取关键信息进行语言检测
+    const keyInfo = extractKeyInfo(content);
+    detectedLanguage = keyInfo.language === "zh" ? "jp" : keyInfo.language; // 将中文映射为日文
+    console.log(
+      `🎯 基于内容检测到语言: ${keyInfo.language} → 映射为: ${detectedLanguage}`
+    );
   }
 
   // 2. 根据检测到的语言调整提示词
@@ -291,7 +360,7 @@ async function generateAiStructuredData(
       content: `Here is the Markdown document content to analyze:
   
   \`\`\`
-  ${markdown}
+  ${content}
   \`\`\`
   
   Remember: All text fields must be in ${
@@ -321,90 +390,144 @@ async function generateAiStructuredData(
       "cover_alt",
     ],
   };
+  console.log("🚀 ~ messages:", messages);
 
-  // 通知：开始AI结构化分析
-  sendSocketNotification(io, `${eventPrefix}:analysis:start`, {
-    docId,
-    message: `开始AI结构化分析 (检测语言: ${detectedLanguage})...`,
+  // 执行AI分析
+  const aiMeta = await aiStructuredRequest(messages, schema, {
+    max_tokens: 800,
+    temperature: 0,
+    retries: 2,
+    model: "mercury-coder-small",
   });
 
-  try {
-    const aiMeta = await aiStructuredRequest(messages, schema, {
-      max_tokens: 800, // 增加 token 数量以获得更好的结果
-      temperature: 0,
-      retries: 2, // 减少重试次数，因为我们有验证步骤
-    });
+  // 验证和修正结果
+  const validatedMeta = validateAndFixResult(aiMeta, detectedLanguage, content);
 
-    // 验证和修正结果
-    const validatedMeta = validateAndFixResult(
-      aiMeta,
-      detectedLanguage,
-      markdown
-    );
-
-    // 通知：AI分析完成
-    sendSocketNotification(io, `${eventPrefix}:analysis:success`, {
-      docId,
-      message: "AI结构化分析完成",
-      aiMeta: validatedMeta,
-      detectedLanguage,
-    });
-
-    return validatedMeta;
-  } catch (error) {
-    console.error("AI 结构化分析失败:", error);
-
-    // 如果 AI 分析失败，返回基于内容的默认值
-    const fallbackMeta = generateFallbackMeta(markdown, detectedLanguage);
-
-    sendSocketNotification(io, `${eventPrefix}:analysis:fallback`, {
-      docId,
-      message: "AI分析失败，使用默认值",
-      aiMeta: fallbackMeta,
-      error: error.message,
-    });
-
-    return fallbackMeta;
-  }
+  return validatedMeta;
 }
 
 /**
- * 生成后备的元数据（当 AI 分析失败时使用）
- * @param {string} markdown - Markdown 内容
- * @param {string} language - 检测到的语言
- * @returns {Object} 后备元数据
+ * 基于关键信息生成降级元数据
+ * @param {Object} keyInfo - 从文档提取的关键信息
+ * @param {string} markdown - 原始 Markdown 内容
+ * @returns {Object} 降级元数据
  */
-function generateFallbackMeta(markdown, language) {
-  // 提取第一个标题作为标题
-  const titleMatch = markdown.match(/^#\s+(.+)$/m);
-  const title = titleMatch
-    ? titleMatch[1].replace(/[#*_`]/g, "").trim()
-    : language === "jp"
-    ? "記事タイトル"
-    : "Article Title";
+function generateFallbackMetaFromKeyInfo(keyInfo, markdown) {
+  const { title, language, wordCount, firstParagraph, keywords, documentType } =
+    keyInfo;
+
+  // 使用智能生成的标题或默认标题
+  const fallbackTitle =
+    title || (language === "jp" ? "記事タイトル" : "Article Title");
+
+  // 生成描述
+  let description = firstParagraph;
+  if (!description || description.length > 150) {
+    const topKeywords = Array.from(keywords).slice(0, 5).join(", ");
+    switch (language) {
+      case "jp":
+        description = `${fallbackTitle}について詳しく解説します。主な内容: ${topKeywords}`;
+        break;
+      case "zh":
+        description = `详细介绍${fallbackTitle}。主要内容: ${topKeywords}`;
+        break;
+      default:
+        description = `Learn about ${fallbackTitle}. Key topics include: ${topKeywords}`;
+    }
+  }
+
+  // 生成 slug
+  const slug = generateSlugFromTitle(fallbackTitle, language);
 
   // 计算阅读时间
-  const wordCount = markdown.replace(
-    /[^\w\s\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g,
-    ""
-  ).length;
   const readingTime = Math.max(1, Math.min(12, Math.ceil(wordCount / 200)));
 
+  // 生成封面 alt
+  const coverAlt =
+    language === "jp"
+      ? `${fallbackTitle}のイメージ画像`
+      : `Image representing ${fallbackTitle}`;
+
   return {
-    seo_title: title,
-    seo_description:
-      language === "jp"
-        ? `${title}について詳しく解説します。`
-        : `Learn more about ${title} in this comprehensive guide.`,
-    heading_h1: title,
-    slug: generateSlug(title, language),
+    seo_title: fallbackTitle.substring(0, 60), // 限制长度
+    seo_description: description.substring(0, 160), // 限制长度
+    heading_h1: fallbackTitle,
+    slug,
     reading_time: readingTime,
-    language: language,
-    cover_alt:
-      language === "jp"
-        ? `${title}のイメージ画像`
-        : `Image representing ${title}`,
+    language: language === "zh" ? "jp" : language, // 将中文映射为日文
+    cover_alt: coverAlt,
+    // 添加额外信息用于调试
+    _fallback: true,
+    _documentType: documentType,
+    _keywordCount: keywords.size,
   };
+}
+
+/**
+ * 从标题生成 slug
+ */
+function generateSlugFromTitle(title, language) {
+  // 常见的中日文到英文映射
+  const translations = {
+    開発: "development",
+    技術: "technology",
+    プログラミング: "programming",
+    ウェブ: "web",
+    アプリ: "app",
+    システム: "system",
+    設計: "design",
+    分析: "analysis",
+    学習: "learning",
+    入門: "introduction",
+    基礎: "basics",
+    応用: "advanced",
+    実践: "practice",
+    解説: "explanation",
+    方法: "method",
+    手順: "steps",
+    使い方: "usage",
+    ガイド: "guide",
+    チュートリアル: "tutorial",
+    // 中文映射
+    开发: "development",
+    技术: "technology",
+    编程: "programming",
+    网页: "web",
+    应用: "app",
+    系统: "system",
+    设计: "design",
+    分析: "analysis",
+    学习: "learning",
+    入门: "introduction",
+    基础: "basics",
+    高级: "advanced",
+    实践: "practice",
+    解释: "explanation",
+    方法: "method",
+    步骤: "steps",
+    使用: "usage",
+    指南: "guide",
+    教程: "tutorial",
+  };
+
+  let slug = title.toLowerCase();
+
+  // 应用翻译映射
+  Object.entries(translations).forEach(([source, target]) => {
+    slug = slug.replace(new RegExp(source, "g"), target);
+  });
+
+  // 清理 slug
+  slug = slug
+    .replace(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, "") // 移除剩余的中日文字符
+    .replace(/[^\w\s-]/g, "") // 只保留字母、数字、空格、连字符
+    .replace(/\s+/g, "-") // 空格转为连字符
+    .replace(/-+/g, "-") // 多个连字符合并
+    .replace(/^-|-$/g, "") // 去除首尾连字符
+    .substring(0, 50); // 限制长度
+
+  // 如果结果为空，使用默认值
+  return slug || "article";
 }
 
 export {

@@ -1,7 +1,10 @@
 /**
  * AI 请求工具函数 - 封装 Inception Labs API
  * 支持配置化参数、错误处理、重试机制和结构化输出
+ * 包含内容长度检查和自动优化功能
  */
+
+import { validateRequestSize, optimizeForModel, estimateTokenCount } from './tokenUtils.js';
 
 /**
  * AI 请求配置选项
@@ -42,6 +45,7 @@ const aiRequest = async (messages, options = {}) => {
     retryDelay: 1000,
     structuredOutput: false,
     outputSchema: null,
+    autoOptimize: true, // 是否自动优化内容长度
   };
 
   const config = { ...defaultOptions, ...options };
@@ -53,7 +57,19 @@ const aiRequest = async (messages, options = {}) => {
   }
 
   // 格式化消息
-  const formattedMessages = formatMessages(messages, config);
+  let formattedMessages = formatMessages(messages, config);
+  
+  // 检查并优化内容长度
+  if (config.autoOptimize) {
+    const optimization = optimizeForModel(formattedMessages, config.model, config.max_tokens + 1000);
+    
+    if (optimization.optimized) {
+      console.log(`🔧 内容已自动优化: ${optimization.originalTokens} -> ${optimization.estimatedTokens} tokens (${(optimization.estimatedTokens/optimization.originalTokens*100).toFixed(1)}%)`);
+      formattedMessages = optimization.messages;
+    } else {
+      console.log(`✅ 内容长度验证通过: ${optimization.estimatedTokens} tokens (${optimization.utilization}% 使用率)`);
+    }
+  }
 
   // 构建请求体
   const requestBody = {
@@ -271,6 +287,12 @@ const sendRequestWithRetry = async (requestBody, config, apiKey) => {
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // 特殊处理上下文长度超限错误
+        if (response.status === 400 && errorText.includes("context_length_exceeded")) {
+          throw new Error(`❌ 请求内容过长，超出模型上下文限制 (${response.status}): ${errorText}`);
+        }
+        
         throw new Error(`❌ API 请求失败 (${response.status}): ${errorText}`);
       }
 
