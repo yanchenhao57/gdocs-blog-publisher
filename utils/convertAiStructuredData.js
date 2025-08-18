@@ -1,38 +1,23 @@
 import { aiStructuredRequest } from "./aiRequest.js";
 import { sendSocketNotification } from "./socketIO.js";
-import { estimateTokenCount } from "./tokenUtils.js";
-import { processLargeMarkdown, extractKeyInfo } from "./markdownProcessor.js";
+import {
+  estimateTokenCount,
+  intelligentTruncateText,
+  optimizeForModel,
+} from "./tokenUtils.js";
+import {
+  extractKeyInfo,
+  detectLanguage,
+  generateSlug,
+  generateFallbackMetaFromKeyInfo,
+  generateSimpleFallbackMeta,
+  validateAndFixResult,
+} from "./documentUtils.js";
 
 /**
  * 优化后的 AI 结构化数据生成函数
  * 改进了提示词精确性和结果验证
  */
-
-/**
- * 检测文档的主要语言
- * @param {string} markdown - Markdown 内容
- * @returns {string} 语言代码 'en' 或 'jp'
- */
-function detectLanguage(markdown) {
-  // 移除 Markdown 语法
-  const plainText = markdown
-    .replace(/```[\s\S]*?```/g, "") // 移除代码块
-    .replace(/`[^`]*`/g, "") // 移除行内代码
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1") // 移除链接，保留链接文本
-    .replace(/[#*_~]/g, "") // 移除 Markdown 标记
-    .replace(/\n/g, " ") // 换行符替换为空格
-    .trim();
-
-  // 日文字符正则（平假名、片假名、汉字）
-  const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g;
-  const englishRegex = /[a-zA-Z]/g;
-
-  const japaneseMatches = plainText.match(japaneseRegex) || [];
-  const englishMatches = plainText.match(englishRegex) || [];
-
-  // 基于字符数量判断主要语言
-  return japaneseMatches.length > englishMatches.length * 0.5 ? "jp" : "en";
-}
 
 /**
  * 使用AI检测文档语言
@@ -93,112 +78,6 @@ ${sampleText}${markdown.length > 2000 ? "..." : ""}
 }
 
 /**
- * 生成英文 slug
- * @param {string} title - 标题
- * @param {string} language - 语言
- * @returns {string} slug
- */
-function generateSlug(title, language) {
-  if (language === "en") {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "") // 只保留字母、数字、空格、连字符
-      .replace(/\s+/g, "-") // 空格替换为连字符
-      .replace(/-+/g, "-") // 多个连字符合并为一个
-      .replace(/^-|-$/g, ""); // 移除首尾连字符
-  }
-
-  // 日文内容需要生成英文 slug，这里提供一些常见的映射
-  // 实际使用中可能需要更复杂的翻译逻辑
-  const commonTranslations = {
-    開発: "development",
-    技術: "technology",
-    プログラミング: "programming",
-    ウェブ: "web",
-    アプリ: "app",
-    システム: "system",
-    設計: "design",
-    分析: "analysis",
-    学習: "learning",
-    入門: "introduction",
-    基礎: "basics",
-    応用: "advanced",
-    実践: "practice",
-    解説: "explanation",
-    方法: "method",
-    手順: "steps",
-    使い方: "usage",
-    ガイド: "guide",
-    チュートリアル: "tutorial",
-  };
-
-  // 简单的日文到英文映射（这里需要根据实际需求扩展）
-  let englishSlug = title;
-  Object.entries(commonTranslations).forEach(([jp, en]) => {
-    englishSlug = englishSlug.replace(new RegExp(jp, "g"), en);
-  });
-
-  return (
-    englishSlug
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "") || "article"
-  );
-}
-
-/**
- * 验证和修正 AI 生成的结果
- * @param {Object} aiResult - AI 生成的结果
- * @param {string} detectedLanguage - 检测到的语言
- * @param {string} markdown - 原始 Markdown 内容
- * @returns {Object} 修正后的结果
- */
-function validateAndFixResult(aiResult, detectedLanguage, markdown) {
-  const result = { ...aiResult };
-
-  // 1. 修正语言字段
-  result.language = detectedLanguage;
-
-  // 2. 验证和修正 slug
-  if (!result.slug || !/^[a-z0-9-]+$/.test(result.slug)) {
-    // 如果 slug 格式不正确，根据标题重新生成
-    const titleForSlug = result.seo_title || result.heading_h1 || "article";
-    result.slug = generateSlug(titleForSlug, detectedLanguage);
-  }
-
-  // 3. 验证阅读时间
-  if (
-    !result.reading_time ||
-    result.reading_time < 1 ||
-    result.reading_time > 12
-  ) {
-    // 重新计算阅读时间（基于字数，假设每分钟读200字）
-    const wordCount = markdown.replace(
-      /[^\w\s\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g,
-      ""
-    ).length;
-    result.reading_time = Math.max(1, Math.min(12, Math.ceil(wordCount / 200)));
-  }
-
-  // 4. 确保字符串字段不为空
-  const stringFields = [
-    "seo_title",
-    "seo_description",
-    "heading_h1",
-    "cover_alt",
-  ];
-  stringFields.forEach((field) => {
-    if (!result[field] || typeof result[field] !== "string") {
-      result[field] = `默认${field}`;
-    }
-  });
-
-  return result;
-}
-
-/**
  * 优化后的 AI 结构化数据生成函数
  * @param {string} markdown - Markdown 内容
  * @param {Object} io - Socket.io 实例
@@ -224,32 +103,47 @@ async function generateAiStructuredData(
   });
 
   try {
-    // 使用新的智能处理系统
-    const result = await processLargeMarkdown(
-      markdown,
-      async (content) => {
-        // 这里是传递给 processLargeMarkdown 的 AI 调用函数
-        return await performAiAnalysis(content, userLanguage);
-      },
-      {
-        directProcessLimit: 10000,
-        summaryProcessLimit: 100000,
-        maxRetries: 2,
-      }
-    );
+    // 检查 token 限制并截取内容
+    const maxTokens = 100000; // 为 AI 请求预留的最大 token 数
+    const tokenEstimate = estimateTokenCount(markdown);
+
+    let processedContent = markdown;
+    let truncated = false;
+
+    if (tokenEstimate > maxTokens) {
+      console.log(
+        `📏 内容过长 (${tokenEstimate} tokens)，开始截取到 ${maxTokens} tokens`
+      );
+      const truncateResult = intelligentTruncateText(markdown, maxTokens, {
+        preserveStructure: true,
+        preferStart: true,
+      });
+      processedContent = truncateResult.text;
+      truncated = truncateResult.truncated;
+
+      sendSocketNotification(io, `${eventPrefix}:analysis:truncated`, {
+        docId,
+        message: `内容已截取: ${tokenEstimate} → ${truncateResult.newTokens} tokens`,
+        originalTokens: tokenEstimate,
+        newTokens: truncateResult.newTokens,
+        compressionRatio: truncateResult.compressionRatio,
+      });
+    }
+
+    // 执行 AI 分析
+    const aiMeta = await performAiAnalysis(processedContent, userLanguage);
 
     // 通知处理完成
     sendSocketNotification(io, `${eventPrefix}:analysis:success`, {
       docId,
-      message: `智能文档分析完成 (${result.processingMethod})`,
-      processingMethod: result.processingMethod,
-      qualityScore: result.qualityScore,
-      originalLength: result.originalLength,
-      processedLength: result.processedLength,
-      aiMeta: result,
+      message: `智能文档分析完成${truncated ? " (内容已截取)" : ""}`,
+      originalLength: markdown.length,
+      processedLength: processedContent.length,
+      truncated,
+      aiMeta,
     });
 
-    return result;
+    return aiMeta;
   } catch (error) {
     console.error("🔥 智能文档分析失败:", error);
 
@@ -406,134 +300,4 @@ async function performAiAnalysis(content, userLanguage = null) {
   return validatedMeta;
 }
 
-/**
- * 基于关键信息生成降级元数据
- * @param {Object} keyInfo - 从文档提取的关键信息
- * @param {string} markdown - 原始 Markdown 内容
- * @returns {Object} 降级元数据
- */
-function generateFallbackMetaFromKeyInfo(keyInfo, markdown) {
-  const { title, language, wordCount, firstParagraph, keywords, documentType } =
-    keyInfo;
-
-  // 使用智能生成的标题或默认标题
-  const fallbackTitle =
-    title || (language === "jp" ? "記事タイトル" : "Article Title");
-
-  // 生成描述
-  let description = firstParagraph;
-  if (!description || description.length > 150) {
-    const topKeywords = Array.from(keywords).slice(0, 5).join(", ");
-    switch (language) {
-      case "jp":
-        description = `${fallbackTitle}について詳しく解説します。主な内容: ${topKeywords}`;
-        break;
-      case "zh":
-        description = `详细介绍${fallbackTitle}。主要内容: ${topKeywords}`;
-        break;
-      default:
-        description = `Learn about ${fallbackTitle}. Key topics include: ${topKeywords}`;
-    }
-  }
-
-  // 生成 slug
-  const slug = generateSlugFromTitle(fallbackTitle, language);
-
-  // 计算阅读时间
-  const readingTime = Math.max(1, Math.min(12, Math.ceil(wordCount / 200)));
-
-  // 生成封面 alt
-  const coverAlt =
-    language === "jp"
-      ? `${fallbackTitle}のイメージ画像`
-      : `Image representing ${fallbackTitle}`;
-
-  return {
-    seo_title: fallbackTitle.substring(0, 60), // 限制长度
-    seo_description: description.substring(0, 160), // 限制长度
-    heading_h1: fallbackTitle,
-    slug,
-    reading_time: readingTime,
-    language: language === "zh" ? "jp" : language, // 将中文映射为日文
-    cover_alt: coverAlt,
-    // 添加额外信息用于调试
-    _fallback: true,
-    _documentType: documentType,
-    _keywordCount: keywords.size,
-  };
-}
-
-/**
- * 从标题生成 slug
- */
-function generateSlugFromTitle(title, language) {
-  // 常见的中日文到英文映射
-  const translations = {
-    開発: "development",
-    技術: "technology",
-    プログラミング: "programming",
-    ウェブ: "web",
-    アプリ: "app",
-    システム: "system",
-    設計: "design",
-    分析: "analysis",
-    学習: "learning",
-    入門: "introduction",
-    基礎: "basics",
-    応用: "advanced",
-    実践: "practice",
-    解説: "explanation",
-    方法: "method",
-    手順: "steps",
-    使い方: "usage",
-    ガイド: "guide",
-    チュートリアル: "tutorial",
-    // 中文映射
-    开发: "development",
-    技术: "technology",
-    编程: "programming",
-    网页: "web",
-    应用: "app",
-    系统: "system",
-    设计: "design",
-    分析: "analysis",
-    学习: "learning",
-    入门: "introduction",
-    基础: "basics",
-    高级: "advanced",
-    实践: "practice",
-    解释: "explanation",
-    方法: "method",
-    步骤: "steps",
-    使用: "usage",
-    指南: "guide",
-    教程: "tutorial",
-  };
-
-  let slug = title.toLowerCase();
-
-  // 应用翻译映射
-  Object.entries(translations).forEach(([source, target]) => {
-    slug = slug.replace(new RegExp(source, "g"), target);
-  });
-
-  // 清理 slug
-  slug = slug
-    .replace(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, "") // 移除剩余的中日文字符
-    .replace(/[^\w\s-]/g, "") // 只保留字母、数字、空格、连字符
-    .replace(/\s+/g, "-") // 空格转为连字符
-    .replace(/-+/g, "-") // 多个连字符合并
-    .replace(/^-|-$/g, "") // 去除首尾连字符
-    .substring(0, 50); // 限制长度
-
-  // 如果结果为空，使用默认值
-  return slug || "article";
-}
-
-export {
-  generateAiStructuredData,
-  detectLanguage,
-  detectLanguageWithAI,
-  generateSlug,
-  validateAndFixResult,
-};
+export { generateAiStructuredData, detectLanguageWithAI };

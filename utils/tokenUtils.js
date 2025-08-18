@@ -64,7 +64,7 @@ export function validateRequestSize(messages, maxTokens = 120000) {
  * @param {Object} options - 截取选项
  * @returns {Object} 包含truncated text和元信息的对象
  */
-export function intelligentTruncateText(text, maxTokens = 50000, options = {}) {
+export function intelligentTruncateText(text, maxTokens = 100000, options = {}) {
   const {
     preserveStructure = true,
     preferStart = true,
