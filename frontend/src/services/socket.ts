@@ -94,6 +94,10 @@ class SocketService {
           clearTimeout(timeout);
           this.updateConnectionStatus('connected');
           this.reconnectAttempts = 0;
+          
+          // 重新注册所有已添加的事件监听器
+          this.reregisterEventListeners();
+          
           resolve();
         });
 
@@ -123,6 +127,20 @@ class SocketService {
       this.updateConnectionStatus('disconnected');
       this.clearAllEventListeners();
     }
+  }
+
+  /**
+   * 重新注册所有事件监听器
+   */
+  private reregisterEventListeners(): void {
+    if (!this.socket) return;
+
+    Object.keys(this.eventListeners).forEach((eventType) => {
+      const listeners = this.eventListeners[eventType];
+      listeners.forEach((listener) => {
+        this.socket!.on(eventType, listener);
+      });
+    });
   }
 
   /**
@@ -185,7 +203,6 @@ class SocketService {
    * 更新连接状态
    */
   private updateConnectionStatus(status: SocketConnectionStatus): void {
-    console.log('🔄 Socket连接状态更新:', status);
     this.connectionStatus = status;
     // 触发状态变化事件，供UI组件监听
     this.triggerConnectionStatusEvent(status);
@@ -197,11 +214,9 @@ class SocketService {
   private triggerConnectionStatusEvent(status: SocketConnectionStatus): void {
     // 直接调用所有监听器，不依赖socket连接状态
     const listeners = this.eventListeners['connectionStatusChanged'] || [];
-    console.log('📡 触发连接状态事件，监听器数量:', listeners.length);
     
-    listeners.forEach((listener, index) => {
+    listeners.forEach((listener) => {
       try {
-        console.log(`📡 调用监听器 ${index + 1}`);
         listener({ 
           type: 'connectionStatusChanged',
           status,
@@ -224,8 +239,8 @@ class SocketService {
     }
     this.eventListeners[eventType].push(listener);
 
-    // 如果socket已连接，立即设置监听器
-    if (this.socket?.connected) {
+    // 如果socket已存在（无论是否连接），立即设置监听器
+    if (this.socket) {
       this.socket.on(eventType, listener);
     }
   }

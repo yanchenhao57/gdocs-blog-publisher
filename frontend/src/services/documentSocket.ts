@@ -31,6 +31,7 @@ class DocumentSocketService {
       'ai:analysis:start',
       'ai:analysis:success',
       'ai:analysis:error',
+      'ai:analysis:fallback',
       'ai:regenerate:start',
       'ai:regenerate:success',
       'ai:regenerate:error',
@@ -134,7 +135,7 @@ class DocumentSocketService {
   private notifyListeners(eventType: SocketEventType, data: NotificationData): void {
     const eventListeners = this.listeners.get(eventType);
     if (eventListeners) {
-      eventListeners.forEach(callback => {
+      eventListeners.forEach((callback) => {
         try {
           callback(data);
         } catch (error) {

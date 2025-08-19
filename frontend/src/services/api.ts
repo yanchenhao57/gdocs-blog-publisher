@@ -1,3 +1,5 @@
+import { ErrorHandler } from '../utils/errorHandler';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export interface ConvertResponse {
@@ -42,6 +44,7 @@ export interface PublishResponse {
 }
 
 class ApiService {
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -60,7 +63,8 @@ class ApiService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorMessage = ErrorHandler.parseErrorMessage(errorData);
+        throw new Error(errorMessage);
       }
       
       return await response.json();

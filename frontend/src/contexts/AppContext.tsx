@@ -10,7 +10,7 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
-    <SocketProvider autoConnect={false}>
+    <SocketProvider autoConnect={true}>
       {children}
     </SocketProvider>
   );

@@ -13,6 +13,7 @@ export type SocketEventType =
   | 'ai:analysis:start'
   | 'ai:analysis:success'
   | 'ai:analysis:error'
+  | 'ai:analysis:fallback'
   | 'ai:regenerate:start'
   | 'ai:regenerate:success'
   | 'ai:regenerate:error'
@@ -48,7 +49,7 @@ export interface GoogleDocsNotification extends BaseNotification {
 
 // AI分析相关通知
 export interface AiAnalysisNotification extends BaseNotification {
-  type: 'ai:analysis:start' | 'ai:analysis:success' | 'ai:analysis:error';
+  type: 'ai:analysis:start' | 'ai:analysis:success' | 'ai:analysis:error' | 'ai:analysis:fallback';
   aiMeta?: any;
   error?: string;
 }
