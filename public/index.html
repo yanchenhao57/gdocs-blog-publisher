@@ -834,16 +834,14 @@
 
           const result = await response.json();
 
-          // 生成预览和正式链接
+          // 生成正式访问链接
           const language = document.getElementById("blog-language").value;
           const slug = document.getElementById("slug").value;
           const prefix = language === "en" ? "en/blog/" : "blog/";
-
-          // 设置正式访问链接
           const articleLink = `${NOTTA_BASE}/${prefix}${slug}`;
 
-          // 设置 Storyblok 预览链接（使用 Dashboard 格式）
-          const previewLink = `https://app.storyblok.com/#/me/spaces/${result.spaceId}/stories/0/0/${result.storyId}`;
+          // 使用API返回的预览链接
+          const previewLink = result.previewLink;
 
           document.getElementById("article-link").href = articleLink;
           document.getElementById("article-link").textContent = articleLink;
@@ -884,16 +882,14 @@
 
       // 发布成功后的处理
       function handlePublishSuccess(result) {
-        // 生成预览和正式链接
+        // 生成正式访问链接
         const language = document.getElementById("blog-language").value;
         const slug = document.getElementById("slug").value;
         const prefix = language === "en" ? "en/blog/" : "blog/";
-
-        // 设置正式访问链接
         const articleLink = `${NOTTA_BASE}/${prefix}${slug}`;
 
-        // 设置 Storyblok 预览链接（使用 Dashboard 格式）
-        const previewLink = `https://app.storyblok.com/#/me/spaces/${result.spaceId}/stories/0/0/${result.storyId}`;
+        // 使用API返回的预览链接
+        const previewLink = result.previewLink;
 
         document.getElementById("article-link").href = articleLink;
         document.getElementById("article-link").textContent = articleLink;

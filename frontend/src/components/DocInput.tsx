@@ -131,151 +131,140 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
 
   return (
     <div
-      className="w-full h-screen flex items-center justify-center"
+      className="w-full max-w-2xl"
       style={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
+        width: "100%",
+        maxWidth: "42rem",
       }}
     >
-      <div
-        className="w-full max-w-2xl"
+      <h1
+        className="text-4xl font-bold text-center mb-8"
         style={{
-          width: "100%",
-          maxWidth: "42rem",
+          fontSize: "2.25rem",
+          fontWeight: "bold",
+          textAlign: "center",
+          marginBottom: "2rem",
+          color: "#000000",
         }}
       >
-        <h1
-          className="text-4xl font-bold text-center mb-8"
-          style={{
-            fontSize: "2.25rem",
-            fontWeight: "bold",
-            textAlign: "center",
-            marginBottom: "2rem",
-            color: "#000000",
-          }}
-        >
-          📄 Google Docs Converter
-        </h1>
+        📄 Google Docs Converter
+      </h1>
 
-        <div className="space-y-6" style={{ marginBottom: "1.5rem" }}>
-          <div>
-            <label
-              htmlFor="doc-link"
-              className="block text-sm font-medium mb-3"
+      <div className="space-y-6" style={{ marginBottom: "1.5rem" }}>
+        <div>
+          <label
+            htmlFor="doc-link"
+            className="block text-sm font-medium mb-3"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.875rem",
+              fontWeight: "500",
+              marginBottom: "0.75rem",
+              color: "#000000",
+            }}
+          >
+            <Link size={16} />
+            Enter Google Docs Document Link
+          </label>
+          <input
+            id="doc-link"
+            type="text"
+            value={docLink}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="e.g., https://docs.google.com/document/d/1HBWkPDoWzQdQ7wU7hooLGgoVK5SEYWl5xvX_3s_2RzM/edit"
+            className={`input-field ${error ? "error-border" : ""} ${
+              isValid ? "valid-border" : ""
+            }`}
+            disabled={isLoading}
+            style={{
+              width: "100%",
+              padding: "1rem 1.25rem",
+              border: error
+                ? "2px solid #ff0000"
+                : isValid
+                ? "2px solid #10b981"
+                : "2px solid #e5e5e5",
+              borderRadius: "0.75rem",
+              backgroundColor: "#ffffff",
+              color: "#000000",
+              fontSize: "1rem",
+              transition: "all 0.2s",
+            }}
+          />
+
+          {/* 错误提示 */}
+          {error && (
+            <div
+              className="error-message"
               style={{
+                color: "#ff0000",
+                fontSize: "0.875rem",
+                marginTop: "0.5rem",
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
-                fontSize: "0.875rem",
-                fontWeight: "500",
-                marginBottom: "0.75rem",
-                color: "#000000",
               }}
             >
-              <Link size={16} />
-              Enter Google Docs Document Link
-            </label>
-            <input
-              id="doc-link"
-              type="text"
-              value={docLink}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="e.g., https://docs.google.com/document/d/1HBWkPDoWzQdQ7wU7hooLGgoVK5SEYWl5xvX_3s_2RzM/edit"
-              className={`input-field ${error ? "error-border" : ""} ${isValid ? "valid-border" : ""
-                }`}
-              disabled={isLoading}
+              <AlertTriangle size={16} />
+              {error}
+            </div>
+          )}
+
+          {/* 成功提示 */}
+          {isValid && !error && (
+            <div
+              className="success-message"
               style={{
-                width: "100%",
-                padding: "1rem 1.25rem",
-                border: error
-                  ? "2px solid #ff0000"
-                  : isValid
-                    ? "2px solid #10b981"
-                    : "2px solid #e5e5e5",
-                borderRadius: "0.75rem",
-                backgroundColor: "#ffffff",
-                color: "#000000",
-                fontSize: "1rem",
-                transition: "all 0.2s",
+                color: "#10b981",
+                fontSize: "0.875rem",
+                marginTop: "0.5rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
               }}
-            />
-
-            {/* 错误提示 */}
-            {error && (
-              <div
-                className="error-message"
-                style={{
-                  color: "#ff0000",
-                  fontSize: "0.875rem",
-                  marginTop: "0.5rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <AlertTriangle size={16} />
-                {error}
-              </div>
-            )}
-
-            {/* 成功提示 */}
-            {isValid && !error && (
-              <div
-                className="success-message"
-                style={{
-                  color: "#10b981",
-                  fontSize: "0.875rem",
-                  marginTop: "0.5rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <CheckCircle size={16} />
-                Valid Google Docs link detected
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={handleConvert}
-            disabled={!isValid || isLoading}
-            className="btn-primary w-full"
-            style={{
-              width: "100%",
-              padding: "1rem 1.5rem",
-              backgroundColor: isValid ? "#000000" : "#cccccc",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "0.75rem",
-              fontSize: "1rem",
-              fontWeight: "500",
-              cursor: isValid && !isLoading ? "pointer" : "not-allowed",
-              transition: "all 0.2s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-            }}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 size={20} className="animate-spin" />
-                Converting...
-              </>
-            ) : (
-              <>
-                <Rocket size={20} />
-                Convert Document
-              </>
-            )}
-          </button>
+            >
+              <CheckCircle size={16} />
+              Valid Google Docs link detected
+            </div>
+          )}
         </div>
+
+        <button
+          onClick={handleConvert}
+          disabled={!isValid || isLoading}
+          className="btn-primary w-full"
+          style={{
+            width: "100%",
+            padding: "1rem 1.5rem",
+            backgroundColor: isValid ? "#000000" : "#cccccc",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "0.75rem",
+            fontSize: "1rem",
+            fontWeight: "500",
+            cursor: isValid && !isLoading ? "pointer" : "not-allowed",
+            transition: "all 0.2s",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.5rem",
+          }}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 size={20} className="animate-spin" />
+              Converting...
+            </>
+          ) : (
+            <>
+              <Rocket size={20} />
+              Convert Document
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

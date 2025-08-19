@@ -4,6 +4,8 @@ import {
   SocketEventType,
   ConvertCompleteNotification,
   ConvertErrorNotification,
+  SocketEventMap,
+  TypedEventListener,
 } from '../types/socket';
 
 /**
@@ -16,41 +18,17 @@ class DocumentSocketService {
 
   constructor(socketService: SocketService = defaultSocketService) {
     this.socketService = socketService;
-    this.setupDefaultListeners();
+    // 移除自动事件监听器设置，让组件通过 on() 或 onTyped() 显式注册
+    // this.setupDefaultListeners();
   }
 
   /**
-   * 设置默认的事件监听器
+   * 设置默认的事件监听器 (已废弃)
+   * @deprecated 移除自动事件监听器，改为组件显式注册
    */
   private setupDefaultListeners(): void {
-    // 监听所有相关事件
-    const events: SocketEventType[] = [
-      'googleDocs:fetch:start',
-      'googleDocs:fetch:success',
-      'googleDocs:fetch:error',
-      'ai:analysis:start',
-      'ai:analysis:success',
-      'ai:analysis:error',
-      'ai:analysis:fallback',
-      'ai:regenerate:start',
-      'ai:regenerate:success',
-      'ai:regenerate:error',
-      'storyblok:convert:start',
-      'storyblok:convert:success',
-      'storyblok:convert:error',
-      'image:process:start',
-      'image:process:success',
-      'image:process:error',
-      'convert:complete',
-      'convert:error',
-      'connectionStatusChanged',
-    ];
-
-    events.forEach(eventType => {
-      this.socketService.on(eventType, (data: NotificationData) => {
-        this.notifyListeners(eventType, data);
-      });
-    });
+    // 已移除自动事件监听器设置
+    // 组件现在需要通过 on() 或 onTyped() 方法显式注册所需的事件监听器
   }
 
   /**
@@ -78,7 +56,7 @@ class DocumentSocketService {
   /**
    * 发布到Storyblok
    */
-  async publishToStoryblok(publishData: any): Promise<void> {
+  async publishToStoryblok(publishData: Record<string, unknown>): Promise<void> {
     if (!this.socketService.isConnected()) {
       await this.socketService.connect();
     }
@@ -99,6 +77,30 @@ class DocumentSocketService {
     // 返回取消监听的函数
     return () => {
       this.off(eventType, callback);
+    };
+  }
+
+  /**
+   * 添加类型安全的事件监听器
+   */
+  onTyped<T extends keyof SocketEventMap>(
+    eventType: T,
+    callback: TypedEventListener<T>
+  ): () => void {
+    // 使用类型安全的Socket服务方法
+    const unsubscribe = this.socketService.onTyped(eventType, callback);
+    
+    // 还要在本地监听器集合中添加（为了兼容现有的notifyListeners逻辑）
+    const genericCallback = callback as (data: NotificationData) => void;
+    if (!this.listeners.has(eventType)) {
+      this.listeners.set(eventType, new Set());
+    }
+    this.listeners.get(eventType)!.add(genericCallback);
+
+    // 返回取消监听的函数
+    return () => {
+      unsubscribe();
+      this.off(eventType as SocketEventType, genericCallback);
     };
   }
 

@@ -1,20 +1,28 @@
 import { ErrorHandler } from '../utils/errorHandler';
+import { AiMeta } from '../types/socket';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+// Storyblok Richtext 内容块接口
+export interface StoryblokRichtextNode {
+  type: string;
+  content?: StoryblokRichtextNode[];
+  text?: string;
+  marks?: Array<{ type: string; attrs?: Record<string, any> }>;
+  attrs?: Record<string, any>;
+}
+
+// Storyblok Richtext 文档接口
+export interface StoryblokRichtext {
+  type: 'doc';
+  content: StoryblokRichtextNode[];
+}
 
 export interface ConvertResponse {
   html: string;
   markdown: string;
-  richtext: any;
-  aiMeta: {
-    seo_title: string;
-    seo_description: string;
-    heading_h1: string;
-    slug: string;
-    reading_time: number;
-    language: string;
-    cover_alt: string;
-  };
+  richtext: StoryblokRichtext;
+  aiMeta: AiMeta;
   firstH1Title: string;
   coverImage: string;
 }
@@ -24,7 +32,7 @@ export interface PublishRequest {
   seo_description: string;
   heading_h1: string;
   slug: string;
-  body: any;
+  body: StoryblokRichtext;
   coverUrl?: string;
   coverAlt?: string;
   date?: string;
@@ -37,10 +45,7 @@ export interface PublishRequest {
 
 export interface PublishResponse {
   success: boolean;
-  slug: string;
-  spaceId: string;
-  storyId: string;
-  fullSlug: string;
+  previewLink: string;
 }
 
 class ApiService {

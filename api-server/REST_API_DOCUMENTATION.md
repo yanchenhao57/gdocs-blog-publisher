@@ -277,10 +277,7 @@ const response = await fetch("/api/publish", {
 ```json
 {
   "success": true,
-  "slug": "article-slug",
-  "spaceId": "159374",
-  "storyId": "78910",
-  "fullSlug": "blog/en/article-slug"
+  "previewLink": "https://app.storyblok.com/#/me/spaces/159374/stories/0/0/78910"
 }
 ```
 

@@ -236,10 +236,12 @@ socket.on("convert:complete", (data) => {
   //   docId: string, 
   //   message: string, 
   //   summary: {
-  //     totalImages: number,
-  //     successImages: number,
-  //     failedImages: number,
-  //     aiAnalysisSuccess: boolean
+  //     hasHtml: boolean,
+  //     hasMarkdown: boolean,
+  //     hasRichtext: boolean,
+  //     hasAiMeta: boolean,
+  //     firstH1Title: string,
+  //     coverImage: string
   //   }
   // }
 });

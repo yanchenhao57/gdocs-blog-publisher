@@ -96,13 +96,12 @@ router.post("/", async (req, res) => {
 
     const result = await publishBlogToStoryblok(blogData);
 
-    // 返回更多的 Storyblok 相关信息
+    // 返回简化的响应信息
+    const previewLink = `https://app.storyblok.com/#/me/spaces/${SPACE_ID}/stories/0/0/${result.story.id}`;
+    
     res.json({
       success: true,
-      slug,
-      spaceId: SPACE_ID,
-      storyId: result.story.id,
-      fullSlug: `${slug_prefix}${slug}`,
+      previewLink,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

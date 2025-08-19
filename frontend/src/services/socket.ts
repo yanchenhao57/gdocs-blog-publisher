@@ -6,6 +6,8 @@ import {
   SocketConfig,
   EventListener,
   EventListeners,
+  SocketEventMap,
+  TypedEventListener,
 } from '../types/socket';
 
 /**
@@ -231,7 +233,33 @@ class SocketService {
   }
 
   /**
-   * 添加事件监听器
+   * 添加类型安全的事件监听器
+   */
+  onTyped<T extends keyof SocketEventMap>(
+    eventType: T, 
+    listener: TypedEventListener<T>
+  ): () => void {
+    // 转换为通用的监听器格式
+    const genericListener = listener as EventListener;
+    
+    if (!this.eventListeners[eventType]) {
+      this.eventListeners[eventType] = [];
+    }
+    this.eventListeners[eventType].push(genericListener);
+
+    // 如果socket已存在（无论是否连接），立即设置监听器
+    if (this.socket) {
+      this.socket.on(eventType as any, genericListener as any);
+    }
+
+    // 返回取消订阅函数
+    return () => {
+      this.off(eventType as SocketEventType, genericListener);
+    };
+  }
+
+  /**
+   * 添加事件监听器（原有方法，保持向后兼容）
    */
   on(eventType: SocketEventType, listener: EventListener): void {
     if (!this.eventListeners[eventType]) {
@@ -273,7 +301,7 @@ class SocketService {
   /**
    * 发送消息到服务器
    */
-  emit(eventType: string, data?: any): void {
+  emit(eventType: string, data?: Record<string, unknown>): void {
     if (this.socket?.connected) {
       this.socket.emit(eventType, data);
     } else {
@@ -284,7 +312,7 @@ class SocketService {
   /**
    * 发送消息并等待响应
    */
-  emitWithAck(eventType: string, data?: any): Promise<any> {
+  emitWithAck(eventType: string, data?: Record<string, unknown>): Promise<unknown> {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
         reject(new Error('Socket not connected'));
@@ -295,7 +323,7 @@ class SocketService {
         reject(new Error('Socket emit timeout'));
       }, this.config.timeout);
 
-      this.socket!.emit(eventType, data, (response: any) => {
+      this.socket!.emit(eventType, data, (response: unknown) => {
         clearTimeout(timeout);
         resolve(response);
       });
@@ -345,7 +373,7 @@ class SocketService {
   /**
    * 设置认证信息
    */
-  setAuth(auth: any): void {
+  setAuth(auth: Record<string, unknown>): void {
     if (this.socket) {
       this.socket.auth = auth;
     }

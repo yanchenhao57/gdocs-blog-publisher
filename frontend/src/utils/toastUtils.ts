@@ -19,7 +19,7 @@ export class ToastUtils {
    * Show a success toast
    */
   static success(message: string, options: ToastOptions = {}) {
-    toast.success(message, {
+    return toast.success(message, {
       duration: options.duration || 4000,
       description: options.description,
       action: options.action,
@@ -30,7 +30,7 @@ export class ToastUtils {
    * Show an error toast
    */
   static error(title: string, message?: string, options: ToastOptions = {}) {
-    toast.error(title, {
+    return toast.error(title, {
       duration: options.duration || 5000,
       description: message || options.description,
       action: options.action,
@@ -41,7 +41,7 @@ export class ToastUtils {
    * Show an info toast
    */
   static info(message: string, options: ToastOptions = {}) {
-    toast.info(message, {
+    return toast.info(message, {
       duration: options.duration || 4000,
       description: options.description,
       action: options.action,
@@ -52,7 +52,7 @@ export class ToastUtils {
    * Show a warning toast
    */
   static warning(message: string, options: ToastOptions = {}) {
-    toast.warning(message, {
+    return toast.warning(message, {
       duration: options.duration || 4000,
       description: options.description,
       action: options.action,
@@ -71,7 +71,7 @@ export class ToastUtils {
   /**
    * Handle and display errors in a consistent way
    */
-  static handleError(error: any, context?: string) {
+  static handleError(error: unknown, context?: string) {
     console.error(`${context ? `${context}: ` : ''}`, error);
     
     let parsedError: ParsedError;

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { SocketConnectionStatus } from '../types/socket';
 import documentSocketService from '../services/documentSocket';
+import { ToastUtils } from '../utils/toastUtils';
 
 interface SocketContextType {
   connectionStatus: SocketConnectionStatus;
@@ -23,13 +24,60 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
 }) => {
   const [connectionStatus, setConnectionStatus] = useState<SocketConnectionStatus>('disconnected');
   const [isConnected, setIsConnected] = useState(false);
+  const hasShownInitialConnection = useRef(false);
+  const lastToastId = useRef<string | number | null>(null);
+  const isInitialized = useRef(false);
 
   useEffect(() => {
+    // 防止React Strict Mode重复初始化
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
     // 监听连接状态变化
     const unsubscribe = documentSocketService.on('connectionStatusChanged', (data: any) => {
-      console.log('Connection status changed:', data);
-      setConnectionStatus(data.status);
-      setIsConnected(data.status === 'connected');
+      console.log('Connection status changed in SocketContext:', data);
+      const newStatus = data.status;
+      setConnectionStatus(newStatus);
+      setIsConnected(newStatus === 'connected');
+
+      // 处理连接状态Toast通知
+      if (lastToastId.current) {
+        ToastUtils.dismissById(lastToastId.current);
+      }
+
+      switch (newStatus) {
+        case 'connected':
+          // 首次连接（页面加载）不显示Toast，避免刷新时的提示
+          if (hasShownInitialConnection.current) {
+            lastToastId.current = ToastUtils.success("🔌 Socket Reconnected", {
+              description: "Real-time notifications restored",
+              duration: 2000,
+            });
+          } else {
+            hasShownInitialConnection.current = true;
+          }
+          break;
+
+        case 'disconnected':
+          lastToastId.current = ToastUtils.warning("🔌 Socket Disconnected", {
+            description: "Real-time notifications are not available",
+            duration: 3000,
+          });
+          break;
+
+        case 'reconnecting':
+          lastToastId.current = ToastUtils.info("🔄 Reconnecting...", {
+            description: "Attempting to restore real-time connection",
+            duration: 2000,
+          });
+          break;
+
+        case 'error':
+          lastToastId.current = ToastUtils.error("❌ Connection Error", "Failed to connect to real-time services", {
+            duration: 4000,
+          });
+          break;
+      }
     });
 
     // 自动连接
@@ -37,7 +85,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
       handleAutoConnect();
     }
 
-    return unsubscribe;
+    return () => {
+      isInitialized.current = false;
+      unsubscribe();
+    };
   }, [autoConnect]);
 
   const handleAutoConnect = async () => {

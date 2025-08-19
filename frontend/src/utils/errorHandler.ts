@@ -5,42 +5,50 @@
 export interface ParsedError {
   title: string;
   message: string;
-  originalError?: any;
+  originalError?: Error | unknown;
 }
 
 export class ErrorHandler {
   /**
    * Parse complex error structures and extract meaningful messages
    */
-  static parseErrorMessage(errorData: any): string {
+  static parseErrorMessage(errorData: unknown): string {
+    // 类型保护：检查errorData是否为对象
+    if (!errorData || typeof errorData !== 'object') {
+      return typeof errorData === 'string' ? errorData : 'Unknown error occurred';
+    }
+
+    const errorObj = errorData as Record<string, unknown>;
+    
     // If errorData.error is a string, try to parse as JSON
-    if (typeof errorData.error === 'string') {
+    if (typeof errorObj.error === 'string') {
       try {
-        const parsedError = JSON.parse(errorData.error);
+        const parsedError = JSON.parse(errorObj.error as string);
         if (parsedError.error && parsedError.error.message) {
           return parsedError.error.message;
         }
       } catch (e) {
         // If parsing fails, return the original string
-        return errorData.error;
+        return errorObj.error as string;
       }
     }
     
     // If errorData.error is an object
-    if (errorData.error && typeof errorData.error === 'object') {
-      if (errorData.error.message) {
-        return errorData.error.message;
+    if (errorObj.error && typeof errorObj.error === 'object') {
+      const errorObject = errorObj.error as Record<string, unknown>;
+      if (errorObject.message) {
+        return errorObject.message as string;
       }
     }
     
     // If there's a direct message field
-    if (errorData.message) {
-      return errorData.message;
+    if (errorObj.message) {
+      return errorObj.message as string;
     }
     
     // If there's a direct error field as string
-    if (typeof errorData.error === 'string') {
-      return errorData.error;
+    if (typeof errorObj.error === 'string') {
+      return errorObj.error;
     }
     
     // Default generic error message
@@ -119,7 +127,7 @@ export class ErrorHandler {
   /**
    * Handle API response errors
    */
-  static handleApiError(errorData: any): ParsedError {
+  static handleApiError(errorData: unknown): ParsedError {
     const parsedMessage = this.parseErrorMessage(errorData);
     return this.categorizeError(parsedMessage);
   }
