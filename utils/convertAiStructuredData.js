@@ -36,12 +36,12 @@ async function detectLanguageWithAI(markdown) {
 请只返回以下JSON格式的结果，不要包含任何其他内容：
 
 {
-  "language": "en" | "jp"
+  "language": "en" | "ja"
 }
 
 判断标准：
 - 如果文档主要使用英文，返回 "en"
-- 如果文档主要使用日文（包含平假名、片假名、汉字），返回 "jp"
+- 如果文档主要使用日文（包含平假名、片假名、汉字），返回 "ja"
 - 如果文档包含多种语言，以主要语言为准
 
 只返回JSON，不要解释。`,
@@ -59,7 +59,7 @@ ${sampleText}${markdown.length > 2000 ? "..." : ""}
   const schema = {
     type: "object",
     properties: {
-      language: { type: "string", enum: ["en", "jp"] },
+      language: { type: "string", enum: ["en", "ja"] },
     },
     required: ["language"],
   };
@@ -171,13 +171,13 @@ async function generateAiStructuredData(
 async function performAiAnalysis(content, userLanguage = null) {
   // 1. 语言检测：优先使用用户指定语言，否则基于内容检测
   let detectedLanguage;
-  if (userLanguage && (userLanguage === "en" || userLanguage === "jp")) {
+  if (userLanguage && (userLanguage === "en" || userLanguage === "ja")) {
     detectedLanguage = userLanguage;
     console.log(`使用用户指定语言: ${userLanguage}`);
   } else {
     // 提取关键信息进行语言检测
     const keyInfo = extractKeyInfo(content);
-    detectedLanguage = keyInfo.language === "zh" ? "jp" : keyInfo.language; // 将中文映射为日文
+    detectedLanguage = keyInfo.language === "zh" ? "ja" : keyInfo.language; // 将中文映射为日文
     console.log(
       `🎯 基于内容检测到语言: ${keyInfo.language} → 映射为: ${detectedLanguage}`
     );
@@ -185,7 +185,7 @@ async function performAiAnalysis(content, userLanguage = null) {
 
   // 2. 根据检测到的语言调整提示词
   const languageInstructions =
-    detectedLanguage === "jp"
+    detectedLanguage === "ja"
       ? {
           seoTitleInstruction:
             "SEO优化的日文标题。简洁有力，包含相关关键词，用于meta title。",
@@ -216,9 +216,9 @@ async function performAiAnalysis(content, userLanguage = null) {
       content: `You are a content analysis assistant. Analyze the provided Markdown document and extract the following fields.
   
   IMPORTANT: The document language is detected as "${
-    detectedLanguage === "jp" ? "Japanese" : "English"
+    detectedLanguage === "ja" ? "Japanese" : "English"
   }". All text fields (except slug) MUST be in ${
-        detectedLanguage === "jp" ? "Japanese" : "English"
+        detectedLanguage === "ja" ? "Japanese" : "English"
       }.
   
   Return the result as **valid raw JSON only** — without explanations, comments, or code blocks.
@@ -239,7 +239,7 @@ async function performAiAnalysis(content, userLanguage = null) {
   3. Do not add any extra fields.
   4. Do not output broken characters or the "" symbol.
   5. All text fields MUST be in ${
-    detectedLanguage === "jp" ? "Japanese" : "English"
+    detectedLanguage === "ja" ? "Japanese" : "English"
   } (except slug which is always English lowercase).
   6. The "slug" field MUST only contain: lowercase letters (a-z), numbers (0-9), and hyphens (-). No other characters allowed.
   7. The "language" field MUST be exactly "${detectedLanguage}".
@@ -258,7 +258,7 @@ async function performAiAnalysis(content, userLanguage = null) {
   \`\`\`
   
   Remember: All text fields must be in ${
-    detectedLanguage === "jp" ? "Japanese" : "English"
+    detectedLanguage === "ja" ? "Japanese" : "English"
   }, and the slug must be lowercase English only.`,
     },
   ];
@@ -271,7 +271,7 @@ async function performAiAnalysis(content, userLanguage = null) {
       heading_h1: { type: "string" },
       slug: { type: "string", pattern: "^[a-z0-9-]+$" },
       reading_time: { type: "number", minimum: 1, maximum: 12 },
-      language: { type: "string", enum: ["en", "jp"] },
+      language: { type: "string", enum: ["en", "ja"] },
       cover_alt: { type: "string" },
     },
     required: [

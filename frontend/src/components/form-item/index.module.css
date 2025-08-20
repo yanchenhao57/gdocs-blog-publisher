@@ -1,0 +1,35 @@
+.form_item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.label_wrapper {
+  display: flex;
+}
+
+.label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.input_part {
+  width: 100%;
+}
+
+/* 深色模式支持 - 手动控制 */
+[data-theme="dark"] .label {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .required {
+  color: #f87171;
+}

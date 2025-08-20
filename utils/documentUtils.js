@@ -32,7 +32,7 @@ export function extractKeyInfo(markdown) {
 
   let language = "en";
   if (japaneseMatches.length > englishMatches.length * 0.3) {
-    language = "jp";
+    language = "ja";
   } else if (chineseMatches.length > englishMatches.length * 0.3) {
     language = "zh";
   }
@@ -83,7 +83,7 @@ export function detectLanguage(markdown) {
   const englishMatches = plainText.match(englishRegex) || [];
 
   // 基于字符数量判断主要语言
-  return japaneseMatches.length > englishMatches.length * 0.5 ? "jp" : "en";
+  return japaneseMatches.length > englishMatches.length * 0.5 ? "ja" : "en";
 }
 
 /**
@@ -112,14 +112,14 @@ export function generateFallbackMetaFromKeyInfo(keyInfo, markdown) {
   const { title, language, wordCount, firstParagraph, keywords, documentType } = keyInfo;
 
   // 使用智能生成的标题或默认标题
-  const fallbackTitle = title || (language === "jp" ? "記事タイトル" : "Article Title");
+  const fallbackTitle = title || (language === "ja" ? "記事タイトル" : "Article Title");
 
   // 生成描述
   let description = firstParagraph;
   if (!description || description.length > 150) {
     const topKeywords = Array.from(keywords).slice(0, 5).join(", ");
     switch (language) {
-      case "jp":
+      case "ja":
         description = `${fallbackTitle}について詳しく解説します。主な内容: ${topKeywords}`;
         break;
       case "zh":
@@ -137,7 +137,7 @@ export function generateFallbackMetaFromKeyInfo(keyInfo, markdown) {
   const readingTime = Math.max(1, Math.min(12, Math.ceil(wordCount / 200)));
 
   // 生成封面 alt
-  const coverAlt = language === "jp" 
+  const coverAlt = language === "ja" 
     ? `${fallbackTitle}のイメージ画像`
     : `Image representing ${fallbackTitle}`;
 
@@ -147,7 +147,7 @@ export function generateFallbackMetaFromKeyInfo(keyInfo, markdown) {
     heading_h1: fallbackTitle,
     slug,
     reading_time: readingTime,
-    language: language === "zh" ? "jp" : language, // 将中文映射为日文
+    language: language === "zh" ? "ja" : language, // 将中文映射为日文
     cover_alt: coverAlt,
     _fallback: true,
     _documentType: documentType,
@@ -176,7 +176,7 @@ export function generateSimpleFallbackMeta(markdown) {
   const slug = generateSlug(title);
   
   // 生成默认描述
-  const description = language === 'jp' ? 
+  const description = language === 'ja' ? 
     `${title}について詳しく解説します。` : 
     `Learn about ${title}.`;
 
@@ -187,7 +187,7 @@ export function generateSimpleFallbackMeta(markdown) {
     slug,
     reading_time: readingTime,
     language,
-    cover_alt: language === 'jp' ? `${title}のイメージ画像` : `Image for ${title}`,
+    cover_alt: language === 'ja' ? `${title}のイメージ画像` : `Image for ${title}`,
     _fallback: true,
   };
 }
@@ -204,11 +204,11 @@ export function validateAndFixResult(aiResult, detectedLanguage, content) {
 
   // 确保必填字段存在
   if (!result.seo_title) {
-    result.seo_title = detectedLanguage === "jp" ? "記事タイトル" : "Article Title";
+    result.seo_title = detectedLanguage === "ja" ? "記事タイトル" : "Article Title";
   }
   
   if (!result.seo_description) {
-    result.seo_description = detectedLanguage === "jp" ? 
+    result.seo_description = detectedLanguage === "ja" ? 
       "この記事について詳しく解説します。" : 
       "Learn more about this article.";
   }
@@ -230,7 +230,7 @@ export function validateAndFixResult(aiResult, detectedLanguage, content) {
   }
   
   if (!result.cover_alt) {
-    result.cover_alt = detectedLanguage === "jp" ? 
+    result.cover_alt = detectedLanguage === "ja" ? 
       `${result.seo_title}のイメージ画像` : 
       `Image for ${result.seo_title}`;
   }

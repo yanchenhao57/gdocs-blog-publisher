@@ -122,7 +122,7 @@ const response = await fetch("/api/convert", {
 | heading_h1      | String | 文章主标题                   |
 | slug            | String | URL 友好的 slug              |
 | reading_time    | Number | 预计阅读时间（分钟）         |
-| language        | String | 语言标识（"en"或"jp"）       |
+| language        | String | 语言标识（"en"或"ja"）       |
 | cover_alt       | String | 封面图 Alt 文本              |
 
 ### 2. 重新生成 AI 结构化数据接口

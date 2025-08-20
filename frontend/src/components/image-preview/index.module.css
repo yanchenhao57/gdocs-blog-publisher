@@ -1,0 +1,359 @@
+.container {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* 图片预览区域 */
+.preview_area {
+  position: relative;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background-color: #f9fafb;
+  overflow: hidden;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* 全宽模式下的预览区域 */
+.preview_area_fullwidth {
+  width: 100% !important;
+  min-height: 200px;
+}
+
+.preview_area:hover {
+  border-color: #9ca3af;
+  background-color: #f3f4f6;
+}
+
+/* 预览图片 */
+.preview_image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+
+
+.preview_image.hidden {
+  opacity: 0;
+}
+
+/* 占位符状态 */
+.placeholder_state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  height: 100%;
+}
+
+.placeholder_icon {
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.placeholder_title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.placeholder_text {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 加载状态 */
+.loading_state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(249, 250, 251, 0.9);
+  color: #6b7280;
+  font-size: 14px;
+  z-index: 2;
+}
+
+.loading_spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.error_state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #dc2626;
+  font-size: 14px;
+  z-index: 2;
+  text-align: center;
+}
+
+.error_state small {
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* 控制区域 */
+.controls_area {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 输入组 */
+.input_group {
+  margin-bottom: 16px;
+}
+
+.input_group:last-child {
+  margin-bottom: 0;
+}
+
+.input_label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* URL输入框 */
+.url_input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.url_input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.url_input::placeholder {
+  color: #9ca3af;
+}
+
+/* Alt文本输入框 */
+.alt_textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 44px;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.alt_textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.alt_textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* 图片信息 */
+.image_info {
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
+  
+  .preview_area {
+    min-height: 200px;
+  }
+  
+  .preview_area_fullwidth {
+    min-height: 180px;
+  }
+  
+  .placeholder_state {
+    padding: 30px 15px;
+  }
+  
+  .placeholder_title {
+    font-size: 16px;
+  }
+  
+  .placeholder_text {
+    font-size: 13px;
+  }
+  
+  .controls_area {
+    padding: 12px;
+  }
+  
+  .url_input,
+  .alt_textarea {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .preview_area {
+    min-height: 150px;
+  }
+  
+  .preview_area_fullwidth {
+    min-height: 150px;
+  }
+  
+  .placeholder_icon {
+    margin-bottom: 12px;
+  }
+  
+  .placeholder_title {
+    font-size: 15px;
+  }
+  
+  .placeholder_text {
+    font-size: 12px;
+  }
+}
+
+/* 深色模式支持 */
+[data-theme="dark"] .preview_area {
+  background-color: #1f2937;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .preview_area:hover {
+  border-color: #6b7280;
+  background-color: #374151;
+}
+
+[data-theme="dark"] .placeholder_icon {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .placeholder_title {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .placeholder_text {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .loading_state {
+  background-color: rgba(31, 41, 55, 0.9);
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .loading_spinner {
+  border-color: #4b5563;
+  border-top-color: #3b82f6;
+}
+
+[data-theme="dark"] .error_state {
+  color: #f87171;
+}
+
+[data-theme="dark"] .error_state small {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .controls_area {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .input_label {
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .url_input,
+[data-theme="dark"] .alt_textarea {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .url_input:focus,
+[data-theme="dark"] .alt_textarea:focus {
+  border-color: #3b82f6;
+}
+
+[data-theme="dark"] .url_input::placeholder,
+[data-theme="dark"] .alt_textarea::placeholder {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .image_info {
+  border-top-color: #374151;
+  color: #9ca3af;
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .preview_area {
+    border-width: 3px;
+    border-color: #000000;
+  }
+  
+  .placeholder_title {
+    color: #000000;
+    font-weight: 700;
+  }
+  
+  .url_input,
+  .alt_textarea {
+    border-width: 2px;
+    border-color: #000000;
+  }
+  
+  .controls_area {
+    border-width: 2px;
+    border-color: #000000;
+  }
+}

@@ -1,0 +1,254 @@
+/* 基础按钮样式 */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 按钮内容布局 */
+.button_content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.button_text {
+  line-height: 1;
+}
+
+.icon_left,
+.icon_right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 按钮变体 - 主要按钮 */
+.button_primary {
+  background-color: #000000;
+  color: #ffffff;
+  border: 2px solid #000000;
+}
+
+.button_primary:hover:not(:disabled) {
+  background-color: #1f1f1f;
+  border-color: #1f1f1f;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.button_primary:active:not(:disabled) {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 按钮变体 - 次要按钮 */
+.button_secondary {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
+
+.button_secondary:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.button_secondary:active:not(:disabled) {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮变体 - 边框按钮 */
+.button_outline {
+  background-color: transparent;
+  color: #000000;
+  border: 2px solid #e5e7eb;
+}
+
+.button_outline:hover:not(:disabled) {
+  border-color: #000000;
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.button_outline:active:not(:disabled) {
+  background-color: #f1f3f4;
+}
+
+/* 按钮变体 - 幽灵按钮 */
+.button_ghost {
+  background-color: transparent;
+  color: #6b7280;
+  border: 2px solid transparent;
+}
+
+.button_ghost:hover:not(:disabled) {
+  color: #000000;
+  background-color: #f8f9fa;
+}
+
+.button_ghost:active:not(:disabled) {
+  background-color: #f1f3f4;
+}
+
+/* 按钮尺寸 - 小按钮 */
+.button_small {
+  padding: 8px 16px;
+  font-size: 14px;
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.button_small .button_content {
+  gap: 6px;
+}
+
+.button_small .icon_left,
+.button_small .icon_right {
+  font-size: 14px;
+}
+
+/* 按钮尺寸 - 中等按钮 */
+.button_medium {
+  padding: 12px 24px;
+  font-size: 16px;
+  min-height: 44px;
+  border-radius: 10px;
+}
+
+.button_medium .icon_left,
+.button_medium .icon_right {
+  font-size: 16px;
+}
+
+/* 按钮尺寸 - 大按钮 */
+.button_large {
+  padding: 16px 32px;
+  font-size: 18px;
+  min-height: 52px;
+  border-radius: 12px;
+}
+
+.button_large .button_content {
+  gap: 10px;
+}
+
+.button_large .icon_left,
+.button_large .icon_right {
+  font-size: 18px;
+}
+
+/* 全宽按钮 */
+.button_fullwidth {
+  width: 100%;
+}
+
+/* 禁用状态 */
+.button_disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+
+/* 加载状态 */
+.button_loading {
+  cursor: wait;
+  position: relative;
+}
+
+.loading_content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 加载动画 */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 深色模式支持 */
+[data-theme="dark"] .button_primary {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+[data-theme="dark"] .button_primary:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+}
+
+[data-theme="dark"] .button_secondary {
+  background-color: #1f2937;
+  color: #ffffff;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .button_secondary:hover:not(:disabled) {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .button_outline {
+  color: #ffffff;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .button_outline:hover:not(:disabled) {
+  border-color: #ffffff;
+  background-color: #1f2937;
+}
+
+[data-theme="dark"] .button_ghost {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .button_ghost:hover:not(:disabled) {
+  color: #ffffff;
+  background-color: #1f2937;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .button_large {
+    padding: 14px 24px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  .button_medium {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+}

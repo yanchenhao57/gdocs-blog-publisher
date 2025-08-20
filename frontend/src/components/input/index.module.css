@@ -1,0 +1,63 @@
+.input_container {
+  display: flex;
+  width: 100%;
+}
+
+.input_field {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.input_field:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.input_field:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.input_field::placeholder {
+  color: #9ca3af;
+}
+
+.error_border {
+  border-color: #ff0000 !important;
+}
+
+.error_border:focus {
+  border-color: #ff0000 !important;
+  box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1) !important;
+}
+
+.valid_border {
+  border-color: #10b981 !important;
+}
+
+.valid_border:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* 悬停效果 */
+.input_field:hover:not(:disabled):not(:focus) {
+  border-color: #d1d5db;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .input_field {
+    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
+  }
+}

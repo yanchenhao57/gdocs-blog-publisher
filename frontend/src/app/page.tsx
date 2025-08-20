@@ -2,8 +2,8 @@
 
 import DocInput from "../components/DocInput";
 import ConversionMonitorWithStore from "../components/ConversionMonitorWithStore";
-import EditFieldsForm from "../components/EditFieldsForm";
-import PublishResultDisplay from "../components/PublishResultDisplay";
+import EditFieldsForm from "../components/edit-fields-form";
+import PublishResultDisplay from "../components/publish-result-display";
 
 import { useState, useEffect } from "react";
 import documentSocketService from "../services/documentSocket";
@@ -60,17 +60,17 @@ export default function Home() {
   // 根据工作流状态渲染不同的UI组件
   const renderCurrentStage = () => {
     console.log("Current workflow stage:", workflowStage); // 调试用
-    
+
     switch (workflowStage) {
       case WorkflowStage.INPUT_DOC_ID:
         return <DocInput onConvert={handleConvert} />;
-      
+
       case WorkflowStage.EDIT_FIELDS:
         return <EditFieldsForm />;
-      
+
       case WorkflowStage.PUBLISH_RESULT:
         return <PublishResultDisplay />;
-      
+
       default:
         return <DocInput onConvert={handleConvert} />;
     }
@@ -82,7 +82,7 @@ export default function Home() {
         width: "100vw",
         height: "100vh",
         margin: 0,
-        padding: 0,
+        padding: "24px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -94,19 +94,21 @@ export default function Home() {
 
       {/* 根据工作流状态渲染对应的UI组件 */}
       {renderCurrentStage()}
-      
+
       {/* 开发调试信息 */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ 
-          position: "fixed", 
-          bottom: "10px", 
-          right: "10px", 
-          padding: "10px",
-          backgroundColor: "rgba(0,0,0,0.8)",
-          color: "white",
-          borderRadius: "4px",
-          fontSize: "12px"
-        }}>
+      {process.env.NODE_ENV === "development" && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "10px",
+            right: "10px",
+            padding: "10px",
+            backgroundColor: "rgba(0,0,0,0.8)",
+            color: "white",
+            borderRadius: "4px",
+            fontSize: "12px",
+          }}
+        >
           Current Stage: {workflowStage}
         </div>
       )}

@@ -1,7 +1,7 @@
 // utils/googleAuth.js
 // 获取 Google OAuth2 客户端的工具函数
 import { google } from "googleapis";
-import { initProxy } from './proxyConfig.js';
+import { initProxy } from "./proxyConfig.js";
 
 /**
  * 获取 Google OAuth2 认证客户端
@@ -10,7 +10,7 @@ import { initProxy } from './proxyConfig.js';
 export async function getGoogleAuthClient() {
   // 自动初始化代理配置
   const proxyConfig = await initProxy();
-  
+
   const auth = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET
@@ -22,9 +22,9 @@ export async function getGoogleAuthClient() {
 
   // 如果检测到代理，配置 Google API 使用代理
   if (proxyConfig.httpAgent || proxyConfig.httpsAgent) {
-    console.log('🌐 使用代理配置 Google API 客户端');
+    console.log("🌐 使用代理配置 Google API 客户端");
     google.options({
-      ...proxyConfig
+      ...proxyConfig,
     });
   }
 

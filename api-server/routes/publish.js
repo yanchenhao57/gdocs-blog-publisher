@@ -61,9 +61,9 @@ router.post("/", async (req, res) => {
     }
 
     // 验证语言参数
-    if (!["en", "jp"].includes(language)) {
+    if (!["en", "ja"].includes(language)) {
       return res.status(400).json({
-        error: "无效的语言参数（必须是 en 或 jp）",
+        error: "无效的语言参数（必须是 en 或 ja）",
       });
     }
 
