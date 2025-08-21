@@ -331,6 +331,15 @@ export default function EditFieldsForm() {
     updateEditableField("coverAlt", value);
   };
 
+  const handleBack = () => {
+    if (previewMode) {
+      setPreviewMode(false);
+      setSlugConflict(null);
+    } else {
+      resetWorkflow();
+    }
+  };
+
   return (
     <div className={styles.wrapper}>
       <h1 className={styles.title}>
@@ -543,7 +552,7 @@ export default function EditFieldsForm() {
               </Button>
 
               {/* URL 冲突警告提示 */}
-              {previewMode && slugConflict?.exists && (
+              {previewMode && slugConflict?.exists && !isCheckingUrl && (
                 <div className={styles.conflict_warning}>
                   <strong>Warning:</strong> This URL already exists in
                   Storyblok. Publishing will overwrite the existing content.
@@ -569,7 +578,7 @@ export default function EditFieldsForm() {
             </div>
             {/* cancel 回到上一步 */}
             <div className={styles.actions_item}>
-              <Button variant="outline" onClick={handleStartOver}>
+              <Button variant="outline" onClick={handleBack}>
                 <div className={styles.actions_button_container}>
                   <ArrowLeft size={16} />
                   Back
