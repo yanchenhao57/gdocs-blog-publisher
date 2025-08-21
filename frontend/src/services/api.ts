@@ -1,7 +1,7 @@
-import { ErrorHandler } from '../utils/errorHandler';
-import { AiMeta } from '../types/socket';
+import { ErrorHandler } from "../utils/errorHandler";
+import { AiMeta } from "../types/socket";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 // Storyblok Richtext 内容块接口
 export interface StoryblokRichtextNode {
@@ -14,7 +14,7 @@ export interface StoryblokRichtextNode {
 
 // Storyblok Richtext 文档接口
 export interface StoryblokRichtext {
-  type: 'doc';
+  type: "doc";
   content: StoryblokRichtextNode[];
 }
 
@@ -48,30 +48,40 @@ export interface PublishResponse {
   previewLink: string;
 }
 
-class ApiService {
+export interface PrePublishCheckResponse {
+  exists: boolean;
+  full_slug: string;
+  story: {
+    id: string;
+    name: string;
+    slug: string;
+    full_slug: string;
+  } | null;
+}
 
+class ApiService {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     const defaultOptions: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       ...options,
     };
 
     try {
       const response = await fetch(url, defaultOptions);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = ErrorHandler.parseErrorMessage(errorData);
         throw new Error(errorMessage);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error);
@@ -81,31 +91,39 @@ class ApiService {
 
   // 转换 Google Docs 文档
   async convertDocument(docId: string): Promise<ConvertResponse> {
-    return this.request<ConvertResponse>('/api/convert', {
-      method: 'POST',
+    return this.request<ConvertResponse>("/api/convert", {
+      method: "POST",
       body: JSON.stringify({ docId }),
     });
   }
 
   // 重新生成 AI 结构化数据
   async regenerateAiData(
-    docId: string, 
-    markdown: string, 
+    docId: string,
+    markdown: string,
     userLanguage?: string
-  ): Promise<{ aiMeta: ConvertResponse['aiMeta']; message: string }> {
-    return this.request('/api/convert/regenerate', {
-      method: 'POST',
+  ): Promise<{ aiMeta: ConvertResponse["aiMeta"]; message: string }> {
+    return this.request("/api/convert/regenerate", {
+      method: "POST",
       body: JSON.stringify({ docId, markdown, userLanguage }),
     });
   }
 
   // 发布到 Storyblok
   async publishToStoryblok(data: PublishRequest): Promise<PublishResponse> {
-    return this.request<PublishResponse>('/api/publish', {
-      method: 'POST',
+    return this.request<PublishResponse>("/api/publish", {
+      method: "POST",
       body: JSON.stringify(data),
+    });
+  }
+
+  // 检查 Storyblok 中是否已存在该 full_slug
+  async checkStoryblokFullSlug(full_slug: string): Promise<PrePublishCheckResponse> {
+    return this.request<PrePublishCheckResponse>("/api/publish/pre-publish", {
+      method: "POST",
+      body: JSON.stringify({ full_slug }),
     });
   }
 }
 
-export const apiService = new ApiService(); 
+export const apiService = new ApiService();

@@ -12,7 +12,16 @@ import Input from "../input";
 import Tab, { TabItem } from "../tab";
 import FormItem from "../form-item";
 import styles from "./index.module.css";
-import { Bot, FileText, Edit3 } from "lucide-react";
+import {
+  Bot,
+  FileText,
+  Edit3,
+  ArrowLeft,
+  ArrowRight,
+  Rss,
+  Replace,
+  SquarePen,
+} from "lucide-react";
 import Dropdown, { DropdownOption } from "../dropdown";
 import NumberStepper from "../number-stepper";
 import {
@@ -22,16 +31,29 @@ import {
   JP_AUTHOR_MAP,
   EN_AUTHOR_MAP,
 } from "../../constants";
-import ImagePreviewExample from "../image-preview/ImagePreviewExample";
 import ImagePreview from "../image-preview";
 import Button from "../button";
-import ButtonExample from "../button/ButtonExample";
+import BlogCard from "../blog-card";
+import SeoMetaCardExample from "../seo-meta-card/SeoMetaCardExample";
+import SeoMetaCard from "../seo-meta-card";
+import HorizontalBlogCardExample from "../horizontal-blog-card/HorizontalBlogCardExample";
+import PrePublishCheck from "../pre-publish-check";
 
 export default function EditFieldsForm() {
   const editableFields = useEditableFields();
   const hasUnsavedChanges = useHasUnsavedChanges();
   const publishState = usePublishState();
   const canPublish = useCanPublish();
+  const [previewMode, setPreviewMode] = useState<boolean>(false);
+  const [storyStatus, setStoryStatus] = useState<"exit" | "not-exit">(
+    "not-exit"
+  );
+  const [loadingStoryStatus, setLoadingStoryStatus] = useState<boolean>(false);
+  const [slugConflict, setSlugConflict] = useState<{
+    exists: boolean;
+    fullSlug: string;
+  } | null>(null);
+  const [isCheckingUrl, setIsCheckingUrl] = useState(false);
 
   // 本地状态管理
   const [currentTabId, setCurrentTabId] = useState<string>("ai");
@@ -231,7 +253,11 @@ export default function EditFieldsForm() {
   };
 
   const handleStartOver = () => {
-    resetWorkflow();
+    if (previewMode) {
+      setPreviewMode(false);
+    } else {
+      resetWorkflow();
+    }
   };
 
   const handleRegenerateAi = async () => {
@@ -254,7 +280,11 @@ export default function EditFieldsForm() {
   };
 
   const handleNextStep = () => {
-    console.log("Next step");
+    if (!previewMode) {
+      setPreviewMode(true);
+    } else {
+      handlePublish();
+    }
   };
 
   const handleReadingTimeChange = (value: number) => {
@@ -269,12 +299,28 @@ export default function EditFieldsForm() {
     updateEditableField("canonical", value);
   };
 
+  // 处理 pre-publish 检查结果
+  const handlePrePublishCheckResult = (exists: boolean, fullSlug: string) => {
+    setSlugConflict({ exists, fullSlug });
+  };
+
+  const handleCheckStatusChange = (isChecking: boolean) => {
+    setIsCheckingUrl(isChecking);
+  };
+
   // 计算默认Canonical URL
   const defaultCanonicalUrl = useMemo(() => {
     const blogPath =
       editableFields.language === "ja" ? JP_BLOG_PATH : EN_BLOG_PATH;
     const slug = editableFields.slug;
-    return slug ? `${NOTTA_HOST}${blogPath}/${slug}` : "";
+    if (slug) {
+      const canonicalUrl = `${NOTTA_HOST}${blogPath}/${slug}`;
+      updateEditableField("canonical", canonicalUrl);
+      return canonicalUrl;
+    } else {
+      updateEditableField("canonical", "");
+      return "";
+    }
   }, [editableFields.language, editableFields.slug]);
 
   const handleCoverImageChange = (value: string) => {
@@ -296,121 +342,213 @@ export default function EditFieldsForm() {
       </h1>
       <div className={styles.content}>
         <div className={styles.form_container_wrapper}>
-          <div className={styles.form_container}>
-            {/* 文章标题 */}
-            <FormItem label="Article Title" required>
-              <Input
-                id="title"
-                value={editableFields.heading_h1}
-                onChange={handleTitleInputChange}
-                placeholder="Enter your article title"
-              />
-              <Tab
-                items={titleTabItems}
-                defaultActiveId={currentTabId}
-                onChange={handleTitleTabChange}
-                className={styles.article_title_tab}
-              />
-            </FormItem>
+          {previewMode ? (
+            <>
+              {/* 预览模式 */}
+              <div className={styles.preview_container}>
+                <div className={styles.preview_card}>
+                  <BlogCard
+                    title={editableFields.heading_h1}
+                    description={editableFields.seo_description}
+                    author={
+                      editableFields.language === "ja"
+                        ? JP_AUTHOR_MAP[
+                            editableFields.author_id as keyof typeof JP_AUTHOR_MAP
+                          ]
+                        : EN_AUTHOR_MAP[
+                            editableFields.author_id as keyof typeof EN_AUTHOR_MAP
+                          ]
+                    }
+                    readingTime={
+                      editableFields.reading_time.toString() +
+                      " " +
+                      (editableFields.reading_time <= 1 ? "minute" : "minutes")
+                    }
+                    publishDate={new Date().toISOString().split("T")[0]}
+                    coverImage={editableFields.coverUrl}
+                    showExternalIcon={true}
+                  />
+                </div>
+                {/* SEO meta */}
+                <div className={styles.seo_meta_container}>
+                  <SeoMetaCard
+                    title={editableFields.seo_title}
+                    description={editableFields.seo_description}
+                    canonical={editableFields.canonical}
+                    editable={false}
+                  />
+                </div>
 
-            {/* 语言选择 */}
-            <FormItem label="Language / 言語" required>
-              <Dropdown
-                options={languageOptions}
-                value={editableFields.language}
-                defaultValue={result?.aiMeta?.language || "en"}
-                placeholder="Select language"
-                searchable={false}
-                onChange={handleLanguageChange}
-              />
-            </FormItem>
-
-            {/* SEO title */}
-            <FormItem label="SEO Title" required>
-              <Input
-                id="seo-title"
-                value={editableFields.seo_title}
-                onChange={handleSeoTitleInputChange}
-                placeholder="Enter your SEO title"
-              />
-            </FormItem>
-
-            {/* SEO description */}
-            <FormItem label="SEO Description" required>
-              <Input
-                id="seo-description"
-                value={editableFields.seo_description}
-                onChange={handleSeoDescriptionInputChange}
-                placeholder="Enter your SEO description"
-              />
-            </FormItem>
-
-            {/* 文章 Slug */}
-            <FormItem label="Article Slug" required>
-              <Input
-                id="article-slug"
-                value={editableFields.slug}
-                onChange={handleArticleSlugChange}
-                placeholder="Enter your article slug"
-              />
-            </FormItem>
-
-            {/* Canonical URL */}
-            <FormItem label="Canonical URL" required>
-              <Input
-                id="canonical-url"
-                value={editableFields.canonical || defaultCanonicalUrl}
-                onChange={handleCanonicalUrlChange}
-                placeholder="Will be auto-generated based on language and slug"
-              />
-            </FormItem>
-
-            {/* 文章阅读时间 */}
-            <FormItem label="Reading Time" required>
-              <div className={styles.reading_time_container}>
-                <NumberStepper
-                  min={1}
-                  value={editableFields.reading_time}
-                  onChange={handleReadingTimeChange}
-                />
-                <span className={styles.reading_time_unit}>
-                  {editableFields.reading_time <= 1 ? "minute" : "minutes"}
-                </span>
+                {/* Pre-publish Check */}
+                <div className={styles.pre_publish_container}>
+                  <PrePublishCheck
+                    slug={editableFields.slug}
+                    language={editableFields.language as "en" | "ja"}
+                    onCheckResult={handlePrePublishCheckResult}
+                    onCheckStatusChange={handleCheckStatusChange}
+                    autoCheck={true}
+                  />
+                </div>
               </div>
-            </FormItem>
+            </>
+          ) : (
+            <>
+              {/* 编辑模式 */}
+              <div className={styles.form_container}>
+                {/* 文章标题 */}
+                <FormItem label="Article Title" required>
+                  <Input
+                    id="title"
+                    value={editableFields.heading_h1}
+                    onChange={handleTitleInputChange}
+                    placeholder="Enter your article title"
+                  />
+                  <Tab
+                    items={titleTabItems}
+                    defaultActiveId={currentTabId}
+                    onChange={handleTitleTabChange}
+                    className={styles.article_title_tab}
+                  />
+                </FormItem>
 
-            {/* 文章封面 */}
-            <FormItem label="Article Cover" required>
-              <ImagePreview
-                fullWidth={true}
-                aspectRatio={16 / 9}
-                imageUrl={editableFields.coverUrl}
-                altText={editableFields.coverAlt}
-                onImageUrlChange={handleCoverImageChange}
-                onAltTextChange={handleCoverImageAltChange}
-              />
-            </FormItem>
+                {/* 语言选择 */}
+                <FormItem label="Language / 言語" required>
+                  <Dropdown
+                    options={languageOptions}
+                    value={editableFields.language}
+                    defaultValue={result?.aiMeta?.language || "en"}
+                    placeholder="Select language"
+                    searchable={false}
+                    onChange={handleLanguageChange}
+                  />
+                </FormItem>
 
-            {/* 文章作者 */}
-            <FormItem label="Article Author" required>
-              <Dropdown
-                options={authorOptions}
-                value={editableFields.author_id}
-                defaultValue={getDefaultAuthorId()}
-                placeholder="Select author"
-                searchable={true}
-                onChange={handleAuthorChange}
-              />
-            </FormItem>
-          </div>
+                {/* SEO title */}
+                <FormItem label="SEO Title" required>
+                  <Input
+                    id="seo-title"
+                    value={editableFields.seo_title}
+                    onChange={handleSeoTitleInputChange}
+                    placeholder="Enter your SEO title"
+                  />
+                </FormItem>
+
+                {/* SEO description */}
+                <FormItem label="SEO Description" required>
+                  <Input
+                    id="seo-description"
+                    value={editableFields.seo_description}
+                    onChange={handleSeoDescriptionInputChange}
+                    placeholder="Enter your SEO description"
+                  />
+                </FormItem>
+
+                {/* 文章 Slug */}
+                <FormItem label="Article Slug" required>
+                  <Input
+                    id="article-slug"
+                    value={editableFields.slug}
+                    onChange={handleArticleSlugChange}
+                    placeholder="Enter your article slug"
+                  />
+                </FormItem>
+
+                {/* Canonical URL */}
+                <FormItem label="Canonical URL" required>
+                  <Input
+                    id="canonical-url"
+                    value={editableFields.canonical || defaultCanonicalUrl}
+                    onChange={handleCanonicalUrlChange}
+                    placeholder="Will be auto-generated based on language and slug"
+                  />
+                </FormItem>
+
+                {/* 文章阅读时间 */}
+                <FormItem label="Reading Time" required>
+                  <div className={styles.reading_time_container}>
+                    <NumberStepper
+                      min={1}
+                      value={editableFields.reading_time}
+                      onChange={handleReadingTimeChange}
+                    />
+                    <span className={styles.reading_time_unit}>
+                      {editableFields.reading_time <= 1 ? "minute" : "minutes"}
+                    </span>
+                  </div>
+                </FormItem>
+
+                {/* 文章封面 */}
+                <FormItem label="Article Cover" required>
+                  <ImagePreview
+                    fullWidth={true}
+                    aspectRatio={16 / 9}
+                    imageUrl={editableFields.coverUrl}
+                    altText={editableFields.coverAlt}
+                    onImageUrlChange={handleCoverImageChange}
+                    onAltTextChange={handleCoverImageAltChange}
+                  />
+                </FormItem>
+
+                {/* 文章作者 */}
+                <FormItem label="Article Author" required>
+                  <Dropdown
+                    options={authorOptions}
+                    value={editableFields.author_id}
+                    defaultValue={getDefaultAuthorId()}
+                    placeholder="Select author"
+                    searchable={true}
+                    onChange={handleAuthorChange}
+                  />
+                </FormItem>
+              </div>
+            </>
+          )}
         </div>
         <div className={styles.actions_container}>
           <div className={styles.actions_content}>
             {/* 发布 */}
             <div className={styles.actions_item}>
-              <Button className={styles.actions_button} onClick={handlePublish}>
-                Publish
+              <Button
+                className={`${styles.actions_button}`}
+                onClick={handleNextStep}
+                disabled={
+                  publishState.isPublishing || (previewMode && isCheckingUrl)
+                }
+              >
+                <div className={styles.actions_button_container}>
+                  {previewMode ? (
+                    <>
+                      {isCheckingUrl ? (
+                        <>
+                          <div className={styles.spinner}></div>
+                          Checking...
+                        </>
+                      ) : slugConflict?.exists ? (
+                        <>
+                          <SquarePen size={16} /> Update Story
+                        </>
+                      ) : (
+                        <>
+                          <Rss size={16} /> Publish
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      Next
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </div>
               </Button>
+
+              {/* URL 冲突警告提示 */}
+              {previewMode && slugConflict?.exists && (
+                <div className={styles.conflict_warning}>
+                  <strong>Warning:</strong> This URL already exists in
+                  Storyblok. Publishing will overwrite the existing content.
+                </div>
+              )}
             </div>
             {/* 重新生成AI */}
             <div className={styles.actions_item}>
@@ -432,7 +570,10 @@ export default function EditFieldsForm() {
             {/* cancel 回到上一步 */}
             <div className={styles.actions_item}>
               <Button variant="outline" onClick={handleStartOver}>
-                Back
+                <div className={styles.actions_button_container}>
+                  <ArrowLeft size={16} />
+                  Back
+                </div>
               </Button>
             </div>
           </div>

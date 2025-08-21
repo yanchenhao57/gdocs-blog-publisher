@@ -56,7 +56,6 @@ const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <div className={styles.loading_content}>
           <div className={styles.spinner} />
-          <span>加载中...</span>
         </div>
       ) : (
         <div className={styles.button_content}>

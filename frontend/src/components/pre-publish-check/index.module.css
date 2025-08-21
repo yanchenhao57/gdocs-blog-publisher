@@ -1,0 +1,191 @@
+/* Pre-publish Check 组件样式 */
+
+.container {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.header {
+  margin-bottom: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.fullSlug {
+  font-size: 14px;
+  color: #1f2937;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  background-color: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  word-break: break-all;
+  display: inline-block;
+}
+
+/* 检查状态 */
+.checking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1e40af;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #bfdbfe;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 结果显示 */
+.result {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.exists {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background-color: #fffae5;
+  color: #92400e;
+}
+
+.available {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background-color: #eafff4;
+  color: #065f46;
+}
+
+.statusIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.statusContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.statusTitle {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.statusDescription {
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.statusDescription strong {
+  font-weight: 600;
+}
+
+.storyInfo {
+  font-size: 12px;
+  opacity: 0.8;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerRight {
+    justify-content: space-between;
+  }
+
+  .fullSlug {
+    font-size: 12px;
+  }
+}
+
+/* 暗色模式支持 */
+[data-theme="dark"] .container {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .label {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .fullSlug {
+  color: #f9fafb;
+  background-color: #4b5563;
+}
+
+[data-theme="dark"] .checking {
+  background-color: #1e3a8a;
+  border-color: #3730a3;
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .spinner {
+  border-color: #3730a3;
+  border-top-color: #60a5fa;
+}
+
+[data-theme="dark"] .exists {
+  background-color: #78350f;
+  border-color: #92400e;
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .available {
+  background-color: #064e3b;
+  border-color: #059669;
+  color: #34d399;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container {
+    transition: none;
+  }
+
+  .spinner {
+    animation: none;
+  }
+}

@@ -1,7 +1,13 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { subscribeWithSelector } from "zustand/middleware";
-import { ConvertResponse, PublishRequest, PublishResponse, apiService } from "../services/api";
+import {
+  ConvertResponse,
+  PublishRequest,
+  PublishResponse,
+  PrePublishCheckResponse,
+  apiService,
+} from "../services/api";
 import { AiMeta } from "../types/socket";
 import { ToastUtils } from "../utils/toastUtils";
 
@@ -192,9 +198,7 @@ export interface ConversionActions {
   startPublishing: () => void;
 
   // 发布成功
-  publishSuccess: (result: {
-    publishedUrl: string;
-  }) => void;
+  publishSuccess: (result: { publishedUrl: string }) => void;
 
   // 发布失败
   publishError: (error: string) => void;
@@ -209,12 +213,19 @@ export interface ConversionActions {
   // === API调用Actions ===
   // 调用转换API并处理工作流状态
   convertDocument: (docId: string) => Promise<void>;
-  
+
   // 重新生成AI数据
-  regenerateAiData: (docId: string, markdown: string, userLanguage?: string) => Promise<void>;
-  
+  regenerateAiData: (
+    docId: string,
+    markdown: string,
+    userLanguage?: string
+  ) => Promise<void>;
+
   // 发布到Storyblok
   publishToStoryblok: () => Promise<void>;
+
+  // 检查 Storyblok 中是否已存在该 full_slug
+  checkStoryblokFullSlug: (full_slug: string) => Promise<PrePublishCheckResponse>;
 }
 
 export type ConversionStore = ConversionState & ConversionActions;
@@ -752,151 +763,165 @@ export const useConversionStore = create<ConversionStore>()(
 
         // === 整体重置 ===
 
-                 // 重置到初始状态（重新开始工作流）
-         resetWorkflow: () => {
-           set(
-             () => ({
-               ...initialState,
-             }),
-             false,
-             "resetWorkflow"
-           );
-         },
+        // 重置到初始状态（重新开始工作流）
+        resetWorkflow: () => {
+          set(
+            () => ({
+              ...initialState,
+            }),
+            false,
+            "resetWorkflow"
+          );
+        },
 
-         // === API调用Actions ===
+        // === API调用Actions ===
 
-         // 调用转换API并处理工作流状态
-         convertDocument: async (docId: string) => {
-           try {
-             // 1. 开始转换流程
-             get().startConversion(docId);
+        // 调用转换API并处理工作流状态
+        convertDocument: async (docId: string) => {
+          try {
+            // 1. 开始转换流程
+            get().startConversion(docId);
 
-             // 2. 显示开始转换的toast
-             ToastUtils.info("🚀 Document Conversion Started", {
-               description: `Starting conversion process for document: ${docId}`,
-               duration: 3000,
-             });
+            // 2. 显示开始转换的toast
+            ToastUtils.info("🚀 Document Conversion Started", {
+              description: `Starting conversion process for document: ${docId}`,
+              duration: 3000,
+            });
 
-             // 3. 调用API
-             const result = await apiService.convertDocument(docId);
+            // 3. 调用API
+            const result = await apiService.convertDocument(docId);
 
-             // 4. API调用成功 - 更新转换结果
-             get().completeConversion(result);
+            // 4. API调用成功 - 更新转换结果
+            get().completeConversion(result);
 
-             // 5. 使用API返回的真实数据初始化可编辑字段
-             get().initializeEditableFields(result.aiMeta, result);
+            // 5. 使用API返回的真实数据初始化可编辑字段
+            get().initializeEditableFields(result.aiMeta, result);
 
-             // 6. 进入编辑字段阶段
-             get().enterEditFieldsStage();
+            // 6. 进入编辑字段阶段
+            get().enterEditFieldsStage();
 
-             console.log("📋 转换完成，API响应:", result);
+            console.log("📋 转换完成，API响应:", result);
+          } catch (error) {
+            // 处理错误
+            ToastUtils.handleError(error, "Document conversion failed");
 
-           } catch (error) {
-             // 处理错误
-             ToastUtils.handleError(error, "Document conversion failed");
-             
-             // 更新错误状态
-             get().failConversion(
-               error instanceof Error ? error.message : "Unknown error occurred"
-             );
-           }
-         },
+            // 更新错误状态
+            get().failConversion(
+              error instanceof Error ? error.message : "Unknown error occurred"
+            );
+          }
+        },
 
-         // 重新生成AI数据
-         regenerateAiData: async (docId: string, markdown: string, userLanguage?: string) => {
-           try {
-             // 1. 开始AI重新生成
-             get().startAiAnalysis();
+        // 重新生成AI数据
+        regenerateAiData: async (
+          docId: string,
+          markdown: string,
+          userLanguage?: string
+        ) => {
+          try {
+            // 1. 开始AI重新生成
+            get().startAiAnalysis();
 
-             // 2. 显示开始Toast
-             ToastUtils.info("🤖 Regenerating AI Data", {
-               description: "Re-analyzing document content with AI...",
-               duration: 3000,
-             });
+            // 2. 显示开始Toast
+            ToastUtils.info("🤖 Regenerating AI Data", {
+              description: "Re-analyzing document content with AI...",
+              duration: 3000,
+            });
 
-             // 3. 调用API
-             const response = await apiService.regenerateAiData(docId, markdown, userLanguage);
+            // 3. 调用API
+            const response = await apiService.regenerateAiData(
+              docId,
+              markdown,
+              userLanguage
+            );
 
-             // 4. 更新AI分析结果
-             get().completeAiAnalysis(response.aiMeta, response.message);
+            // 4. 更新AI分析结果
+            get().completeAiAnalysis(response.aiMeta, response.message);
 
-             // 5. 更新可编辑字段
-             const currentResult = get().result;
-             if (currentResult) {
-               get().initializeEditableFields(response.aiMeta, currentResult);
-             }
+            // 5. 更新可编辑字段
+            const currentResult = get().result;
+            if (currentResult) {
+              get().initializeEditableFields(response.aiMeta, currentResult);
+            }
 
-             // 6. 显示成功Toast
-             ToastUtils.success("🎯 AI Data Regenerated", {
-               description: response.message || "AI analysis completed successfully",
-               duration: 4000,
-             });
+            // 6. 显示成功Toast
+            ToastUtils.success("🎯 AI Data Regenerated", {
+              description:
+                response.message || "AI analysis completed successfully",
+              duration: 4000,
+            });
 
-             console.log("🤖 AI数据重新生成完成:", response);
+            console.log("🤖 AI数据重新生成完成:", response);
+          } catch (error) {
+            // 处理错误
+            ToastUtils.handleError(error, "AI data regeneration failed");
 
-           } catch (error) {
-             // 处理错误
-             ToastUtils.handleError(error, "AI data regeneration failed");
-             
-             // 更新AI分析失败状态
-             get().failAiAnalysis(
-               error instanceof Error ? error.message : "AI regeneration failed",
-               "Failed to regenerate AI data"
-             );
-           }
-         },
+            // 更新AI分析失败状态
+            get().failAiAnalysis(
+              error instanceof Error ? error.message : "AI regeneration failed",
+              "Failed to regenerate AI data"
+            );
+          }
+        },
 
-         // 发布到Storyblok
-         publishToStoryblok: async () => {
-           const state = get();
-           
-           try {
-             // 1. 检查是否可以发布
-             if (state.workflowStage !== WorkflowStage.EDIT_FIELDS) {
-               throw new Error("Cannot publish: not in edit fields stage");
-             }
+        // 发布到Storyblok
+        publishToStoryblok: async () => {
+          const state = get();
 
-             if (!state.result) {
-               throw new Error("Cannot publish: no conversion result available");
-             }
+          try {
+            // 1. 检查是否可以发布
+            if (state.workflowStage !== WorkflowStage.EDIT_FIELDS) {
+              throw new Error("Cannot publish: not in edit fields stage");
+            }
 
-             // 2. 开始发布流程
-             get().startPublishing();
+            if (!state.result) {
+              throw new Error("Cannot publish: no conversion result available");
+            }
 
-             // 3. 构造发布数据
-             const publishData = {
-               ...state.editableFields,
-               body: state.result.richtext,
-               coverUrl: state.editableFields.coverUrl,
-               coverAlt: state.editableFields.coverAlt,
-             };
+            // 2. 开始发布流程
+            get().startPublishing();
 
-             // 4. 调用发布API
-             const publishResult = await apiService.publishToStoryblok(publishData);
+            // 3. 构造发布数据
+            const publishData = {
+              ...state.editableFields,
+              body: state.result.richtext,
+              coverUrl: state.editableFields.coverUrl,
+              coverAlt: state.editableFields.coverAlt,
+            };
 
-             // 5. 发布成功
-             get().publishSuccess({
-               publishedUrl: publishResult.previewLink,
-             });
+            // 4. 调用发布API
+            const publishResult = await apiService.publishToStoryblok(
+              publishData
+            );
 
-             // 6. 显示成功Toast
-             ToastUtils.success("🎉 Published Successfully", {
-               description: "Article published to Storyblok successfully!",
-               duration: 5000,
-             });
+            // 5. 发布成功
+            get().publishSuccess({
+              publishedUrl: publishResult.previewLink,
+            });
 
-             console.log("📤 发布成功:", publishResult);
+            // 6. 显示成功Toast
+            ToastUtils.success("🎉 Published Successfully", {
+              description: "Article published to Storyblok successfully!",
+              duration: 5000,
+            });
 
-           } catch (error) {
-             // 处理发布错误
-             const errorMessage = error instanceof Error ? error.message : "Unknown publish error";
-             
-             get().publishError(errorMessage);
-             
-             ToastUtils.handleError(error, "Publication failed");
-           }
-         },
-       }),
+            console.log("📤 发布成功:", publishResult);
+          } catch (error) {
+            // 处理发布错误
+            const errorMessage =
+              error instanceof Error ? error.message : "Unknown publish error";
+
+            get().publishError(errorMessage);
+
+            ToastUtils.handleError(error, "Publication failed");
+          }
+        },
+
+        // 检查 Storyblok 中是否已存在该 full_slug
+        checkStoryblokFullSlug: async (full_slug: string) => {
+          return await apiService.checkStoryblokFullSlug(full_slug);
+        },
+      }),
       {
         name: "conversion-store", // devtools中显示的名称
       }

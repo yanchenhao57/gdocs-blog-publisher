@@ -1,5 +1,6 @@
 import express from "express";
 import { publishBlogToStoryblok } from "../../utils/publishBlogToStoryblok.js";
+import { getStoryByFullSlugCDN } from "../../utils/storyblokCDNApi.js";
 import {
   BLOG_JP_PARENT_ID,
   BLOG_EN_PARENT_ID,
@@ -17,6 +18,51 @@ const router = express.Router();
 
 // Storyblok 空间ID
 const SPACE_ID = "159374";
+
+// Pre-publish 接口：检测 full_slug 是否已存在
+router.post("/pre-publish", async (req, res) => {
+  try {
+    const { full_slug } = req.body;
+
+    // 验证必填字段
+    if (!full_slug) {
+      return res.status(400).json({
+        error: "full_slug 为必填字段",
+      });
+    }
+
+    console.log(`🔍 检查 full_slug 是否存在: ${full_slug}`);
+
+    // 检查 Storyblok 中是否已存在该 full_slug
+    const existingStory = await getStoryByFullSlugCDN(full_slug);
+
+    const exists = !!existingStory;
+    
+    console.log(`📊 检查结果: ${exists ? '已存在' : '不存在'}`);
+    if (exists) {
+      console.log(`   - Story ID: ${existingStory.id}`);
+      console.log(`   - Story Name: ${existingStory.name}`);
+    }
+
+    res.json({
+      exists,
+      full_slug,
+      story: exists ? {
+        id: existingStory.id,
+        name: existingStory.name,
+        slug: existingStory.slug,
+        full_slug: existingStory.full_slug
+      } : null
+    });
+
+  } catch (err) {
+    console.error(`❌ Pre-publish 检查失败:`, err);
+    res.status(500).json({ 
+      error: err.message,
+      exists: false 
+    });
+  }
+});
 
 router.post("/", async (req, res) => {
   try {
