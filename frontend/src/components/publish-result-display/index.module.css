@@ -1,169 +1,155 @@
-/* Main container - based on EditFieldsForm */
-.wrapper {
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  max-height: 90vh;
-  overflow: hidden;
-  min-height: 90vh;
+/* Main container */
+.container {
+  min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
-.wrapper::-webkit-scrollbar {
-  display: none;
+.card {
+  width: 100%;
+  max-width: 640px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.header {
+  padding: 32px 32px 0 32px;
+  text-align: center;
 }
 
 .title {
-  text-align: center;
-  margin-bottom: 30px;
-  position: sticky;
-  top: 0;
-  background-color: white;
-  padding: 1rem 0;
-  z-index: 100;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
 }
 
 .content {
-  width: 100%;
-  background-color: #fff;
-  display: flex;
-  gap: 24px;
-  flex: 1;
-  align-items: flex-start;
-  overflow: hidden;
-  flex-wrap: wrap;
-}
-
-/* Result container */
-.result_container {
-  flex: 1;
-  overflow: auto;
-  height: 100%;
-  padding-right: 12px;
-}
-
-.result_container::-webkit-scrollbar {
-  display: none;
-}
-
-/* Status cards */
-.success_card,
-.error_card,
-.default_card {
-  background-color: #ffffff;
-  border-radius: 12px;
   padding: 32px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+/* Status states */
+.success_state,
+.error_state,
+.default_state {
+  width: 100%;
+}
+
+.icon_wrapper {
   margin-bottom: 24px;
-}
-
-.success_card {
-  border: 2px solid #10b981;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
-}
-
-.error_card {
-  border: 2px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
-}
-
-.default_card {
-  border: 2px solid #d1d5db;
-  background-color: #f9fafb;
-  text-align: center;
-  color: #6b7280;
-}
-
-/* Status header */
-.status_header {
-  text-align: center;
-  margin-bottom: 32px;
 }
 
 .success_icon {
   color: #10b981;
-  margin-bottom: 16px;
+  display: block;
+  margin: 0 auto;
 }
 
 .error_icon {
   color: #ef4444;
-  margin-bottom: 16px;
+  display: block;
+  margin: 0 auto;
 }
 
 .status_title {
   font-size: 24px;
   font-weight: 700;
   margin: 0 0 12px 0;
-  color: #1f2937;
+  color: #1e293b;
 }
 
 .status_description {
   font-size: 16px;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
+  color: #64748b;
+  margin: 0 0 32px 0;
+  line-height: 1.6;
 }
 
 /* Details section */
 .details_section {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 24px;
+  margin-bottom: 32px;
 }
 
-.details_title {
+.section_title {
   font-size: 18px;
   font-weight: 600;
   color: #374151;
   margin: 0 0 20px 0;
-  text-align: center;
 }
 
-.link_section {
-  text-align: center;
-  margin-bottom: 20px;
+.dashboard_button {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: 8px;
 }
 
-.url_info {
-  text-align: center;
+.dashboard_button:hover {
+  background-color: #1f2937 !important;
+  border-color: #1f2937 !important;
 }
 
-.url_info strong {
-  color: #374151;
-  font-size: 14px;
+/* Preview section */
+.preview_section {
+  margin-top: 24px;
+}
+
+.preview_label {
   display: block;
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  font-size: 14px;
 }
 
-.url_text {
+.url_container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.url_display {
+  flex: 1;
   font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
     "Courier New", monospace;
   font-size: 12px;
-  color: #6b7280;
-  background-color: #f3f4f6;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 0;
+  color: #475569;
   word-break: break-all;
   line-height: 1.4;
+  text-align: left;
 }
 
-/* Error details */
-.error_details {
-  background-color: #ffffff;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 16px;
+.copy_button {
+  flex-shrink: 0;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  background-color: transparent !important;
+  border: none !important;
+  color: #64748b !important;
+  transition: color 0.2s ease !important;
 }
 
-.error_details_title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #dc2626;
-  margin: 0 0 12px 0;
+.copy_button:hover {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+/* Error section */
+.error_section {
+  margin-top: 24px;
+  text-align: left;
 }
 
 .error_message {
@@ -172,64 +158,60 @@
   font-size: 14px;
   color: #7f1d1d;
   background-color: #fef2f2;
-  padding: 12px;
-  border-radius: 6px;
+  border: 1px solid #fecaca;
+  padding: 16px;
+  border-radius: 8px;
   word-break: break-word;
   line-height: 1.4;
 }
 
-/* Actions container - based on EditFieldsForm */
-.actions_container {
-  height: 100%;
-  max-width: 300px;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+.default_state {
+  color: #64748b;
+  font-size: 16px;
 }
 
-.actions_content {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 2px dashed #6b7280;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 40px;
+/* Footer */
+.footer {
+  padding: 24px 32px 32px 32px;
+  border-top: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  text-align: center;
 }
 
-.actions_item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.start_new_button {
+  background-color: transparent !important;
+  border: 1px solid #d1d5db !important;
+  color: #374151 !important;
+  padding: 10px 20px;
+  font-weight: 500;
+  border-radius: 8px;
 }
 
-.action_button {
-  width: 100%;
+.start_new_button:hover {
+  background-color: #f9fafb !important;
+  border-color: #9ca3af !important;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .wrapper {
-    max-width: 100%;
-    max-height: none;
+  .container {
+    padding: 16px;
     min-height: auto;
-    padding: 0 16px;
+  }
+
+  .card {
+    max-width: 100%;
+  }
+
+  .header {
+    padding: 24px 24px 0 24px;
+  }
+
+  .title {
+    font-size: 24px;
   }
 
   .content {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .result_container {
-    padding-right: 0;
-  }
-
-  .success_card,
-  .error_card,
-  .default_card {
     padding: 24px;
   }
 
@@ -237,21 +219,35 @@
     font-size: 20px;
   }
 
-  .details_section {
-    padding: 16px;
+  .footer {
+    padding: 20px 24px 24px 24px;
   }
 
-  .actions_container {
-    max-width: 100%;
-    min-width: auto;
-    justify-content: flex-start;
+  .url_container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .copy_button {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .success_card,
-  .error_card,
-  .default_card {
+  .container {
+    padding: 12px;
+  }
+
+  .header {
+    padding: 20px 20px 0 20px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .content {
     padding: 20px;
   }
 
@@ -259,12 +255,15 @@
     font-size: 18px;
   }
 
-  .details_title {
+  .section_title {
     font-size: 16px;
   }
 
-  .url_text {
+  .url_display {
     font-size: 11px;
-    padding: 6px 8px;
+  }
+
+  .footer {
+    padding: 16px 20px 20px 20px;
   }
 }

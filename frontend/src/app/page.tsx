@@ -9,7 +9,6 @@ import { useState, useEffect } from "react";
 import documentSocketService from "../services/documentSocket";
 import {
   useConversionStoreClient,
-  useConversionStatus,
   useWorkflowStage,
 } from "../stores/conversionStoreClient";
 import { WorkflowStage } from "../stores/conversionStore";
@@ -18,16 +17,8 @@ export default function Home() {
   const [currentDocId, setCurrentDocId] = useState<string>("");
 
   // Zustand状态管理（客户端安全版本）
-  const {
-    convertDocument,
-    resetConversion,
-    resetWorkflow,
-    isConverting,
-    currentStage,
-  } = useConversionStoreClient();
+  const { convertDocument, resetConversion } = useConversionStoreClient();
 
-  // 获取当前转换状态和工作流状态
-  const conversionStatus = useConversionStatus();
   const workflowStage = useWorkflowStage();
 
   useEffect(() => {

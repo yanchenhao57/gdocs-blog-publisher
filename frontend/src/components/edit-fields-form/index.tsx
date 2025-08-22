@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   useEditableFields,
-  useHasUnsavedChanges,
   usePublishState,
   useCanPublish,
   useConversionStoreClient,
@@ -11,6 +10,7 @@ import {
 import Input from "../input";
 import Tab, { TabItem } from "../tab";
 import FormItem from "../form-item";
+import Modal from "../modal";
 import styles from "./index.module.css";
 import {
   Bot,
@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Rss,
-  Replace,
   SquarePen,
 } from "lucide-react";
 import Dropdown, { DropdownOption } from "../dropdown";
@@ -34,21 +33,16 @@ import {
 import ImagePreview from "../image-preview";
 import Button from "../button";
 import BlogCard from "../blog-card";
-import SeoMetaCardExample from "../seo-meta-card/SeoMetaCardExample";
 import SeoMetaCard from "../seo-meta-card";
-import HorizontalBlogCardExample from "../horizontal-blog-card/HorizontalBlogCardExample";
 import PrePublishCheck from "../pre-publish-check";
 
 export default function EditFieldsForm() {
   const editableFields = useEditableFields();
-  const hasUnsavedChanges = useHasUnsavedChanges();
   const publishState = usePublishState();
   const canPublish = useCanPublish();
   const [previewMode, setPreviewMode] = useState<boolean>(false);
-  const [storyStatus, setStoryStatus] = useState<"exit" | "not-exit">(
-    "not-exit"
-  );
-  const [loadingStoryStatus, setLoadingStoryStatus] = useState<boolean>(false);
+  const [showBackConfirmModal, setShowBackConfirmModal] =
+    useState<boolean>(false);
   const [slugConflict, setSlugConflict] = useState<{
     exists: boolean;
     fullSlug: string;
@@ -56,7 +50,7 @@ export default function EditFieldsForm() {
   const [isCheckingUrl, setIsCheckingUrl] = useState(false);
 
   // 本地状态管理
-  const [currentTabId, setCurrentTabId] = useState<string>("ai");
+  const [currentTabId, setCurrentTabId] = useState<string>("document");
   const [customTitle, setCustomTitle] = useState<string>("");
 
   const {
@@ -67,16 +61,15 @@ export default function EditFieldsForm() {
     currentDocId,
     result,
   } = useConversionStoreClient();
-  console.log("🚀 ~ EditFieldsForm ~ result:", result);
 
   // 初始化时设置默认的标题来源
   useEffect(() => {
-    if (result?.aiMeta?.heading_h1) {
+    if (result?.firstH1Title) {
       setCurrentTabId("ai");
-      updateEditableField("heading_h1", result.aiMeta.heading_h1);
-    } else if (result?.firstH1Title) {
-      setCurrentTabId("document");
       updateEditableField("heading_h1", result.firstH1Title);
+    } else if (result?.aiMeta?.heading_h1) {
+      setCurrentTabId("document");
+      updateEditableField("heading_h1", result.aiMeta.heading_h1);
     }
   }, [result, updateEditableField]);
 
@@ -93,14 +86,6 @@ export default function EditFieldsForm() {
     if (!editableFields.author_id || !currentAuthorExists) {
       const randomAuthor = getRandomAuthor(currentLanguage);
       updateEditableField("author_id", randomAuthor);
-      console.log(
-        "Set random author for",
-        currentLanguage,
-        ":",
-        randomAuthor,
-        "->",
-        authorMap[randomAuthor as keyof typeof authorMap]
-      );
     }
   }, [editableFields.language, editableFields.author_id, updateEditableField]);
 
@@ -223,12 +208,10 @@ export default function EditFieldsForm() {
   const handleLanguageChange = (languageId: string, option: DropdownOption) => {
     // 更新语言，useEffect会自动处理作者的更新
     updateEditableField("language", languageId);
-    console.log("Language changed to:", languageId, option.label);
   };
 
   const handleAuthorChange = (authorId: string, option: DropdownOption) => {
     updateEditableField("author_id", authorId);
-    console.log("Author changed to:", authorId, option.label);
   };
 
   const handleSeoTitleInputChange = (value: string) => {
@@ -249,14 +232,6 @@ export default function EditFieldsForm() {
     } catch (error) {
       // 错误已经在publishToStoryblok action中处理了
       console.error("Publication failed:", error);
-    }
-  };
-
-  const handleStartOver = () => {
-    if (previewMode) {
-      setPreviewMode(false);
-    } else {
-      resetWorkflow();
     }
   };
 
@@ -336,182 +311,198 @@ export default function EditFieldsForm() {
       setPreviewMode(false);
       setSlugConflict(null);
     } else {
-      resetWorkflow();
+      setShowBackConfirmModal(true);
     }
+  };
+
+  const handleConfirmBack = () => {
+    setShowBackConfirmModal(false);
+    resetWorkflow();
+  };
+
+  const handleCancelBack = () => {
+    setShowBackConfirmModal(false);
   };
 
   return (
     <div className={styles.wrapper}>
-      <h1 className={styles.title}>
-        Configuring{" "}
-        <span style={{ fontWeight: "bold", color: "#007bff" }}>
-          ‹ {result?.firstH1Title} ›
-        </span>{" "}
-        content fields
-      </h1>
-      <div className={styles.content}>
-        <div className={styles.form_container_wrapper}>
-          {previewMode ? (
-            <>
-              {/* 预览模式 */}
-              <div className={styles.preview_container}>
-                <div className={styles.preview_card}>
-                  <BlogCard
-                    title={editableFields.heading_h1}
-                    description={editableFields.seo_description}
-                    author={
-                      editableFields.language === "ja"
-                        ? JP_AUTHOR_MAP[
-                            editableFields.author_id as keyof typeof JP_AUTHOR_MAP
-                          ]
-                        : EN_AUTHOR_MAP[
-                            editableFields.author_id as keyof typeof EN_AUTHOR_MAP
-                          ]
-                    }
-                    readingTime={
-                      editableFields.reading_time.toString() +
-                      " " +
-                      (editableFields.reading_time <= 1 ? "minute" : "minutes")
-                    }
-                    publishDate={new Date().toISOString().split("T")[0]}
-                    coverImage={editableFields.coverUrl}
-                    showExternalIcon={true}
-                  />
-                </div>
-                {/* SEO meta */}
-                <div className={styles.seo_meta_container}>
-                  <SeoMetaCard
-                    title={editableFields.seo_title}
-                    description={editableFields.seo_description}
-                    canonical={editableFields.canonical}
-                    editable={false}
-                  />
-                </div>
-
-                {/* Pre-publish Check */}
-                <div className={styles.pre_publish_container}>
-                  <PrePublishCheck
-                    slug={editableFields.slug}
-                    language={editableFields.language as "en" | "ja"}
-                    onCheckResult={handlePrePublishCheckResult}
-                    onCheckStatusChange={handleCheckStatusChange}
-                    autoCheck={true}
-                  />
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* 编辑模式 */}
-              <div className={styles.form_container}>
-                {/* 文章标题 */}
-                <FormItem label="Article Title" required>
-                  <Input
-                    id="title"
-                    value={editableFields.heading_h1}
-                    onChange={handleTitleInputChange}
-                    placeholder="Enter your article title"
-                  />
-                  <Tab
-                    items={titleTabItems}
-                    defaultActiveId={currentTabId}
-                    onChange={handleTitleTabChange}
-                    className={styles.article_title_tab}
-                  />
-                </FormItem>
-
-                {/* 语言选择 */}
-                <FormItem label="Language / 言語" required>
-                  <Dropdown
-                    options={languageOptions}
-                    value={editableFields.language}
-                    defaultValue={result?.aiMeta?.language || "en"}
-                    placeholder="Select language"
-                    searchable={false}
-                    onChange={handleLanguageChange}
-                  />
-                </FormItem>
-
-                {/* SEO title */}
-                <FormItem label="SEO Title" required>
-                  <Input
-                    id="seo-title"
-                    value={editableFields.seo_title}
-                    onChange={handleSeoTitleInputChange}
-                    placeholder="Enter your SEO title"
-                  />
-                </FormItem>
-
-                {/* SEO description */}
-                <FormItem label="SEO Description" required>
-                  <Input
-                    id="seo-description"
-                    value={editableFields.seo_description}
-                    onChange={handleSeoDescriptionInputChange}
-                    placeholder="Enter your SEO description"
-                  />
-                </FormItem>
-
-                {/* 文章 Slug */}
-                <FormItem label="Article Slug" required>
-                  <Input
-                    id="article-slug"
-                    value={editableFields.slug}
-                    onChange={handleArticleSlugChange}
-                    placeholder="Enter your article slug"
-                  />
-                </FormItem>
-
-                {/* Canonical URL */}
-                <FormItem label="Canonical URL" required>
-                  <Input
-                    id="canonical-url"
-                    value={editableFields.canonical || defaultCanonicalUrl}
-                    onChange={handleCanonicalUrlChange}
-                    placeholder="Will be auto-generated based on language and slug"
-                  />
-                </FormItem>
-
-                {/* 文章阅读时间 */}
-                <FormItem label="Reading Time" required>
-                  <div className={styles.reading_time_container}>
-                    <NumberStepper
-                      min={1}
-                      value={editableFields.reading_time}
-                      onChange={handleReadingTimeChange}
-                    />
-                    <span className={styles.reading_time_unit}>
-                      {editableFields.reading_time <= 1 ? "minute" : "minutes"}
-                    </span>
-                  </div>
-                </FormItem>
-
-                {/* 文章封面 */}
-                <FormItem label="Article Cover" required>
-                  <ImagePreview
-                    fullWidth={true}
-                    aspectRatio={16 / 9}
-                    imageUrl={editableFields.coverUrl}
-                    altText={editableFields.coverAlt}
-                    onImageUrlChange={handleCoverImageChange}
-                    onAltTextChange={handleCoverImageAltChange}
-                  />
-                </FormItem>
-
-                {/* 文章作者 */}
-                <FormItem label="Article Author" required>
-                  <Dropdown
-                    options={authorOptions}
-                    value={editableFields.author_id}
-                    defaultValue={getDefaultAuthorId()}
-                    placeholder="Select author"
-                    searchable={true}
-                    onChange={handleAuthorChange}
-                  />
-                </FormItem>
-              </div>
-            </>
+      <div className={styles.header}>
+        <h1 className={styles.title}>
+          Configuring Content Fields
+          {result?.firstH1Title && (
+            <span className={styles.document_name}>for "{result.firstH1Title}"</span>
           )}
+        </h1>
+      </div>
+      <div className={styles.content}>
+        <div className={styles.form_container_wrapper_outer}>
+          <div className={styles.form_container_wrapper}>
+            {previewMode ? (
+              <>
+                {/* 预览模式 */}
+                <div className={styles.preview_container}>
+                  <div className={styles.preview_card}>
+                    <BlogCard
+                      title={editableFields.heading_h1}
+                      description={editableFields.seo_description}
+                      author={
+                        editableFields.language === "ja"
+                          ? JP_AUTHOR_MAP[
+                              editableFields.author_id as keyof typeof JP_AUTHOR_MAP
+                            ]
+                          : EN_AUTHOR_MAP[
+                              editableFields.author_id as keyof typeof EN_AUTHOR_MAP
+                            ]
+                      }
+                      readingTime={
+                        editableFields.reading_time.toString() +
+                        " " +
+                        (editableFields.reading_time <= 1
+                          ? "minute"
+                          : "minutes")
+                      }
+                      publishDate={new Date().toISOString().split("T")[0]}
+                      coverImage={editableFields.coverUrl}
+                      showExternalIcon={true}
+                    />
+                  </div>
+                  {/* SEO meta */}
+                  <div className={styles.seo_meta_container}>
+                    <SeoMetaCard
+                      title={editableFields.seo_title}
+                      description={editableFields.seo_description}
+                      canonical={editableFields.canonical}
+                      editable={false}
+                    />
+                  </div>
+
+                  {/* Pre-publish Check */}
+                  <div className={styles.pre_publish_container}>
+                    <PrePublishCheck
+                      slug={editableFields.slug}
+                      language={editableFields.language as "en" | "ja"}
+                      onCheckResult={handlePrePublishCheckResult}
+                      onCheckStatusChange={handleCheckStatusChange}
+                      autoCheck={true}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 编辑模式 */}
+                <div className={styles.form_container}>
+                  {/* 文章标题 */}
+                  <FormItem label="Article Title" required>
+                    <Input
+                      id="title"
+                      value={editableFields.heading_h1}
+                      onChange={handleTitleInputChange}
+                      placeholder="Enter your article title"
+                    />
+                    <Tab
+                      items={titleTabItems}
+                      defaultActiveId={currentTabId}
+                      onChange={handleTitleTabChange}
+                      className={styles.article_title_tab}
+                    />
+                  </FormItem>
+
+                  {/* 语言选择 */}
+                  <FormItem label="Language / 言語" required>
+                    <Dropdown
+                      options={languageOptions}
+                      value={editableFields.language}
+                      defaultValue={result?.aiMeta?.language || "en"}
+                      placeholder="Select language"
+                      searchable={false}
+                      onChange={handleLanguageChange}
+                    />
+                  </FormItem>
+
+                  {/* SEO title */}
+                  <FormItem label="SEO Title" required>
+                    <Input
+                      id="seo-title"
+                      value={editableFields.seo_title}
+                      onChange={handleSeoTitleInputChange}
+                      placeholder="Enter your SEO title"
+                    />
+                  </FormItem>
+
+                  {/* SEO description */}
+                  <FormItem label="SEO Description" required>
+                    <Input
+                      id="seo-description"
+                      value={editableFields.seo_description}
+                      onChange={handleSeoDescriptionInputChange}
+                      placeholder="Enter your SEO description"
+                    />
+                  </FormItem>
+
+                  {/* 文章 Slug */}
+                  <FormItem label="Article Slug" required>
+                    <Input
+                      id="article-slug"
+                      value={editableFields.slug}
+                      onChange={handleArticleSlugChange}
+                      placeholder="Enter your article slug"
+                    />
+                  </FormItem>
+
+                  {/* Canonical URL */}
+                  <FormItem label="Canonical URL" required>
+                    <Input
+                      id="canonical-url"
+                      value={editableFields.canonical || defaultCanonicalUrl}
+                      onChange={handleCanonicalUrlChange}
+                      placeholder="Will be auto-generated based on language and slug"
+                    />
+                  </FormItem>
+
+                  {/* 文章阅读时间 */}
+                  <FormItem label="Reading Time" required>
+                    <div className={styles.reading_time_container}>
+                      <NumberStepper
+                        min={1}
+                        value={editableFields.reading_time}
+                        onChange={handleReadingTimeChange}
+                      />
+                      <span className={styles.reading_time_unit}>
+                        {editableFields.reading_time <= 1
+                          ? "minute"
+                          : "minutes"}
+                      </span>
+                    </div>
+                  </FormItem>
+
+                  {/* 文章封面 */}
+                  <FormItem label="Article Cover" required>
+                    <ImagePreview
+                      fullWidth={true}
+                      aspectRatio={16 / 9}
+                      imageUrl={editableFields.coverUrl}
+                      altText={editableFields.coverAlt}
+                      onImageUrlChange={handleCoverImageChange}
+                      onAltTextChange={handleCoverImageAltChange}
+                    />
+                  </FormItem>
+
+                  {/* 文章作者 */}
+                  <FormItem label="Article Author" required>
+                    <Dropdown
+                      options={authorOptions}
+                      value={editableFields.author_id}
+                      defaultValue={getDefaultAuthorId()}
+                      placeholder="Select author"
+                      searchable={true}
+                      onChange={handleAuthorChange}
+                    />
+                  </FormItem>
+                </div>
+              </>
+            )}
+          </div>
         </div>
         <div className={styles.actions_container}>
           <div className={styles.actions_content}>
@@ -560,22 +551,25 @@ export default function EditFieldsForm() {
               )}
             </div>
             {/* 重新生成AI */}
-            <div className={styles.actions_item}>
-              <Button
-                className={styles.actions_button}
-                onClick={handleRegenerateAi}
-                variant="secondary"
-              >
-                Regenerate AI
-              </Button>
-              <span className={styles.regenerate_ai_description}>
-                If you are not satisfied with the AI generated content, you can
-                regenerate it.{" "}
-                <strong>
-                  If language is not correct, please change the language first.
-                </strong>
-              </span>
-            </div>
+            {!previewMode && (
+              <div className={styles.actions_item}>
+                <Button
+                  className={styles.actions_button}
+                  onClick={handleRegenerateAi}
+                  variant="secondary"
+                >
+                  Regenerate AI
+                </Button>
+                <span className={styles.regenerate_ai_description}>
+                  If you are not satisfied with the AI generated content, you
+                  can regenerate it.{" "}
+                  <strong>
+                    If language is not correct, please change the language
+                    first.
+                  </strong>
+                </span>
+              </div>
+            )}
             {/* cancel 回到上一步 */}
             <div className={styles.actions_item}>
               <Button variant="outline" onClick={handleBack}>
@@ -588,6 +582,27 @@ export default function EditFieldsForm() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={showBackConfirmModal}
+        onClose={handleCancelBack}
+        title="Confirm Go Back"
+        primaryAction={{
+          label: "Confirm",
+          onClick: handleConfirmBack,
+          variant: "primary",
+        }}
+        secondaryAction={{
+          label: "Cancel",
+          onClick: handleCancelBack,
+          variant: "outline",
+        }}
+      >
+        <p>
+          If you go back to the previous step, your current editing progress
+          will not be saved. Are you sure you want to continue?
+        </p>
+      </Modal>
     </div>
   );
 }
