@@ -56,8 +56,9 @@ app.use("/api/convert", convertRouter);
 app.use("/api/publish", publishRouter);
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 API server running at http://localhost:${PORT}`);
+  console.log(`🌐 API server also accessible at http://192.168.101.79:${PORT}`);
   console.log(`🔌 Socket.io server ready`);
   console.log(`📱 Visit http://localhost:${PORT} to use the tool`);
 });

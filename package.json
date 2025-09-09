@@ -8,7 +8,13 @@
     "start": "DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
     "start:dev": "DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
     "start:smart": "node api-server/server.js",
-    "start:skip-upload": "SKIP_IMAGE_UPLOAD=true DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js"
+    "start:skip-upload": "SKIP_IMAGE_UPLOAD=true DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
+    "start:persistent": "./start-persistent.sh",
+    "stop": "./stop-services.sh",
+    "status": "pm2 status",
+    "logs": "pm2 logs",
+    "restart": "pm2 restart all",
+    "setup:no-sleep": "sudo pmset -a sleep 0 && sudo pmset -a displaysleep 10"
   },
   "type": "module",
   "keywords": [],
