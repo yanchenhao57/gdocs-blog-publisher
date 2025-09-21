@@ -7,6 +7,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import convertRouter from "./routes/convert.js";
 import publishRouter from "./routes/publish.js";
+import storyblokRouter from "./routes/storyblok.js";
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.set("io", io);
 // API 路由
 app.use("/api/convert", convertRouter);
 app.use("/api/publish", publishRouter);
+app.use("/api/storyblok", storyblokRouter);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {

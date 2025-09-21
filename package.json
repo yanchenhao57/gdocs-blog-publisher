@@ -8,7 +8,7 @@
     "start": "DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
     "start:dev": "DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
     "start:smart": "node api-server/server.js",
-    "start:skip-upload": "SKIP_IMAGE_UPLOAD=true DISABLE_PROXY_AUTO_DETECT=true node api-server/server.js",
+    "start:skip-upload": "SKIP_IMAGE_UPLOAD=true DISABLE_PROXY_AUTO_DETECT=false node api-server/server.js",
     "start:persistent": "./start-persistent.sh",
     "stop": "./stop-services.sh",
     "status": "pm2 status",

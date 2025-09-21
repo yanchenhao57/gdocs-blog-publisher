@@ -380,6 +380,10 @@ try {
 
 ## 更新日志
 
+### v1.1.0
+
+- TODO: Add new features here
+
 ### v1.0.0
 
 - 初始版本发布

@@ -59,6 +59,51 @@ export interface PrePublishCheckResponse {
   } | null;
 }
 
+// Storyblok Story 接口
+export interface StoryblokStory {
+  id: number;
+  name: string;
+  slug: string;
+  full_slug: string;
+  content: any;
+  created_at: string;
+  published_at: string;
+  uuid: string;
+  [key: string]: any;
+}
+
+// 获取单个 Story 响应接口
+export interface GetStoryResponse {
+  success: boolean;
+  data: {
+    story: StoryblokStory;
+  };
+}
+
+// 批量获取 Stories 响应接口
+export interface GetStoriesResponse {
+  success: boolean;
+  data: {
+    total: number;
+    success_count: number;
+    failed_count: number;
+    stories: StoryblokStory[];
+    failed: Array<{
+      full_slug: string;
+      error: string;
+    }>;
+  };
+}
+
+// 健康检查响应接口
+export interface HealthCheckResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+}
+
+// TODO: Add new interface definitions here
+
 class ApiService {
   private async request<T>(
     endpoint: string,
@@ -124,6 +169,28 @@ class ApiService {
       body: JSON.stringify({ full_slug }),
     });
   }
+
+  // 根据 full_slug 获取单个 Storyblok Story
+  async getStoryblokStory(full_slug: string): Promise<StoryblokStory> {
+    const response = await this.request<GetStoryResponse>(`/api/storyblok/story/${encodeURIComponent(full_slug)}`);
+    return response.data.story;
+  }
+
+  // 批量获取 Storyblok Stories
+  async getStoryblokStories(full_slugs: string[]): Promise<GetStoriesResponse["data"]> {
+    const response = await this.request<GetStoriesResponse>("/api/storyblok/stories", {
+      method: "POST",
+      body: JSON.stringify({ full_slugs }),
+    });
+    return response.data;
+  }
+
+  // Storyblok 健康检查
+  async checkStoryblokHealth(): Promise<HealthCheckResponse> {
+    return this.request<HealthCheckResponse>("/api/storyblok/health");
+  }
+
+  // TODO: Add new API methods here
 }
 
 export const apiService = new ApiService();
