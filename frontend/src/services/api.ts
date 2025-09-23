@@ -102,7 +102,25 @@ export interface HealthCheckResponse {
   timestamp: string;
 }
 
-// TODO: Add new interface definitions here
+// 内部链接优化相关接口
+export interface InternalLinkOptimizationRequest {
+  paragraphs: Array<{
+    index: number;
+    markdown: string;
+  }>;
+  links: Array<{
+    targetUrl: string;
+    anchorTexts: string[];
+  }>;
+}
+
+export interface InternalLinkOptimizationResponse {
+  changes: Array<{
+    index: number;
+    original: string;
+    modified: string;
+  }>;
+}
 
 class ApiService {
   private async request<T>(
@@ -190,7 +208,13 @@ class ApiService {
     return this.request<HealthCheckResponse>("/api/storyblok/health");
   }
 
-  // TODO: Add new API methods here
+  // 内部链接优化
+  async optimizeInternalLinks(data: InternalLinkOptimizationRequest): Promise<InternalLinkOptimizationResponse> {
+    return this.request<InternalLinkOptimizationResponse>("/api/internal-link-optimizer", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiService = new ApiService();

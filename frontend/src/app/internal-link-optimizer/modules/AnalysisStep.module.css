@@ -1,0 +1,307 @@
+/* 主容器 */
+.container {
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* 标题区域 */
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 16px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* 整体进度条 */
+.overallProgress {
+  margin-bottom: 48px;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progressLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.progressValue {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.progressBarContainer {
+  width: 100%;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  height: 8px;
+}
+
+.progressBar {
+  background-color: #3b82f6;
+  height: 8px;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+/* 分析阶段 */
+.phases {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.phaseCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.phaseCardDisabled {
+  opacity: 0.5;
+}
+
+.phaseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.phaseInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.phaseIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phaseIconCompleted {
+  background-color: #dcfce7;
+}
+
+.phaseIconLoading {
+  background-color: #dbeafe;
+}
+
+.phaseIconError {
+  background-color: #fee2e2;
+}
+
+.phaseIconPending {
+  background-color: #f3f4f6;
+}
+
+.phaseContent {
+  flex: 1;
+}
+
+.phaseTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.phaseDescription {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* 重试按钮 */
+.retryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2563eb;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.retryButton:hover {
+  color: #1d4ed8;
+  background-color: #eff6ff;
+}
+
+/* 阶段进度条 */
+.phaseProgressContainer {
+  margin-bottom: 16px;
+}
+
+.phaseProgressBar {
+  width: 100%;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  height: 6px;
+}
+
+.phaseProgressFill {
+  height: 6px;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.phaseProgressBlue {
+  background-color: #3b82f6;
+}
+
+.phaseProgressPurple {
+  background-color: #8b5cf6;
+}
+
+/* 状态消息 */
+.statusMessage {
+  font-size: 14px;
+}
+
+.statusMessageCompleted {
+  color: #047857;
+  background-color: #ecfdf5;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.statusMessageLoading {
+  color: #1e40af;
+  background-color: #eff6ff;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.statusMessageLoadingPurple {
+  color: #7c3aed;
+  background-color: #faf5ff;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.statusMessagePending {
+  color: #374151;
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.statusMessageDisabled {
+  color: #6b7280;
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.statusMessageError {
+  color: #991b1b;
+  background-color: #fef2f2;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* 完成状态 */
+.completionContainer {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.completionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: #dcfce7;
+  color: #065f46;
+  border-radius: 8px;
+  font-weight: 500;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* 图标颜色 */
+.iconGreen {
+  color: #059669;
+}
+
+.iconBlue {
+  color: #2563eb;
+}
+
+.iconRed {
+  color: #dc2626;
+}
+
+.iconGray {
+  color: #9ca3af;
+}
+
+.iconPurple {
+  color: #7c3aed;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .phaseCard {
+    padding: 16px;
+  }
+  
+  .phaseHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .retryButton {
+    align-self: flex-end;
+  }
+}
+
+/* 动画 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.iconSpin {
+  animation: spin 1s linear infinite;
+}

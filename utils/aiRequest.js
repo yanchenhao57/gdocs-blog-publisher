@@ -4,11 +4,17 @@
  * 包含内容长度检查和自动优化功能
  */
 
-import { validateRequestSize, optimizeForModel, estimateTokenCount } from './tokenUtils.js';
+import {
+  validateRequestSize,
+  optimizeForModel,
+  estimateTokenCount,
+} from "./tokenUtils.js";
+import { logFile } from "./logFile.js";
 
 /**
  * AI 请求配置选项
  * @typedef {Object} AIRequestOptions
+ * @property {string} [provider='inception'] - AI 服务提供商 ('inception' 或 'openai')
  * @property {string} [model='mercury-coder-small'] - AI 模型名称
  * @property {number} [max_tokens=1000] - 最大生成 token 数
  * @property {number} [temperature=0.7] - 生成温度（0-1）
@@ -37,6 +43,7 @@ import { validateRequestSize, optimizeForModel, estimateTokenCount } from './tok
 const aiRequest = async (messages, options = {}) => {
   // 默认配置
   const defaultOptions = {
+    provider: "inception", // 默认使用 Inception Labs
     model: "mercury-coder-small",
     max_tokens: 1000,
     temperature: 0,
@@ -50,24 +57,47 @@ const aiRequest = async (messages, options = {}) => {
 
   const config = { ...defaultOptions, ...options };
 
-  // 获取 API Key
-  const apiKey = process.env.INCEPTION_API_KEY;
-  if (!apiKey) {
-    throw new Error("❌ 缺少 INCEPTION_API_KEY 环境变量");
+  // 获取 API Key 根据提供商
+  let apiKey, apiUrl;
+  if (config.provider === "openai") {
+    apiKey = process.env.OPENAI_API_KEY;
+    apiUrl = "http://litellm-test3.mc-k8s-apn1.notta.io/v1/chat/completions";
+    if (!apiKey) {
+      throw new Error("❌ 缺少 OPENAI_API_KEY 环境变量");
+    }
+  } else {
+    apiKey = process.env.INCEPTION_API_KEY;
+    apiUrl = "https://api.inceptionlabs.ai/v1/chat/completions";
+    if (!apiKey) {
+      throw new Error("❌ 缺少 INCEPTION_API_KEY 环境变量");
+    }
   }
 
   // 格式化消息
   let formattedMessages = formatMessages(messages, config);
-  
+
   // 检查并优化内容长度
   if (config.autoOptimize) {
-    const optimization = optimizeForModel(formattedMessages, config.model, config.max_tokens + 1000);
-    
+    const optimization = optimizeForModel(
+      formattedMessages,
+      config.model,
+      config.max_tokens + 1000
+    );
+
     if (optimization.optimized) {
-      console.log(`🔧 内容已自动优化: ${optimization.originalTokens} -> ${optimization.estimatedTokens} tokens (${(optimization.estimatedTokens/optimization.originalTokens*100).toFixed(1)}%)`);
+      console.log(
+        `🔧 内容已自动优化: ${optimization.originalTokens} -> ${
+          optimization.estimatedTokens
+        } tokens (${(
+          (optimization.estimatedTokens / optimization.originalTokens) *
+          100
+        ).toFixed(1)}%)`
+      );
       formattedMessages = optimization.messages;
     } else {
-      console.log(`✅ 内容长度验证通过: ${optimization.estimatedTokens} tokens (${optimization.utilization}% 使用率)`);
+      console.log(
+        `✅ 内容长度验证通过: ${optimization.estimatedTokens} tokens (${optimization.utilization}% 使用率)`
+      );
     }
   }
 
@@ -81,8 +111,14 @@ const aiRequest = async (messages, options = {}) => {
   };
 
   // 发送请求（带重试）
-  const response = await sendRequestWithRetry(requestBody, config, apiKey);
+  const response = await sendRequestWithRetry(
+    requestBody,
+    config,
+    apiKey,
+    apiUrl
+  );
   console.log("🚀 ~ aiRequest ~ response:", response);
+  logFile("aiRequest", "json", "log", response);
 
   // 如果启用结构化输出，尝试解析 JSON
   if (config.structuredOutput) {
@@ -263,36 +299,40 @@ const parseStructuredOutput = (content) => {
  * @param {Object} requestBody - 请求体
  * @param {Object} config - 配置选项
  * @param {string} apiKey - API 密钥
+ * @param {string} apiUrl - API 地址
  * @returns {Promise<AIResponse>} AI 响应结果
  */
-const sendRequestWithRetry = async (requestBody, config, apiKey) => {
+const sendRequestWithRetry = async (requestBody, config, apiKey, apiUrl) => {
   let lastError;
 
   for (let attempt = 1; attempt <= config.retries; attempt++) {
     try {
       console.log(`🚀 AI 请求尝试 ${attempt}/${config.retries}...`);
 
-      const response = await fetch(
-        "https://api.inceptionlabs.ai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(requestBody),
-          signal: AbortSignal.timeout(config.timeout),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(config.timeout),
+      });
+      console.log("🚀 ~ sendRequestWithRetry ~ response:", response);
 
       if (!response.ok) {
         const errorText = await response.text();
-        
+
         // 特殊处理上下文长度超限错误
-        if (response.status === 400 && errorText.includes("context_length_exceeded")) {
-          throw new Error(`❌ 请求内容过长，超出模型上下文限制 (${response.status}): ${errorText}`);
+        if (
+          response.status === 400 &&
+          errorText.includes("context_length_exceeded")
+        ) {
+          throw new Error(
+            `❌ 请求内容过长，超出模型上下文限制 (${response.status}): ${errorText}`
+          );
         }
-        
+
         throw new Error(`❌ API 请求失败 (${response.status}): ${errorText}`);
       }
 
@@ -311,7 +351,7 @@ const sendRequestWithRetry = async (requestBody, config, apiKey) => {
       };
     } catch (error) {
       lastError = error;
-      console.log(`⚠️ 请求失败 (尝试 ${attempt}): ${error.message}`);
+      console.log(`⚠️ 请求失败 (尝试 ${attempt}): ${error}`);
 
       if (attempt < config.retries) {
         console.log(`⏳ ${config.retryDelay}ms 后重试...`);

@@ -9,13 +9,14 @@
  * @returns {number} 估算的token数量
  */
 export function estimateTokenCount(text) {
-  if (!text || typeof text !== 'string') return 0;
-  
+  if (!text || typeof text !== "string") return 0;
+
   // 粗略估算：英文平均1个token约4个字符，中日文平均1个token约1-2个字符
   const englishChars = text.match(/[a-zA-Z0-9\s]/g)?.length || 0;
-  const cjkChars = text.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g)?.length || 0;
+  const cjkChars =
+    text.match(/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g)?.length || 0;
   const otherChars = text.length - englishChars - cjkChars;
-  
+
   return Math.ceil(englishChars / 4 + cjkChars * 1.5 + otherChars / 3);
 }
 
@@ -26,9 +27,9 @@ export function estimateTokenCount(text) {
  */
 export function estimateMessagesTokenCount(messages) {
   if (!Array.isArray(messages)) return 0;
-  
+
   return messages.reduce((total, message) => {
-    if (typeof message === 'string') {
+    if (typeof message === "string") {
       return total + estimateTokenCount(message);
     }
     if (message && message.content) {
@@ -45,15 +46,15 @@ export function estimateMessagesTokenCount(messages) {
  * @returns {Object} 包含isValid和estimatedTokens的对象
  */
 export function validateRequestSize(messages, maxTokens = 120000) {
-  const estimatedTokens = Array.isArray(messages) 
+  const estimatedTokens = Array.isArray(messages)
     ? estimateMessagesTokenCount(messages)
     : estimateTokenCount(messages);
-    
+
   return {
     isValid: estimatedTokens <= maxTokens,
     estimatedTokens,
     maxTokens,
-    utilization: (estimatedTokens / maxTokens * 100).toFixed(1)
+    utilization: ((estimatedTokens / maxTokens) * 100).toFixed(1),
   };
 }
 
@@ -64,41 +65,52 @@ export function validateRequestSize(messages, maxTokens = 120000) {
  * @param {Object} options - 截取选项
  * @returns {Object} 包含truncated text和元信息的对象
  */
-export function intelligentTruncateText(text, maxTokens = 100000, options = {}) {
+export function intelligentTruncateText(
+  text,
+  maxTokens = 100000,
+  options = {}
+) {
   const {
     preserveStructure = true,
     preferStart = true,
-    minRetainRatio = 0.3
+    minRetainRatio = 0.3,
   } = options;
-  
-  if (!text || typeof text !== 'string') {
-    return { text: '', truncated: false, originalTokens: 0, newTokens: 0 };
+
+  if (!text || typeof text !== "string") {
+    return { text: "", truncated: false, originalTokens: 0, newTokens: 0 };
   }
-  
+
   const originalTokens = estimateTokenCount(text);
-  
+
   if (originalTokens <= maxTokens) {
-    return { 
-      text, 
-      truncated: false, 
-      originalTokens, 
-      newTokens: originalTokens 
+    return {
+      text,
+      truncated: false,
+      originalTokens,
+      newTokens: originalTokens,
     };
   }
-  
-  console.log(`正在截取内容: ${originalTokens} tokens -> ${maxTokens} tokens (${(maxTokens/originalTokens*100).toFixed(1)}%)`);
-  
+
+  console.log(
+    `正在截取内容: ${originalTokens} tokens -> ${maxTokens} tokens (${(
+      (maxTokens / originalTokens) *
+      100
+    ).toFixed(1)}%)`
+  );
+
   let result = text;
-  
+
   if (preserveStructure) {
     // 优先保留结构的智能截取
     result = truncateWithStructure(text, maxTokens, preferStart);
   } else {
     // 简单按比例截取
     const targetLength = Math.floor(text.length * (maxTokens / originalTokens));
-    result = preferStart ? text.substring(0, targetLength) : text.substring(text.length - targetLength);
+    result = preferStart
+      ? text.substring(0, targetLength)
+      : text.substring(text.length - targetLength);
   }
-  
+
   // 确保截取结果不会太短
   const finalTokens = estimateTokenCount(result);
   if (finalTokens < maxTokens * minRetainRatio) {
@@ -106,15 +118,15 @@ export function intelligentTruncateText(text, maxTokens = 100000, options = {}) 
     const targetLength = Math.floor(text.length * minRetainRatio);
     result = text.substring(0, targetLength);
   }
-  
+
   const newTokens = estimateTokenCount(result);
-  
+
   return {
     text: result,
     truncated: true,
     originalTokens,
     newTokens,
-    compressionRatio: (newTokens / originalTokens).toFixed(3)
+    compressionRatio: (newTokens / originalTokens).toFixed(3),
   };
 }
 
@@ -126,43 +138,46 @@ export function intelligentTruncateText(text, maxTokens = 100000, options = {}) 
  * @returns {string} 截取后的文本
  */
 function truncateWithStructure(text, maxTokens, preferStart = true) {
-  const lines = text.split('\n');
-  let result = '';
+  const lines = text.split("\n");
+  let result = "";
   let currentTokens = 0;
-  
+
   if (preferStart) {
     // 从开头截取，优先保留标题和重要内容
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const lineTokens = estimateTokenCount(line + '\n');
-      
+      const lineTokens = estimateTokenCount(line + "\n");
+
       if (currentTokens + lineTokens > maxTokens) {
         // 如果是标题，尝试保留（允许轻微超出）
-        if (line.startsWith('#') && currentTokens + lineTokens < maxTokens * 1.1) {
-          result += line + '\n';
+        if (
+          line.startsWith("#") &&
+          currentTokens + lineTokens < maxTokens * 1.1
+        ) {
+          result += line + "\n";
           currentTokens += lineTokens;
         }
         break;
       }
-      
-      result += line + '\n';
+
+      result += line + "\n";
       currentTokens += lineTokens;
     }
   } else {
     // 从结尾截取
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i];
-      const lineTokens = estimateTokenCount(line + '\n');
-      
+      const lineTokens = estimateTokenCount(line + "\n");
+
       if (currentTokens + lineTokens > maxTokens) {
         break;
       }
-      
-      result = line + '\n' + result;
+
+      result = line + "\n" + result;
       currentTokens += lineTokens;
     }
   }
-  
+
   return result.trim();
 }
 
@@ -170,12 +185,14 @@ function truncateWithStructure(text, maxTokens, preferStart = true) {
  * 模型的上下文限制配置
  */
 export const MODEL_LIMITS = {
-  'mercury-coder-small': 128000,
-  'mercury-coder-large': 128000,
-  'gpt-4': 8192,
-  'gpt-4-32k': 32768,
-  'gpt-3.5-turbo': 4096,
-  'gpt-3.5-turbo-16k': 16384
+  "mercury-coder-small": 128000,
+  "mercury-coder-large": 128000,
+  "gpt-4o-mini": 128000,
+  "gpt-4o": 128000,
+  "gpt-4": 8192,
+  "gpt-4-32k": 32768,
+  "gpt-3.5-turbo": 4096,
+  "gpt-3.5-turbo-16k": 16384,
 };
 
 /**
@@ -194,22 +211,26 @@ export function getModelLimit(modelName) {
  * @param {number} reservedTokens - 为响应预留的token数
  * @returns {Object} 优化后的消息和元信息
  */
-export function optimizeForModel(messages, modelName = 'mercury-coder-small', reservedTokens = 2000) {
+export function optimizeForModel(
+  messages,
+  modelName = "mercury-coder-small",
+  reservedTokens = 2000
+) {
   const modelLimit = getModelLimit(modelName);
   const maxInputTokens = modelLimit - reservedTokens;
-  
+
   const validation = validateRequestSize(messages, maxInputTokens);
-  
+
   if (validation.isValid) {
     return {
       messages,
       optimized: false,
-      ...validation
+      ...validation,
     };
   }
-  
+
   // 需要优化
-  if (typeof messages === 'string') {
+  if (typeof messages === "string") {
     const result = intelligentTruncateText(messages, maxInputTokens);
     return {
       messages: result.text,
@@ -217,36 +238,42 @@ export function optimizeForModel(messages, modelName = 'mercury-coder-small', re
       truncated: result.truncated,
       originalTokens: result.originalTokens,
       estimatedTokens: result.newTokens,
-      compressionRatio: result.compressionRatio
+      compressionRatio: result.compressionRatio,
     };
   }
-  
+
   if (Array.isArray(messages)) {
     // 对消息数组进行优化（优先截取最长的消息）
-    const optimizedMessages = messages.map(msg => {
-      if (typeof msg === 'string') {
+    const optimizedMessages = messages.map((msg) => {
+      if (typeof msg === "string") {
         const result = intelligentTruncateText(msg, maxInputTokens * 0.8);
         return result.text;
       }
       if (msg && msg.content) {
-        const result = intelligentTruncateText(msg.content, maxInputTokens * 0.8);
+        const result = intelligentTruncateText(
+          msg.content,
+          maxInputTokens * 0.8
+        );
         return { ...msg, content: result.text };
       }
       return msg;
     });
-    
-    const finalValidation = validateRequestSize(optimizedMessages, maxInputTokens);
-    
+
+    const finalValidation = validateRequestSize(
+      optimizedMessages,
+      maxInputTokens
+    );
+
     return {
       messages: optimizedMessages,
       optimized: true,
-      ...finalValidation
+      ...finalValidation,
     };
   }
-  
+
   return {
     messages,
     optimized: false,
-    ...validation
+    ...validation,
   };
 }

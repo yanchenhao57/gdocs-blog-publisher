@@ -1,0 +1,28 @@
+.wrapper {
+  padding: 8px 24px;
+  border-radius: 0px 2px 2px 0px;
+  border-left: 6px solid #3164ff;
+  background: #f5f7ff;
+  margin: 24px 0;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #111827;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 6px 16px;
+    margin: 20px 0;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 6px 12px;
+    margin: 16px 0;
+    font-size: 18px;
+  }
+}

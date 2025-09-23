@@ -1,30 +1,31 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import {
-  StepIndicator,
   InputStep,
   AnalysisStep,
   SuggestionsStep,
   OutputStep,
 } from "./modules";
 import { useInternalLinkOptimizerStore } from "../../stores/internalLinkOptimizerStore";
+import TabBar from "../../components/tab-bar";
 
 export default function InternalLinkOptimizer() {
   const {
     currentStep,
+    completedSteps,
     blogUrl,
     linkRows,
-    originalContent,
     analysisProgress,
     error,
     setBlogUrl,
     setLinkRows,
     startAnalysis,
     goBackToInput,
+    goToStep,
     startOver,
+    setCompletedSteps,
     addLinkRow,
     removeLinkRow,
     updateLinkRow,
@@ -47,7 +48,14 @@ export default function InternalLinkOptimizer() {
     }
   }, [error, setError]);
 
-  // TODO: Add new useEffect for analysis completion
+  // 监听步骤变化，确保当前步骤被标记为已完成
+  useEffect(() => {
+    if (currentStep && !completedSteps.has(currentStep as any)) {
+      // 如果当前步骤还没有被标记为完成，添加到完成列表
+      const updatedSteps = new Set([...completedSteps, currentStep as any]);
+      setCompletedSteps(updatedSteps);
+    }
+  }, [currentStep, completedSteps, setCompletedSteps]);
 
   // 自定义批量粘贴处理函数，添加 toast 提示
   const handleBulkPasteWithToast = (text: string) => {
@@ -86,43 +94,17 @@ export default function InternalLinkOptimizer() {
     }
   };
 
-  const getBackButton = () => {
-    switch (currentStep) {
-      case "suggestions":
-        return {
-          onClick: goBackToInput,
-          text: "Back to Configuration",
-        };
-      default:
-        return null;
+  const handleTabClick = (stepId: string) => {
+    if (stepId === "input") {
+      goBackToInput();
+    } else {
+      goToStep(stepId as any);
     }
   };
 
-  const backButton = getBackButton();
-
   return (
-    <div className="min-h-screen bg-white">
-      {/* Floating Step Indicator */}
-      <StepIndicator currentStep={currentStep} />
-
-      <div className="mx-auto max-w-6xl px-8 py-16">
-        {/* Back Button */}
-        {backButton && (
-          <div className="mb-8">
-            <button
-              onClick={backButton.onClick}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:shadow-sm transition-all"
-              style={{
-                fontFamily:
-                  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              }}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {backButton.text}
-            </button>
-          </div>
-        )}
-
+    <div className="min-h-screen bg-white flex flex-col">
+      <div className="flex-1 mx-auto px-8 py-16 pb-32">
         <div className="mb-16 text-center">
           <h1
             className="text-xl font-medium text-gray-900 mb-3"
@@ -164,15 +146,20 @@ export default function InternalLinkOptimizer() {
           {currentStep === "analysis" && (
             <AnalysisStep analysisProgress={analysisProgress} />
           )}
-          {currentStep === "suggestions" && <SuggestionsStep />}
-          {currentStep === "output" && (
-            <OutputStep
-              optimizedContent={originalContent}
-              onStartOver={startOver}
+          {currentStep === "suggestions" && (
+            <SuggestionsStep 
+              onProceedToOutput={() => goToStep("output")} 
             />
           )}
+          {currentStep === "output" && <OutputStep onStartOver={startOver} />}
         </div>
       </div>
+
+      <TabBar
+        currentStep={currentStep}
+        completedSteps={completedSteps}
+        onTabClick={handleTabClick}
+      />
     </div>
   );
 }
