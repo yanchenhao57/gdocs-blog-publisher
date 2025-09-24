@@ -104,8 +104,7 @@ The component is used in the `SuggestionsStep` component:
 import { useInternalLinkOptimizerStore } from "../../../stores/internalLinkOptimizerStore";
 
 function SuggestionsStep() {
-  const { storyData, analysisProgress } = useInternalLinkOptimizerStore();
-  const isAnalyzing = analysisProgress > 0 && analysisProgress < 100;
+  const { storyData, isAnalyzing } = useInternalLinkOptimizerStore();
 
   return (
     <div className="space-y-6">
@@ -114,7 +113,7 @@ function SuggestionsStep() {
       ) : (
         <div className="text-center text-gray-500">
           {isAnalyzing ? (
-            <div>Loading blog content... ({analysisProgress}%)</div>
+            <div>Loading blog content...</div>
           ) : (
             <div>No blog data available</div>
           )}

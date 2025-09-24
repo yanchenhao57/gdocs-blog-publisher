@@ -24,7 +24,7 @@ export interface Suggestion {
   accepted: boolean | null;
 }
 
-export type Step = "input" | "analysis" | "suggestions" | "optimization" | "output";
+export type Step = "input" | "suggestions" | "optimization" | "output";
 
 export interface OptimizationChange {
   index: number;

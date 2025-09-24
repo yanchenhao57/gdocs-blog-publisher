@@ -1,0 +1,43 @@
+/* 主页面容器 */
+.container {
+  max-width: 100%; /* max-w-screen-xl */
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* 内容区域 */
+.content {
+  width: 100%;
+  flex: 1;
+  margin: 0 auto;
+  padding-bottom: 160px;
+}
+
+/* 头部区域 */
+.header {
+  text-align: center;
+  padding: 48px 0;
+}
+
+.title {
+  font-size: 20px; /* text-xl */
+  font-weight: 500;
+  color: #111827; /* text-gray-900 */
+  margin-bottom: 12px; /* mb-3 */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.subtitle {
+  font-size: 14px; /* text-sm */
+  color: #6b7280; /* text-gray-500 */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* 步骤内容区域 */
+.stepContent {
+  /* 空的样式，用于语义化 */
+  width: 100%;
+}

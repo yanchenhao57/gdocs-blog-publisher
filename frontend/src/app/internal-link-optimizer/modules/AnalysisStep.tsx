@@ -11,28 +11,29 @@ import { useInternalLinkOptimizerStore } from "../../../stores/internalLinkOptim
 import styles from "./AnalysisStep.module.css";
 
 interface AnalysisStepProps {
-  analysisProgress: number;
+  // No longer need progress props
 }
 
 // 分析阶段定义
 type AnalysisPhase = "storyblok" | "ai" | "completed";
 
-export default function AnalysisStep({ analysisProgress }: AnalysisStepProps) {
+export default function AnalysisStep({}: AnalysisStepProps) {
   const {
     error,
     storyData,
     optimizationChanges,
-    storyblokProgress,
-    aiProgress,
+    isFetchStoryblokLoading,
+    isAnalyzing,
     startAnalysis,
     retryStoryblokFetch,
     retryAIAnalysis,
   } = useInternalLinkOptimizerStore();
 
-  // 根据进度和数据状态确定当前阶段
+  // 根据加载状态确定当前阶段
   const getCurrentPhase = (): AnalysisPhase => {
     if (optimizationChanges.length > 0) return "completed";
-    if (storyData && analysisProgress >= 50) return "ai";
+    if (storyData && isAnalyzing) return "ai";
+    if (isFetchStoryblokLoading) return "storyblok";
     return "storyblok";
   };
 
@@ -40,16 +41,16 @@ export default function AnalysisStep({ analysisProgress }: AnalysisStepProps) {
 
   // 计算各阶段的状态
   const getPhaseStatus = (phase: AnalysisPhase) => {
-    if (error) return "error";
-
     switch (phase) {
       case "storyblok":
+        if (error && !storyData) return "error";
         if (storyData) return "completed";
-        if (currentPhase === "storyblok") return "loading";
+        if (isFetchStoryblokLoading) return "loading";
         return "pending";
       case "ai":
+        if (error && storyData) return "error";
         if (optimizationChanges.length > 0) return "completed";
-        if (currentPhase === "ai") return "loading";
+        if (isAnalyzing) return "loading";
         if (storyData) return "pending";
         return "disabled";
       case "completed":
@@ -71,9 +72,7 @@ export default function AnalysisStep({ analysisProgress }: AnalysisStepProps) {
     startAnalysis();
   };
 
-  // 直接使用独立的进度状态
-  const getStoryblokProgress = () => storyblokProgress;
-  const getAIProgress = () => aiProgress;
+  // 移除进度条相关逻辑
 
   return (
     <div className={styles.container}>
@@ -84,19 +83,6 @@ export default function AnalysisStep({ analysisProgress }: AnalysisStepProps) {
         </p>
       </div>
 
-      {/* 整体进度条 */}
-      <div className={styles.overallProgress}>
-        <div className={styles.progressHeader}>
-          <span className={styles.progressLabel}>Overall Progress</span>
-          <span className={styles.progressValue}>{analysisProgress}%</span>
-        </div>
-        <div className={styles.progressBarContainer}>
-          <div
-            className={styles.progressBar}
-            style={{ width: `${analysisProgress}%` }}
-          />
-        </div>
-      </div>
 
       {/* 分析阶段 */}
       <div className={styles.phases}>
@@ -160,18 +146,6 @@ export default function AnalysisStep({ analysisProgress }: AnalysisStepProps) {
               )}
           </div>
 
-          {/* Storyblok 阶段进度条 */}
-          {(getPhaseStatus("storyblok") === "loading" ||
-            getPhaseStatus("storyblok") === "completed") && (
-            <div className={styles.phaseProgressContainer}>
-              <div className={styles.phaseProgressBar}>
-                <div
-                  className={`${styles.phaseProgressFill} ${styles.phaseProgressBlue}`}
-                  style={{ width: `${getStoryblokProgress()}%` }}
-                />
-              </div>
-            </div>
-          )}
 
           {/* 状态信息 */}
           <div className={styles.statusMessage}>
@@ -241,18 +215,6 @@ export default function AnalysisStep({ analysisProgress }: AnalysisStepProps) {
             )}
           </div>
 
-          {/* AI 阶段进度条 */}
-          {(getPhaseStatus("ai") === "loading" ||
-            getPhaseStatus("ai") === "completed") && (
-            <div className={styles.phaseProgressContainer}>
-              <div className={styles.phaseProgressBar}>
-                <div
-                  className={`${styles.phaseProgressFill} ${styles.phaseProgressPurple}`}
-                  style={{ width: `${getAIProgress()}%` }}
-                />
-              </div>
-            </div>
-          )}
 
           {/* 状态信息 */}
           <div className={styles.statusMessage}>

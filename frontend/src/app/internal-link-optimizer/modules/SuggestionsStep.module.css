@@ -1,0 +1,148 @@
+/* 主容器 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* 空状态 */
+.emptyState {
+  max-width: 768px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 48px 0;
+}
+
+.emptyStateText {
+  color: #6b7280;
+}
+
+/* 内容区域 */
+.contentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 加载卡片 */
+.loadingCard {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 32px;
+  text-align: center;
+}
+
+.loadingContent {
+  color: #6b7280;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #e5e7eb;
+  border-bottom-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 操作区域 */
+.actionSection {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.actionContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.actionContent {
+  text-align: center;
+  max-width: 448px;
+}
+
+.actionInfo {
+  margin-bottom: 16px;
+}
+
+/* 完成状态消息 */
+.completedMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #059669;
+  margin-bottom: 8px;
+}
+
+.completedMessageText {
+  font-weight: 500;
+}
+
+.actionDescription {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* 进行按钮 */
+.proceedButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 500;
+  padding: 12px 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  transition: all 0.2s ease;
+}
+
+.proceedButton:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* 待处理状态 */
+.pendingMessage {
+  color: #4b5563;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.pendingCount {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 禁用的进行按钮 */
+.proceedButtonDisabled {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #d1d5db;
+  color: #6b7280;
+  font-weight: 500;
+  padding: 12px 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: not-allowed;
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, BarChart3, CheckCircle, FileText, LucideIcon } from 'lucide-react';
+import { Settings, CheckCircle, FileText, LucideIcon } from 'lucide-react';
 import styles from './index.module.css';
 
 export interface TabItem {
@@ -16,7 +16,6 @@ interface TabBarProps {
 
 const defaultSteps: TabItem[] = [
   { id: "input", label: "Configure", icon: Settings },
-  { id: "analysis", label: "Analyze", icon: BarChart3 },
   { id: "suggestions", label: "Review", icon: CheckCircle },
   { id: "output", label: "Export", icon: FileText },
 ];

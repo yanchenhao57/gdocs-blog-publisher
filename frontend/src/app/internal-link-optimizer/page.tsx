@@ -2,14 +2,11 @@
 
 import React, { useEffect } from "react";
 import { toast } from "sonner";
-import {
-  InputStep,
-  AnalysisStep,
-  SuggestionsStep,
-  OutputStep,
-} from "./modules";
+import { InputStep, SuggestionsStep, OutputStep } from "./modules";
 import { useInternalLinkOptimizerStore } from "../../stores/internalLinkOptimizerStore";
 import TabBar from "../../components/tab-bar";
+import BottomBar from "./modules/bottom-bar";
+import styles from "./page.module.css";
 
 export default function InternalLinkOptimizer() {
   const {
@@ -17,7 +14,6 @@ export default function InternalLinkOptimizer() {
     completedSteps,
     blogUrl,
     linkRows,
-    analysisProgress,
     error,
     setBlogUrl,
     setLinkRows,
@@ -43,8 +39,6 @@ export default function InternalLinkOptimizer() {
         description: error,
         duration: 5000,
       });
-      // 显示 toast 后清除错误状态，避免重复显示
-      setTimeout(() => setError(null), 100);
     }
   }, [error, setError]);
 
@@ -103,30 +97,18 @@ export default function InternalLinkOptimizer() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex-1 mx-auto px-8 py-16 pb-32">
-        <div className="mb-16 text-center">
-          <h1
-            className="text-xl font-medium text-gray-900 mb-3"
-            style={{
-              fontFamily:
-                'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            }}
-          >
+    <div className={styles.container}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>
             Internal Link Optimizer
           </h1>
-          <p
-            className="text-sm text-gray-500"
-            style={{
-              fontFamily:
-                'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            }}
-          >
+          <p className={styles.subtitle}>
             Optimize your content with AI-powered internal linking suggestions
           </p>
         </div>
 
-        <div>
+        <div className={styles.stepContent}>
           {currentStep === "input" && (
             <InputStep
               blogUrl={blogUrl}
@@ -143,23 +125,14 @@ export default function InternalLinkOptimizer() {
               handleBulkPaste={handleBulkPasteWithToast}
             />
           )}
-          {currentStep === "analysis" && (
-            <AnalysisStep analysisProgress={analysisProgress} />
-          )}
           {currentStep === "suggestions" && (
-            <SuggestionsStep 
-              onProceedToOutput={() => goToStep("output")} 
-            />
+            <SuggestionsStep onProceedToOutput={() => goToStep("output")} />
           )}
           {currentStep === "output" && <OutputStep onStartOver={startOver} />}
         </div>
       </div>
 
-      <TabBar
-        currentStep={currentStep}
-        completedSteps={completedSteps}
-        onTabClick={handleTabClick}
-      />
+      <BottomBar />
     </div>
   );
 }

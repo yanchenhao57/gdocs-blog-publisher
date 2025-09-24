@@ -22,11 +22,13 @@ interface InternalLinkOptimizerState {
   // 表单数据
   blogUrl: string;
   linkRows: LinkRow[];
-  analysisProgress: number;
-  
-  // 独立的进度状态
-  storyblokProgress: number;
-  aiProgress: number;
+
+  // 加载状态
+  isFetchStoryblokLoading: boolean;
+  isAnalyzing: boolean;
+
+  isFetchStoryblokError: boolean;
+  isAnalyzingError: boolean;
 
   // 错误处理
   error: string | null;
@@ -39,24 +41,28 @@ interface InternalLinkOptimizerState {
 
   // 优化结果
   optimizationChanges: OptimizationChange[];
-  optimizationProgress: number;
 
   // 优化状态（用户决策）
   optimizationStatus: Record<number, "pending" | "accepted" | "rejected">;
+
+  // 发布状态
+  isPublishing: boolean;
+  publishSuccess: boolean;
+  publishError: string | null;
 
   // 操作方法
   setCurrentStep: (step: Step) => void;
   setCompletedSteps: (steps: Set<Step>) => void;
   setBlogUrl: (url: string) => void;
   setLinkRows: (rows: LinkRow[] | ((prev: LinkRow[]) => LinkRow[])) => void;
-  setAnalysisProgress: (progress: number) => void;
-  setStoryblokProgress: (progress: number) => void;
-  setAIProgress: (progress: number) => void;
+  setIsFetchStoryblokLoading: (loading: boolean) => void;
+  setIsAnalyzing: (analyzing: boolean) => void;
+  setIsFetchStoryblokError: (error: boolean) => void;
+  setIsAnalyzingError: (error: boolean) => void;
   setError: (error: string | null) => void;
   setStoryData: (data: any) => void;
   setMarkdownContent: (content: MarkdownContent[]) => void;
   setOptimizationChanges: (changes: OptimizationChange[]) => void;
-  setOptimizationProgress: (progress: number) => void;
   setOptimizationStatus: (
     status: Record<number, "pending" | "accepted" | "rejected">
   ) => void;
@@ -65,9 +71,16 @@ interface InternalLinkOptimizerState {
     status: "pending" | "accepted" | "rejected" | "undo"
   ) => void;
 
+  // 发布方法
+  setIsPublishing: (publishing: boolean) => void;
+  setPublishSuccess: (success: boolean) => void;
+  setPublishError: (error: string | null) => void;
+  publishToStoryblok: () => Promise<void>;
+
   // 业务逻辑方法
   startAnalysis: () => void;
-  startOptimization: () => void;
+  fetchStoryblokData: () => Promise<void>;
+  runAIAnalysis: () => Promise<void>;
   retryStoryblokFetch: () => void;
   retryAIAnalysis: () => void;
   goBackToInput: () => void;
@@ -99,10 +112,13 @@ const initialState = {
   markdownContent: [],
   optimizationChanges: [],
   optimizationStatus: {},
-  analysisProgress: 0,
-  storyblokProgress: 0,
-  aiProgress: 0,
-  optimizationProgress: 0,
+  isFetchStoryblokLoading: false,
+  isAnalyzing: false,
+  isFetchStoryblokError: false,
+  isAnalyzingError: false,
+  isPublishing: false,
+  publishSuccess: false,
+  publishError: null as string | null,
   error: null as string | null,
   storyData: null as any,
 };
@@ -120,11 +136,15 @@ export const useInternalLinkOptimizerStore =
         set((state) => ({
           linkRows: typeof rows === "function" ? rows(state.linkRows) : rows,
         })),
-      setAnalysisProgress: (progress) => set({ analysisProgress: progress }),
-      setStoryblokProgress: (progress) => set({ storyblokProgress: progress }),
-      setAIProgress: (progress) => set({ aiProgress: progress }),
-      setOptimizationProgress: (progress) =>
-        set({ optimizationProgress: progress }),
+      setIsFetchStoryblokLoading: (loading) =>
+        set({ isFetchStoryblokLoading: loading }),
+      setIsAnalyzing: (analyzing) => set({ isAnalyzing: analyzing }),
+      setIsFetchStoryblokError: (error) =>
+        set({ isFetchStoryblokError: error }),
+      setIsAnalyzingError: (error) => set({ isAnalyzingError: error }),
+      setIsPublishing: (publishing) => set({ isPublishing: publishing }),
+      setPublishSuccess: (success) => set({ publishSuccess: success }),
+      setPublishError: (error) => set({ publishError: error }),
       setError: (error) => set({ error }),
       setStoryData: (data) => set({ storyData: data }),
       setMarkdownContent: (content) => set({ markdownContent: content }),
@@ -142,18 +162,18 @@ export const useInternalLinkOptimizerStore =
           return { optimizationStatus: newStatus };
         }),
       // 业务逻辑方法
-      startAnalysis: async () => {
+      fetchStoryblokData: async () => {
         const state = get();
         const { blogUrl } = state;
 
-        // 清除之前的错误
+        // 清除之前的 Storyblok 相关错误和数据
         set({
-          currentStep: "analysis",
-          analysisProgress: 0,
-          storyblokProgress: 0,
-          aiProgress: 0,
+          isFetchStoryblokLoading: true,
+          isFetchStoryblokError: false,
+          isAnalyzingError: false,
           error: null,
           storyData: null,
+          markdownContent: [],
         });
 
         try {
@@ -170,17 +190,8 @@ export const useInternalLinkOptimizerStore =
             );
           }
 
-          // 更新进度：开始获取数据
-          set({ 
-            analysisProgress: 10, 
-            storyblokProgress: 20 
-          });
-
-          console.log(`🔍 开始分析 URL: ${blogUrl}`);
+          console.log(`🔍 开始获取 Storyblok 数据: ${blogUrl}`);
           console.log(`📝 解析出的 full_slug: ${fullSlug}`);
-
-          // 更新 Storyblok 进度
-          set({ storyblokProgress: 50 });
 
           // 调用 Storyblok API 获取 story 数据
           const storyData = await apiService.getStoryblokStory(fullSlug);
@@ -193,66 +204,54 @@ export const useInternalLinkOptimizerStore =
             );
           console.log("🚀 ~ markdownContent:", markdownContent);
 
-          // 更新进度：Storyblok 数据获取完成
-          set({ 
-            analysisProgress: 50, 
-            storyblokProgress: 100, 
-            storyData, 
-            markdownContent 
+          // Storyblok 数据获取完成
+          set({
+            isFetchStoryblokLoading: false,
+            isFetchStoryblokError: false,
+            storyData,
+            markdownContent,
+            error: null,
           });
 
           console.log("✅ 成功获取 story 数据:", storyData);
-
-          await get().startOptimization();
-
-          // 更新进度：内容提取完成
-          set({ analysisProgress: 100 });
-
-          // 分析完成，跳转到下一步
-          set((state) => ({
-            currentStep: "suggestions",
-            completedSteps: new Set([
-              ...state.completedSteps,
-              "analysis",
-              "suggestions",
-              "output",
-            ]),
-            error: null,
-          }));
-
-          console.log("🎉 分析完成");
         } catch (error) {
-          console.error("❌ 分析失败:", error);
-            set({
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Analysis failed, please try again",
-              currentStep: "input",
-              analysisProgress: 0,
-              storyblokProgress: 0,
-              aiProgress: 0,
-            });
+          console.error("❌ Storyblok 数据获取失败:", error);
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to fetch Storyblok data, please try again",
+            isFetchStoryblokLoading: false,
+            isFetchStoryblokError: true,
+            storyData: null,
+            markdownContent: [],
+          });
+          throw error; // 重新抛出错误，让调用者处理
         }
       },
 
-      startOptimization: async () => {
+      runAIAnalysis: async () => {
         const state = get();
-        const { markdownContent, linkRows } = state;
+        const { markdownContent, linkRows, storyData } = state;
 
-        // 开始 AI 分析阶段
+        // 验证是否有 Storyblok 数据
+        if (!storyData || !markdownContent || markdownContent.length === 0) {
+          const error = new Error(
+            "No Storyblok data available. Please fetch data first."
+          );
+          set({ error: error.message });
+          throw error;
+        }
+
+        // 清除之前的 AI 相关错误
         set({
-          aiProgress: 0,
+          isAnalyzing: true,
+          isAnalyzingError: false,
           error: null,
           optimizationChanges: [],
         });
 
         try {
-          // 验证输入数据
-          if (!markdownContent || markdownContent.length === 0) {
-            throw new Error("No content available for optimization");
-          }
-
           // 过滤有效的链接行（有URL和锚文本的）
           const validLinks = linkRows
             .filter(
@@ -271,15 +270,9 @@ export const useInternalLinkOptimizerStore =
             );
           }
 
-          console.log("🔗 开始内部链接优化...");
+          console.log("🔗 开始 AI 内部链接分析...");
           console.log("📄 内容段落数:", markdownContent.length);
           console.log("🔗 链接数:", validLinks.length);
-
-          // 更新进度：开始 AI 分析
-          set({ 
-            analysisProgress: 60,
-            aiProgress: 20 
-          });
 
           // 调用API进行优化
           const optimizationRequest = {
@@ -287,52 +280,95 @@ export const useInternalLinkOptimizerStore =
             links: validLinks,
           };
 
-          console.log("🚀 发送优化请求:", optimizationRequest);
-
-          set({ 
-            analysisProgress: 80,
-            aiProgress: 60 
-          });
+          console.log("🚀 发送 AI 优化请求:", optimizationRequest);
 
           const result = await apiService.optimizeInternalLinks(
             optimizationRequest
           );
 
-          console.log("✅ 优化完成:", result);
+          console.log("✅ AI 分析完成:", result);
 
-          // 更新进度：AI 分析完成
+          // AI 分析完成
           set({
-            analysisProgress: 100,
-            aiProgress: 100,
+            isAnalyzing: false,
+            isAnalyzingError: false,
             optimizationChanges: result.changes,
+            error: null,
           });
 
-          // 跳转到输出步骤
-          // set({
-          //   currentStep: "output",
-          //   error: null,
-          // });
-
           console.log(
-            "🎉 内部链接优化完成，共生成",
+            "🎉 AI 内部链接分析完成，共生成",
             result.changes.length,
-            "个修改"
+            "个优化建议"
           );
         } catch (error) {
-          console.error("❌ 优化失败:", error);
-            set({
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Optimization failed, please try again",
+          console.error("❌ AI 分析失败:", error);
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : "AI analysis failed, please try again",
+            isAnalyzing: false,
+            isAnalyzingError: true,
+          });
+          throw error; // 重新抛出错误，让调用者处理
+        }
+      },
+
+      startAnalysis: async () => {
+        // 初始化状态
+        set({
+          isFetchStoryblokLoading: false,
+          isAnalyzing: false,
+          isAnalyzingError: false,
+          isFetchStoryblokError: false,
+          error: null,
+          storyData: null,
+          markdownContent: [],
+          optimizationChanges: [],
+        });
+
+        try {
+          console.log("🚀 开始完整分析流程...");
+
+          // 第一步：获取 Storyblok 数据
+          await get().fetchStoryblokData();
+
+          // 第二步：运行 AI 分析
+          await get().runAIAnalysis();
+
+          // 如果到这里说明分析完成，可以跳转到 suggestions
+          const currentState = get();
+          if (currentState.optimizationChanges.length > 0) {
+            set((state) => ({
               currentStep: "suggestions",
-              aiProgress: 0,
-            });
+              completedSteps: new Set([
+                ...state.completedSteps,
+                "suggestions",
+                "output",
+              ]),
+              error: null,
+            }));
+            console.log(
+              "🎉 完整分析完成，生成了",
+              currentState.optimizationChanges.length,
+              "个优化建议"
+            );
+          }
+        } catch (error) {
+          console.error("❌ 分析流程失败:", error);
+          // 错误已经在各个子方法中处理，这里不需要额外设置
         }
       },
 
       goBackToInput: () => {
-        set({ currentStep: "input", analysisProgress: 0 });
+        set({
+          currentStep: "input",
+          isFetchStoryblokLoading: false,
+          isAnalyzing: false,
+          isAnalyzingError: false,
+          isFetchStoryblokError: false,
+        });
       },
 
       goToStep: (step: Step) => {
@@ -349,172 +385,85 @@ export const useInternalLinkOptimizerStore =
           set({ currentStep: step });
         } else {
           console.warn("❌ Step is not completed, cannot navigate to:", step);
-          console.log("Available completed steps:", Array.from(state.completedSteps));
+          console.log(
+            "Available completed steps:",
+            Array.from(state.completedSteps)
+          );
         }
       },
 
       retryStoryblokFetch: async () => {
-        const state = get();
-        const { blogUrl } = state;
+        console.log("🔄 重试获取 Storyblok 数据...");
 
-        // 清除之前的错误，重置相关状态
+        // 清除之前的 AI 相关状态，但保留 optimizationChanges 状态
         set({
-          currentStep: "analysis",
-          analysisProgress: 0,
-          storyblokProgress: 0,
-          aiProgress: 0,
-          error: null,
-          storyData: null,
-          markdownContent: [],
-          optimizationChanges: [],
+          isAnalyzing: false,
+          isAnalyzingError: false,
+          isFetchStoryblokError: false,
+          isFetchStoryblokLoading: true,
         });
 
         try {
-          // 验证 URL
-          if (!blogUrl.trim()) {
-            throw new Error("Please enter a blog URL");
+          await get().fetchStoryblokData();
+          console.log("✅ 重试获取 Storyblok 数据成功");
+
+          // 自动继续执行 AI 分析
+          await get().runAIAnalysis();
+
+          // 如果分析完成，跳转到 suggestions
+          const currentState = get();
+          if (currentState.optimizationChanges.length > 0) {
+            set((state) => ({
+              currentStep: "suggestions",
+              completedSteps: new Set([
+                ...state.completedSteps,
+                "suggestions",
+                "output",
+              ]),
+              error: null,
+            }));
+            console.log("🎉 重试分析完成");
           }
-
-          // 从 URL 解析出 full_slug
-          const fullSlug = extractFullSlugFromUrl(blogUrl);
-          if (!fullSlug) {
-            throw new Error(
-              "Unable to parse valid slug from URL, please check URL format"
-            );
-          }
-
-          // 更新进度：开始获取数据
-          set({ 
-            analysisProgress: 10, 
-            storyblokProgress: 20 
-          });
-
-          console.log(`🔍 重新获取 Storyblok 数据: ${blogUrl}`);
-          console.log(`📝 解析出的 full_slug: ${fullSlug}`);
-
-          // 更新 Storyblok 进度
-          set({ storyblokProgress: 50 });
-
-          // 调用 Storyblok API 获取 story 数据
-          const storyData = await apiService.getStoryblokStory(fullSlug);
-          const markdownContent =
-            MarkdownConverter.create().extractParagraphsToMarkdown(
-              storyData.content?.body as StoryblokRichtext
-            );
-
-          // 更新进度：Storyblok 数据获取完成
-          set({ 
-            analysisProgress: 50, 
-            storyblokProgress: 100, 
-            storyData, 
-            markdownContent 
-          });
-
-          console.log("✅ 重新获取 Storyblok 数据成功:", storyData);
-
-          // 继续执行 AI 分析
-          await get().startOptimization();
-
-          // 更新进度：完成
-          set({ analysisProgress: 100 });
-
-          // 分析完成，跳转到下一步
-          set((state) => ({
-            currentStep: "suggestions",
-            completedSteps: new Set([
-              ...state.completedSteps,
-              "analysis",
-              "suggestions",
-              "output",
-            ]),
-            error: null,
-          }));
-
-          console.log("🎉 重新分析完成");
         } catch (error) {
-          console.error("❌ 重新获取 Storyblok 数据失败:", error);
-            set({
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to fetch Storyblok data, please try again",
-              currentStep: "input",
-              analysisProgress: 0,
-              storyblokProgress: 0,
-              aiProgress: 0,
-            });
+          console.error("❌ 重试获取 Storyblok 数据失败:", error);
+          // 错误已经在子方法中处理
         }
       },
 
       retryAIAnalysis: async () => {
-        const state = get();
-        const { markdownContent, linkRows, storyData } = state;
-
-        // 验证前置条件
-        if (!storyData) {
-          set({
-            error: "No Storyblok data available. Please fetch data first.",
-            currentStep: "input",
-          });
-          return;
-        }
-
-        if (!markdownContent || markdownContent.length === 0) {
-          set({
-            error:
-              "No content available for analysis. Please fetch data first.",
-            currentStep: "input",
-          });
-          return;
-        }
-
-        // 重置 AI 分析相关状态
-        set({
-          analysisProgress: 50, // 保持 Storyblok 阶段完成状态
-          aiProgress: 0, // 重置 AI 进度
-          optimizationChanges: [],
-          error: null,
-          currentStep: "analysis",
-        });
+        console.log("🔄 重试 AI 分析...");
 
         try {
-          console.log("🤖 重新执行 AI 分析...");
+          await get().runAIAnalysis();
+          console.log("✅ 重试 AI 分析成功");
 
-          // 执行优化分析
-          await get().startOptimization();
-
-          // 更新进度：完成
-          set({ analysisProgress: 100 });
-
-          // 分析完成，跳转到下一步
-          set((state) => ({
-            currentStep: "suggestions",
-            completedSteps: new Set([
-              ...state.completedSteps,
-              "analysis",
-              "suggestions",
-              "output",
-            ]),
-            error: null,
-          }));
-
-          console.log("🎉 AI 重新分析完成");
+          // 如果分析完成，跳转到 suggestions
+          const currentState = get();
+          if (currentState.optimizationChanges.length > 0) {
+            set((state) => ({
+              currentStep: "suggestions",
+              completedSteps: new Set([
+                ...state.completedSteps,
+                "suggestions",
+                "output",
+              ]),
+              error: null,
+            }));
+            console.log("🎉 重试 AI 分析完成");
+          }
         } catch (error) {
-          console.error("❌ AI 重新分析失败:", error);
-            set({
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "AI analysis failed, please try again",
-              analysisProgress: 50, // 保持 Storyblok 阶段完成状态
-              aiProgress: 0, // 重置 AI 进度
-              currentStep: "analysis",
-            });
+          console.error("❌ 重试 AI 分析失败:", error);
+          // 错误已经在 runAIAnalysis 中处理
         }
       },
 
       startOver: () => {
-        set(initialState);
+        set({
+          ...initialState,
+          isPublishing: false,
+          publishSuccess: false,
+          publishError: null,
+        });
       },
 
       // LinkRow 操作方法
@@ -603,6 +552,130 @@ export const useInternalLinkOptimizerStore =
           }
         }
       },
+
+      // 发布到 Storyblok
+      publishToStoryblok: async () => {
+        const state = get();
+        const {
+          storyData,
+          optimizationChanges,
+          optimizationStatus,
+          markdownContent,
+        } = state;
+
+        if (!storyData) {
+          set({ publishError: "No story data available" });
+          return;
+        }
+
+        // 计算接受的修改
+        const acceptedChanges = optimizationChanges.filter(
+          (change) => optimizationStatus[change.index] === "accepted"
+        );
+
+        // 计算最终优化内容
+        const finalOptimizedContent = (() => {
+          // 深拷贝原始的 storyData.content
+          const optimizedContent = JSON.parse(
+            JSON.stringify(storyData.content)
+          );
+
+          // 如果没有接受的修改，直接返回原始内容
+          if (acceptedChanges.length === 0) {
+            return optimizedContent;
+          }
+
+          // 获取 body 中的 content 数组（paragraph 列表）
+          if (!optimizedContent.body || !optimizedContent.body.content) {
+            console.error("Invalid story content structure");
+            return optimizedContent;
+          }
+
+          const paragraphs = optimizedContent.body.content;
+
+          // 应用用户接受的修改
+          acceptedChanges.forEach((change) => {
+            // change.index 对应 paragraph 在 content 数组中的位置
+            if (change.index >= 0 && change.index < paragraphs.length) {
+              const paragraph = paragraphs[change.index];
+
+              // 确保是 paragraph 类型
+              if (paragraph && paragraph.type === "paragraph") {
+                try {
+                  // 将修改后的 markdown 转换为 ProseMirror paragraph 节点
+                  const newParagraphNode =
+                    MarkdownConverter.markdownToParagraph(change.modified);
+                  if (newParagraphNode) {
+                    // 替换原始的 paragraph 内容
+                    paragraphs[change.index] = newParagraphNode;
+                  }
+                } catch (error) {
+                  console.error(
+                    `Error converting modified content at index ${change.index}:`,
+                    error
+                  );
+                }
+              }
+            }
+          });
+
+          return optimizedContent;
+        })();
+
+        set({
+          isPublishing: true,
+          publishError: null,
+          publishSuccess: false,
+        });
+
+        try {
+          // 构造发布请求数据
+          const publishRequest = {
+            seo_title: storyData.content.title || storyData.name,
+            seo_description: storyData.content.description || "",
+            heading_h1: storyData.content.heading_h1 || storyData.name,
+            slug: storyData.slug,
+            body: finalOptimizedContent.body,
+            coverUrl: storyData.content.cover?.filename,
+            coverAlt: storyData.content.cover?.alt,
+            date: storyData.content.date,
+            canonical: storyData.content.canonical,
+            author_id: storyData.content.author_id,
+            reading_time:
+              typeof storyData.content.reading_time === "string"
+                ? parseInt(storyData.content.reading_time) || 5
+                : storyData.content.reading_time || 5,
+            language: storyData?.full_slug?.startsWith("en") ? "en" : "ja",
+            is_show_newsletter_dialog:
+              storyData.content.is_show_newsletter_dialog,
+          };
+
+          console.log("🚀 Publishing to Storyblok:", {
+            storyId: storyData.id,
+            storyName: storyData.name,
+            acceptedChangesCount: acceptedChanges.length,
+            totalSuggestions: optimizationChanges.length,
+          });
+
+          // 调用真实的 API
+          const response = await apiService.publishToStoryblok(publishRequest);
+
+          console.log("✅ Successfully published to Storyblok:", response);
+          set({
+            isPublishing: false,
+            publishSuccess: true,
+            publishError: null,
+          });
+        } catch (error) {
+          console.error("❌ Failed to publish to Storyblok:", error);
+          set({
+            isPublishing: false,
+            publishSuccess: false,
+            publishError:
+              error instanceof Error ? error.message : "Publication failed",
+          });
+        }
+      },
     }))
   );
 
@@ -614,7 +687,8 @@ export const selectFormData = (state: InternalLinkOptimizerState) => ({
   linkRows: state.linkRows,
 });
 export const selectAnalysisData = (state: InternalLinkOptimizerState) => ({
-  analysisProgress: state.analysisProgress,
+  isFetchStoryblokLoading: state.isFetchStoryblokLoading,
+  isAnalyzing: state.isAnalyzing,
 });
 
 // 导出 store 的类型
