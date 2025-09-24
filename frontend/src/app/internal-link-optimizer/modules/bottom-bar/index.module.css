@@ -22,6 +22,66 @@
 }
 
 .content {
+  width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.content_inner {
+  --width: auto;
+  width: var(--width);
+  display: flex;
+  transition: width 1s ease-in-out;
+}
+
+.common_bar {
+  width: min-content;
+}
+
+.others_bar {
+  width: max-content;
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+/* 按钮淡入动画 */
+.button_fade_in {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bottom_bar_btn {
+  width: max-content;
+  min-width: 100px;
+  padding: 8px 20px;
+  height: 98%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #000000;
+  border-radius: 16px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px,
+    rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #000000;
+  transition: all 0.2s ease;
+  margin-left: 12px;
+  opacity: 0;
+}
+
+.bottom_bar_btn.button_fade_in {
+  opacity: 1;
 }

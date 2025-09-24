@@ -22,12 +22,10 @@ const OptimizationComparison = ({
   onUndo,
   status = "pending",
 }: OptimizationComparisonProps) => {
-
   const renderContent = (markdown: string) => {
     try {
       // 使用 MarkdownConverter 将 markdown 转换为 ProseMirror JSON
       const paragraphNode = MarkdownConverter.markdownToParagraph(markdown);
-      console.log("🚀 ~ renderContent ~ paragraphNode:", paragraphNode);
 
       if (!paragraphNode) {
         // 如果转换失败，显示原始文本
@@ -37,10 +35,8 @@ const OptimizationComparison = ({
       // 包装为完整的文档结构
       const docContent = {
         type: "doc",
-        content: [paragraphNode]
+        content: [paragraphNode],
       };
-
-      console.log("🚀 ~ renderContent ~ docContent:", docContent);
 
       // 使用 storyblok-rich-text-react-renderer 渲染
       return render(docContent);
@@ -74,7 +70,7 @@ const OptimizationComparison = ({
   };
 
   return (
-    <Card 
+    <Card
       className={`${styles.card} ${styles[status]}`}
       data-optimization-index={change.index}
     >

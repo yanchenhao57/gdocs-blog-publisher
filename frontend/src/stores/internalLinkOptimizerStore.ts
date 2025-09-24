@@ -377,18 +377,10 @@ export const useInternalLinkOptimizerStore =
 
       goToStep: (step: Step) => {
         const state = get();
-        console.log(
-          "🚀 ~ goToStep: (step: Step) => {",
-          step,
-          "completedSteps:",
-          Array.from(state.completedSteps)
-        );
         // 只允许导航到已完成的步骤
         if (state.completedSteps.has(step)) {
-          console.log("✅ Step is completed, navigating to:", step);
           set({ currentStep: step });
         } else {
-          console.warn("❌ Step is not completed, cannot navigate to:", step);
           console.log(
             "Available completed steps:",
             Array.from(state.completedSteps)
