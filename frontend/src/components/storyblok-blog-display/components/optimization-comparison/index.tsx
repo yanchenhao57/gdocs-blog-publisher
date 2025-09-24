@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { render } from "storyblok-rich-text-react-renderer";
 import { MarkdownConverter } from "../../../../utils/markdownConverter";
+import { Card, CardContent } from "../../../ui/card";
+import Button from "../../../button";
+import { Check, X, RotateCcw, Clock, CheckCircle, XCircle } from "lucide-react";
 import styles from "./index.module.css";
 import type { OptimizationChange } from "../../../../app/internal-link-optimizer/modules/types";
 
@@ -19,7 +22,6 @@ const OptimizationComparison = ({
   onUndo,
   status = "pending",
 }: OptimizationComparisonProps) => {
-  const [expanded, setExpanded] = useState(true);
 
   const renderContent = (markdown: string) => {
     try {
@@ -52,11 +54,11 @@ const OptimizationComparison = ({
   const getStatusIcon = () => {
     switch (status) {
       case "accepted":
-        return "✅";
+        return <CheckCircle size={14} />;
       case "rejected":
-        return "❌";
+        return <XCircle size={14} />;
       default:
-        return "⏳";
+        return <Clock size={14} />;
     }
   };
 
@@ -72,74 +74,58 @@ const OptimizationComparison = ({
   };
 
   return (
-    <div 
-      className={`${styles.comparisonContainer} ${styles[status]}`}
+    <Card 
+      className={`${styles.card} ${styles[status]}`}
       data-optimization-index={change.index}
     >
-      {/* 折叠/展开控制 */}
-      <div className={styles.header} onClick={() => setExpanded(!expanded)}>
-        <div className={styles.headerLeft}>
-          <span className={styles.expandIcon}>{expanded ? "📖" : "📕"}</span>
-          <span className={styles.changeLabel}>
-            AI Optimization Suggestion #{change.index}
-          </span>
+      <CardContent className={styles.cardContent}>
+        {/* 状态标签 - 左上角 */}
+        <div className={styles.statusBadge}>
+          <span className={styles.statusIcon}>{getStatusIcon()}</span>
+          <span className={styles.statusText}>{getStatusLabel()}</span>
         </div>
-        <div className={styles.headerRight}>
-          <span className={styles.statusBadge}>
-            {getStatusIcon()} {getStatusLabel()}
-          </span>
-        </div>
-      </div>
 
-      {expanded && (
-        <div className={styles.comparisonContent}>
-          {/* 建议内容 - 直接显示优化后的文案 */}
-          <div className={styles.suggestedSection}>
-            <div className={styles.sectionLabel}>
-              ✨ AI Suggested Improvement
-            </div>
-            <div className={styles.contentBox}>
-              {renderContent(change.modified)}
-            </div>
+        {/* AI 建议内容 */}
+        <div className={styles.contentSection}>
+          <div className={styles.contentBox}>
+            {renderContent(change.modified)}
           </div>
+        </div>
 
-          {/* 操作按钮 */}
-          {status === "pending" && (
-            <div className={styles.actionButtons}>
-              <button
-                className={`${styles.actionButton} ${styles.acceptButton}`}
+        {/* 操作按钮 - 右下角 */}
+        <div className={styles.actionButtons}>
+          {status === "pending" ? (
+            <>
+              <Button
+                variant="outline"
+                size="small"
+                icon={<Check size={14} />}
                 onClick={() => onAccept(change.index)}
               >
-                ✅ Accept Changes
-              </button>
-              <button
-                className={`${styles.actionButton} ${styles.rejectButton}`}
+                Accept
+              </Button>
+              <Button
+                variant="outline"
+                size="small"
+                icon={<X size={14} />}
                 onClick={() => onReject(change.index)}
               >
-                ❌ Reject Changes
-              </button>
-            </div>
-          )}
-
-          {/* 已处理状态提示和撤销按钮 */}
-          {status !== "pending" && (
-            <div className={styles.statusSection}>
-              <div className={styles.statusMessage}>
-                {status === "accepted"
-                  ? "✅ These changes have been accepted and will be applied."
-                  : "❌ These changes have been rejected and will not be applied."}
-              </div>
-              <button
-                className={`${styles.actionButton} ${styles.undoButton}`}
-                onClick={() => onUndo(change.index)}
-              >
-                ↩️ Undo Decision
-              </button>
-            </div>
+                Reject
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="ghost"
+              size="small"
+              icon={<RotateCcw size={14} />}
+              onClick={() => onUndo(change.index)}
+            >
+              Undo
+            </Button>
           )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

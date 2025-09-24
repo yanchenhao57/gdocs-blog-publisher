@@ -5,11 +5,15 @@ import {
   Upload,
   Loader2,
   CheckCircle,
+  ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useInternalLinkOptimizerStore } from "../../../stores/internalLinkOptimizerStore";
 import { render } from "storyblok-rich-text-react-renderer";
 import { MarkdownConverter } from "../../../utils/markdownConverter";
 import { apiService } from "../../../services/api";
+import Button from "../../../components/button";
 import styles from "./OutputStep.module.css";
 
 interface OutputStepProps {
@@ -22,11 +26,17 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
     optimizationChanges,
     optimizationStatus,
     markdownContent,
+    blogUrl,
+    linkRows,
     isPublishing,
     publishSuccess,
     publishError,
+    publishResult,
     publishToStoryblok,
   } = useInternalLinkOptimizerStore();
+
+  const [isCopied, setIsCopied] = useState(false);
+  const [showStartOverModal, setShowStartOverModal] = useState(false);
 
   // 计算接受的修改统计
   const acceptedChanges = useMemo(() => {
@@ -34,6 +44,60 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
       (change) => optimizationStatus[change.index] === "accepted"
     );
   }, [optimizationChanges, optimizationStatus]);
+
+  // 计算用户输入信息摘要
+  const inputSummary = useMemo(() => {
+    const validLinks = linkRows.filter(row => row.targetUrl.trim());
+    const totalAnchorTexts = linkRows.reduce((total, row) => 
+      total + row.anchorTexts.filter(text => text.trim()).length, 0
+    );
+    
+    return {
+      blogUrl,
+      totalLinks: validLinks.length,
+      totalAnchorTexts,
+      storyTitle: storyData?.name || 'Unknown'
+    };
+  }, [blogUrl, linkRows, storyData]);
+
+  // 检查是否所有建议都已决策完毕
+  const allDecisionsComplete = useMemo(() => {
+    if (optimizationChanges.length === 0) return true; // 没有建议时认为完成
+    
+    return optimizationChanges.every(change => 
+      optimizationStatus[change.index] === "accepted" || 
+      optimizationStatus[change.index] === "rejected"
+    );
+  }, [optimizationChanges, optimizationStatus]);
+
+  // Start Over 处理逻辑
+  const handleStartOver = () => {
+    if (!publishSuccess) {
+      // 如果没有发布过，显示确认弹窗
+      setShowStartOverModal(true);
+    } else {
+      // 如果已经发布过，直接重新开始
+      onStartOver();
+    }
+  };
+
+  const confirmStartOver = () => {
+    setShowStartOverModal(false);
+    onStartOver();
+  };
+
+  // 复制链接功能
+  const handleCopyUrl = async () => {
+    if (publishResult?.previewLink) {
+      try {
+        await navigator.clipboard.writeText(publishResult.previewLink);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy URL:", err);
+      }
+    }
+  };
 
   // 生成最终优化的 Storyblok content JSON
   const finalOptimizedContent = useMemo(() => {
@@ -123,7 +187,30 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
           </p>
         </div>
 
-        {/* 统计信息 */}
+        {/* 输入信息摘要 */}
+        <div className={styles.statsSection}>
+          <h3 className={styles.statsTitle}>Configuration Summary</h3>
+          <div className={styles.summaryGrid}>
+            <div className={styles.summaryItem}>
+              <div className={styles.summaryLabel}>Blog URL</div>
+              <div className={styles.summaryValue}>{inputSummary.blogUrl}</div>
+            </div>
+            <div className={styles.summaryItem}>
+              <div className={styles.summaryLabel}>Story Title</div>
+              <div className={styles.summaryValue}>{inputSummary.storyTitle}</div>
+            </div>
+            <div className={styles.summaryItem}>
+              <div className={styles.summaryLabel}>Internal Links</div>
+              <div className={styles.summaryValue}>{inputSummary.totalLinks} links configured</div>
+            </div>
+            <div className={styles.summaryItem}>
+              <div className={styles.summaryLabel}>Anchor Texts</div>
+              <div className={styles.summaryValue}>{inputSummary.totalAnchorTexts} texts defined</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 优化统计信息 */}
         <div className={styles.statsSection}>
           <h3 className={styles.statsTitle}>Optimization Summary</h3>
           <div className={styles.statsGrid}>
@@ -157,104 +244,123 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
           </div>
         </div>
 
-        {/* 优化内容展示 */}
-        <div className={styles.contentSection}>
-          <div className={styles.contentHeader}>
-            <FileText className={styles.buttonIcon} size={16} />
-            <span className={styles.contentHeaderText}>
-              Optimized Storyblok Content JSON
-            </span>
-          </div>
-          <div className={styles.contentBody}>
-            <div className={styles.optimizedContent}>
-              {finalOptimizedContent ? (
-                <pre
-                  style={{
-                    whiteSpace: "pre-wrap",
-                    fontSize: "12px",
-                    lineHeight: "1.4",
-                    backgroundColor: "#f8f9fa",
-                    padding: "16px",
-                    borderRadius: "8px",
-                    overflow: "auto",
-                    maxHeight: "400px",
-                  }}
-                >
-                  {JSON.stringify(finalOptimizedContent, null, 2)}
-                </pre>
-              ) : (
-                <p>No optimized content available</p>
-              )}
-            </div>
-          </div>
-        </div>
 
-        {/* 发布状态 */}
+        {/* 发布结果显示 */}
         {publishSuccess && (
-          <div
-            className={styles.statsSection}
-            style={{ background: "#dcfce7", borderColor: "#bbf7d0" }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <CheckCircle size={20} style={{ color: "#059669" }} />
-              <span style={{ color: "#065f46", fontWeight: "500" }}>
-                Successfully published to Storyblok!
-              </span>
+          <div className={styles.successSection}>
+            <div className={styles.successHeader}>
+              <CheckCircle size={24} className={styles.successIcon} />
+              <h3 className={styles.successTitle}>Published Successfully!</h3>
             </div>
+            <p className={styles.successDescription}>
+              Your optimized content has been published to Storyblok.
+            </p>
+            
+            {publishResult?.previewLink && (
+              <div className={styles.previewSection}>
+                <label className={styles.previewLabel}>Preview Link:</label>
+                <div className={styles.urlContainer}>
+                  <div className={styles.urlDisplay}>
+                    {publishResult.previewLink}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    icon={isCopied ? <Check size={14} /> : <Copy size={14} />}
+                    onClick={handleCopyUrl}
+                  >
+                    {isCopied ? "Copied!" : "Copy"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {publishError && (
-          <div
-            className={styles.statsSection}
-            style={{ background: "#fee2e2", borderColor: "#fca5a5" }}
-          >
-            <span style={{ color: "#991b1b" }}>
-              ❌ Publication failed: {publishError}
-            </span>
+          <div className={styles.errorSection}>
+            <h3 className={styles.errorTitle}>Publication Failed</h3>
+            <div className={styles.errorMessage}>
+              {publishError}
+            </div>
           </div>
         )}
 
-        {/* 发布操作 */}
+        {/* 操作按钮 */}
         <div className={styles.actionSection}>
-          <h3 className={styles.actionTitle}>Publish to Storyblok</h3>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <button
+          <div className={styles.actionButtons}>
+            <Button
+              variant="primary"
+              size="large"
+              icon={isPublishing ? <Loader2 className={styles.iconSpin} size={16} /> : <Upload size={16} />}
+              iconPosition="left"
               onClick={publishToStoryblok}
-              disabled={
-                isPublishing || !finalOptimizedContent || publishSuccess
-              }
-              className={`${styles.actionButton} ${styles.publishButton}`}
-              style={{ minWidth: "200px" }}
+              disabled={isPublishing || !finalOptimizedContent || publishSuccess || !allDecisionsComplete}
+              loading={isPublishing}
             >
-              {isPublishing ? (
-                <div className={styles.loading}>
-                  <Loader2 className={styles.iconSpin} size={16} />
-                  <span className={styles.loadingText}>Publishing...</span>
-                </div>
-              ) : publishSuccess ? (
-                <>
-                  <CheckCircle className={styles.buttonIcon} size={16} />
-                  Published to Storyblok
-                </>
-              ) : (
-                <>
-                  <Upload className={styles.buttonIcon} size={16} />
-                  Publish to Storyblok
-                </>
-              )}
-            </button>
+              {publishSuccess ? "Published to Storyblok" : "Publish to Storyblok"}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="large"
+              icon={<RotateCcw size={16} />}
+              iconPosition="left"
+              onClick={handleStartOver}
+            >
+              Start Over
+            </Button>
           </div>
         </div>
 
-        {/* 底部操作 */}
-        <div className={styles.bottomActions}>
-          <button onClick={onStartOver} className={styles.startOverButton}>
-            <RotateCcw className={styles.buttonIcon} size={16} />
-            Start Over
-          </button>
-        </div>
+        {/* 添加未完成决策时的提示 */}
+        {!allDecisionsComplete && (
+          <div className={styles.warningSection}>
+            <p className={styles.warningText}>
+              Please complete all optimization decisions before publishing. 
+              Go back to the Suggestions step to review remaining items.
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Start Over 确认弹窗 */}
+      {showStartOverModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Start Over?</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalDescription}>
+                You haven't published your optimized content yet. Starting over will clear all your current progress including:
+              </p>
+              <ul className={styles.modalList}>
+                <li>• All optimization suggestions and decisions</li>
+                <li>• Current blog content analysis</li>
+                <li>• Link configuration settings</li>
+              </ul>
+              <p className={styles.modalWarning}>
+                This action cannot be undone. Are you sure you want to continue?
+              </p>
+            </div>
+            <div className={styles.modalFooter}>
+              <Button
+                variant="outline"
+                onClick={() => setShowStartOverModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={confirmStartOver}
+              >
+                Yes, Start Over
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

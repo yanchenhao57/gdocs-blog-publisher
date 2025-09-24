@@ -1,16 +1,14 @@
 /* 主容器 */
 .container {
-  max-width: 1200px;
+  max-width: 980px;
   margin: 0 auto;
   position: relative;
+  min-height: 100vh;
 }
 
 /* 空状态 */
 .emptyState {
-  max-width: 768px;
-  margin: 0 auto;
-  text-align: center;
-  padding: 48px 0;
+  max-width: 980px;
 }
 
 .emptyStateText {

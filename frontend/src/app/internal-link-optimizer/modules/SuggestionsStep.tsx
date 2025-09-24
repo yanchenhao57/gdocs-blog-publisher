@@ -63,11 +63,13 @@ export default function SuggestionsStep({
 
   // 导航到下一个待处理的建议
   const scrollToNextOptimization = () => {
-    const pendingOptimizations = optimizationChanges.filter(
-      (change) =>
-        !optimizationStatus[change.index] ||
-        optimizationStatus[change.index] === "pending"
-    );
+    const pendingOptimizations = optimizationChanges
+      .filter(
+        (change) =>
+          !optimizationStatus[change.index] ||
+          optimizationStatus[change.index] === "pending"
+      )
+      .sort((a, b) => a.index - b.index);
 
     if (pendingOptimizations.length > 0) {
       const nextOptimization = pendingOptimizations[0];
@@ -104,19 +106,23 @@ export default function SuggestionsStep({
   const allDecisionsComplete = totalCount > 0 && pendingCount === 0;
 
   useEffect(() => {
-    scrollToNextOptimization();
+    setTimeout(() => {
+      scrollToNextOptimization();
+    }, 500);
   }, []);
 
   return (
     <div className={styles.container}>
       {/* 浮动导航面板 */}
-      <SuggestionsNavigationPanel
+      {/* <SuggestionsNavigationPanel
         totalCount={totalCount}
         completedCount={completedCount}
         pendingCount={pendingCount}
         progressPercentage={progressPercentage}
+        optimizationChanges={optimizationChanges}
+        optimizationStatus={optimizationStatus}
         onScrollToNext={scrollToNextOptimization}
-      />
+      /> */}
 
       {/* Storyblok Blog Display */}
       <div className={styles.contentSection}>

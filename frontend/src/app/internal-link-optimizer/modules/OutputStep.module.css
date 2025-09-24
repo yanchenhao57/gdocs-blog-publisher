@@ -4,6 +4,7 @@
   max-width: 1024px;
   margin: 0 auto;
   padding: 0 24px;
+  min-height: 101vh;
 }
 
 .contentWrapper {
@@ -96,6 +97,36 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
+}
+
+/* 用户输入摘要网格 */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.summaryValue {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  word-break: break-all;
 }
 
 .statItem {
@@ -249,4 +280,215 @@
 .buttonIcon {
   margin-right: 8px;
   flex-shrink: 0;
+}
+
+/* 用户输入摘要网格 */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.summaryValue {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  word-break: break-all;
+}
+
+/* 成功状态 */
+.successSection {
+  background-color: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.successHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.successIcon {
+  color: #059669;
+}
+
+.successTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #065f46;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.successDescription {
+  font-size: 14px;
+  color: #047857;
+  margin-bottom: 16px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* 预览链接区域 */
+.previewSection {
+  margin-top: 16px;
+}
+
+.previewLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #047857;
+  margin-bottom: 8px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.urlContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.urlDisplay {
+  flex: 1;
+  padding: 8px 12px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #047857;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+}
+
+/* 错误状态 */
+.errorSection {
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.errorTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 8px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.errorMessage {
+  font-size: 14px;
+  color: #991b1b;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* 操作按钮区域 */
+.actionButtons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 警告区域 */
+.warningSection {
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.warningText {
+  font-size: 14px;
+  color: #92400e;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+}
+
+/* 确认弹窗 */
+.modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modalContent {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  margin: 16px;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+}
+
+.modalHeader {
+  margin-bottom: 16px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.modalBody {
+  margin-bottom: 24px;
+}
+
+.modalDescription {
+  font-size: 14px;
+  color: #4b5563;
+  margin-bottom: 12px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.modalList {
+  margin: 12px 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.modalList li {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.modalWarning {
+  font-size: 14px;
+  color: #dc2626;
+  font-weight: 500;
+  margin-top: 12px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }

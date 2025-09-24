@@ -1,109 +1,93 @@
+/* 悬浮导航容器 - 右侧固定，垂直居中 */
 .container {
   position: fixed;
-  bottom: 24px;
   right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 50;
-}
-
-.panel {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
-  border: 1px solid #e5e7eb;
-  padding: 16px;
-  min-width: 200px;
-}
-
-/* 进度区域 */
-.progressSection {
-  margin-bottom: 12px;
-}
-
-.progressHeader {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.progressLabel {
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.progressCount {
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.progressBarContainer {
-  width: 100%;
-  height: 8px;
-  background-color: #e5e7eb;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.progressBar {
-  height: 100%;
-  background-color: #3b82f6;
-  border-radius: 9999px;
-  transition: width 0.3s ease;
-}
-
-/* 下一个按钮 */
-.nextButton {
-  width: 100%;
-  background-color: #3b82f6;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
+/* 导航按钮 */
+.navButton {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background-color: #000000;
   border: none;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-weight: 500;
 }
 
-.nextButton:hover {
-  background-color: #2563eb;
+.navButton:hover {
+  background-color: #374151;
 }
 
-.nextButtonText {
-  font-size: 14px;
+.navButton:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
 }
 
-.nextButtonIcon {
-  width: 16px;
-  height: 16px;
+.navButton:active {
+  transform: scale(0.95);
 }
 
-/* 完成状态 */
-.completedSection {
-  text-align: center;
-  padding: 8px 0;
+/* 向上三角形 */
+.upTriangle {
+  color: white;
+  transform: rotate(180deg); /* 旋转三角形指向上方 */
 }
 
-.completedText {
+/* 向下三角形 */
+.downTriangle {
+  color: white;
+  transform: rotate(0deg);
+}
+
+/* 数字显示 - 覆盖在三角形上 */
+.count {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  color: #059669;
-  font-weight: 500;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.completedIcon {
-  color: #059669;
-}
-
-.completedSubtext {
-  color: #6b7280;
+  color: #000000;
   font-size: 12px;
+  font-weight: 700;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .container {
+    right: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    right: 12px;
+  }
+  
+  .navButton {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .upTriangle svg,
+  .downTriangle svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .count {
+    font-size: 11px;
+  }
 }

@@ -49,6 +49,7 @@ interface InternalLinkOptimizerState {
   isPublishing: boolean;
   publishSuccess: boolean;
   publishError: string | null;
+  publishResult: { previewLink: string } | null;
 
   // 操作方法
   setCurrentStep: (step: Step) => void;
@@ -75,6 +76,7 @@ interface InternalLinkOptimizerState {
   setIsPublishing: (publishing: boolean) => void;
   setPublishSuccess: (success: boolean) => void;
   setPublishError: (error: string | null) => void;
+  setPublishResult: (result: { previewLink: string } | null) => void;
   publishToStoryblok: () => Promise<void>;
 
   // 业务逻辑方法
@@ -119,6 +121,7 @@ const initialState = {
   isPublishing: false,
   publishSuccess: false,
   publishError: null as string | null,
+  publishResult: null as { previewLink: string } | null,
   error: null as string | null,
   storyData: null as any,
 };
@@ -145,6 +148,7 @@ export const useInternalLinkOptimizerStore =
       setIsPublishing: (publishing) => set({ isPublishing: publishing }),
       setPublishSuccess: (success) => set({ publishSuccess: success }),
       setPublishError: (error) => set({ publishError: error }),
+      setPublishResult: (result) => set({ publishResult: result }),
       setError: (error) => set({ error }),
       setStoryData: (data) => set({ storyData: data }),
       setMarkdownContent: (content) => set({ markdownContent: content }),
@@ -463,6 +467,7 @@ export const useInternalLinkOptimizerStore =
           isPublishing: false,
           publishSuccess: false,
           publishError: null,
+          publishResult: null,
         });
       },
 
@@ -626,6 +631,7 @@ export const useInternalLinkOptimizerStore =
           isPublishing: true,
           publishError: null,
           publishSuccess: false,
+          publishResult: null,
         });
 
         try {
@@ -665,6 +671,7 @@ export const useInternalLinkOptimizerStore =
             isPublishing: false,
             publishSuccess: true,
             publishError: null,
+            publishResult: { previewLink: response.previewLink },
           });
         } catch (error) {
           console.error("❌ Failed to publish to Storyblok:", error);
