@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { render } from "storyblok-rich-text-react-renderer";
+import { ImageIcon } from "lucide-react";
 import type { ReactElement } from "react";
 import styles from "./index.module.css";
 import type {
@@ -268,15 +269,25 @@ export default function StoryblokBlogDisplay({
       {/* Hero Section */}
       <header className={styles.heroSection}>
         {/* Cover Image */}
-        {blogData.coverImage && (
-          <div className={styles.coverImageContainer}>
+        <div className={styles.coverImageContainer}>
+          {blogData.coverImage ? (
             <img
               src={blogData.coverImage}
               alt={blogData.title}
               className={styles.coverImage}
             />
-          </div>
-        )}
+          ) : (
+            <div className={styles.coverImagePlaceholder}>
+              <div className={styles.placeholderIcon}>
+                <ImageIcon size={48} />
+              </div>
+              <h3 className={styles.placeholderTitle}>Cover Image</h3>
+              <p className={styles.placeholderText}>
+                No cover image available for this article
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Article Meta */}
         <div className={styles.articleMeta}>

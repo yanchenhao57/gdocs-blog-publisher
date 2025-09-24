@@ -17,12 +17,46 @@
   overflow: hidden;
   border-radius: 0.5rem; /* rounded-lg */
   margin-bottom: 2rem;
+  border: 2px dashed #d1d5db;
+  background-color: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .coverImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Cover Image Placeholder */
+.coverImagePlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  height: 100%;
+}
+
+.placeholderIcon {
+  color: #9ca3af;
+}
+
+.placeholderTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.placeholderText {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
 }
 
 /* Article Meta */

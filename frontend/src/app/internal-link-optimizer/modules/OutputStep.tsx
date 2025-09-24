@@ -47,26 +47,29 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
 
   // 计算用户输入信息摘要
   const inputSummary = useMemo(() => {
-    const validLinks = linkRows.filter(row => row.targetUrl.trim());
-    const totalAnchorTexts = linkRows.reduce((total, row) => 
-      total + row.anchorTexts.filter(text => text.trim()).length, 0
+    const validLinks = linkRows.filter((row) => row.targetUrl.trim());
+    const totalAnchorTexts = linkRows.reduce(
+      (total, row) =>
+        total + row.anchorTexts.filter((text) => text.trim()).length,
+      0
     );
-    
+
     return {
       blogUrl,
       totalLinks: validLinks.length,
       totalAnchorTexts,
-      storyTitle: storyData?.name || 'Unknown'
+      storyTitle: storyData?.name || "Unknown",
     };
   }, [blogUrl, linkRows, storyData]);
 
   // 检查是否所有建议都已决策完毕
   const allDecisionsComplete = useMemo(() => {
     if (optimizationChanges.length === 0) return true; // 没有建议时认为完成
-    
-    return optimizationChanges.every(change => 
-      optimizationStatus[change.index] === "accepted" || 
-      optimizationStatus[change.index] === "rejected"
+
+    return optimizationChanges.every(
+      (change) =>
+        optimizationStatus[change.index] === "accepted" ||
+        optimizationStatus[change.index] === "rejected"
     );
   }, [optimizationChanges, optimizationStatus]);
 
@@ -197,15 +200,21 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
             </div>
             <div className={styles.summaryItem}>
               <div className={styles.summaryLabel}>Story Title</div>
-              <div className={styles.summaryValue}>{inputSummary.storyTitle}</div>
+              <div className={styles.summaryValue}>
+                {inputSummary.storyTitle}
+              </div>
             </div>
             <div className={styles.summaryItem}>
               <div className={styles.summaryLabel}>Internal Links</div>
-              <div className={styles.summaryValue}>{inputSummary.totalLinks} links configured</div>
+              <div className={styles.summaryValue}>
+                {inputSummary.totalLinks} links configured
+              </div>
             </div>
             <div className={styles.summaryItem}>
               <div className={styles.summaryLabel}>Anchor Texts</div>
-              <div className={styles.summaryValue}>{inputSummary.totalAnchorTexts} texts defined</div>
+              <div className={styles.summaryValue}>
+                {inputSummary.totalAnchorTexts} texts defined
+              </div>
             </div>
           </div>
         </div>
@@ -244,7 +253,6 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
           </div>
         </div>
 
-
         {/* 发布结果显示 */}
         {publishSuccess && (
           <div className={styles.successSection}>
@@ -255,7 +263,7 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
             <p className={styles.successDescription}>
               Your optimized content has been published to Storyblok.
             </p>
-            
+
             {publishResult?.previewLink && (
               <div className={styles.previewSection}>
                 <label className={styles.previewLabel}>Preview Link:</label>
@@ -263,14 +271,26 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
                   <div className={styles.urlDisplay}>
                     {publishResult.previewLink}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="small"
-                    icon={isCopied ? <Check size={14} /> : <Copy size={14} />}
-                    onClick={handleCopyUrl}
-                  >
-                    {isCopied ? "Copied!" : "Copy"}
-                  </Button>
+                  <div className={styles.linkActions}>
+                    <Button
+                      variant="ghost"
+                      size="small"
+                      icon={isCopied ? <Check size={14} /> : <Copy size={14} />}
+                      onClick={handleCopyUrl}
+                    >
+                      {isCopied ? "Copied!" : "Copy"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="small"
+                      icon={<ExternalLink size={14} />}
+                      onClick={() =>
+                        window.open(publishResult.previewLink, "_blank")
+                      }
+                    >
+                      Open in New Tab
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -280,9 +300,7 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
         {publishError && (
           <div className={styles.errorSection}>
             <h3 className={styles.errorTitle}>Publication Failed</h3>
-            <div className={styles.errorMessage}>
-              {publishError}
-            </div>
+            <div className={styles.errorMessage}>{publishError}</div>
           </div>
         )}
 
@@ -292,15 +310,28 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
             <Button
               variant="primary"
               size="large"
-              icon={isPublishing ? <Loader2 className={styles.iconSpin} size={16} /> : <Upload size={16} />}
+              icon={
+                isPublishing ? (
+                  <Loader2 className={styles.iconSpin} size={16} />
+                ) : (
+                  <Upload size={16} />
+                )
+              }
               iconPosition="left"
               onClick={publishToStoryblok}
-              disabled={isPublishing || !finalOptimizedContent || publishSuccess || !allDecisionsComplete}
+              disabled={
+                isPublishing ||
+                !finalOptimizedContent ||
+                publishSuccess ||
+                !allDecisionsComplete
+              }
               loading={isPublishing}
             >
-              {publishSuccess ? "Published to Storyblok" : "Publish to Storyblok"}
+              {publishSuccess
+                ? "Published to Storyblok"
+                : "Publish to Storyblok"}
             </Button>
-            
+
             <Button
               variant="outline"
               size="large"
@@ -317,8 +348,8 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
         {!allDecisionsComplete && (
           <div className={styles.warningSection}>
             <p className={styles.warningText}>
-              Please complete all optimization decisions before publishing. 
-              Go back to the Suggestions step to review remaining items.
+              Please complete all optimization decisions before publishing. Go
+              back to the Suggestions step to review remaining items.
             </p>
           </div>
         )}
@@ -333,7 +364,8 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
             </div>
             <div className={styles.modalBody}>
               <p className={styles.modalDescription}>
-                You haven't published your optimized content yet. Starting over will clear all your current progress including:
+                You haven't published your optimized content yet. Starting over
+                will clear all your current progress including:
               </p>
               <ul className={styles.modalList}>
                 <li>• All optimization suggestions and decisions</li>
@@ -351,10 +383,7 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
               >
                 Cancel
               </Button>
-              <Button
-                variant="primary"
-                onClick={confirmStartOver}
-              >
+              <Button variant="primary" onClick={confirmStartOver}>
                 Yes, Start Over
               </Button>
             </div>
