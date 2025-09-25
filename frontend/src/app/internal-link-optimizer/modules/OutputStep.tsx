@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   FileText,
   RotateCcw,
@@ -177,6 +177,11 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
       </div>
     );
   }
+
+  useEffect(() => {
+    // 滚动到顶部
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className={styles.container}>
