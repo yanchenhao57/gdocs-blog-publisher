@@ -166,7 +166,26 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
             }}
           >
             <Link size={16} />
-            Enter Google Docs Document Link
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
+              <span>Enter Google Docs Document Link</span>{" "}
+              <span
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: "400",
+                  color: "#666666",
+                }}
+              >
+                You need to share the document with "
+                <strong>yanchenhao05@gmail.com</strong>" first! Then I can
+                convert it.
+              </span>
+            </div>
           </label>
           <input
             id="doc-link"

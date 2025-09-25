@@ -81,7 +81,7 @@ export default function Home() {
       }}
     >
       {/* Socket监听器 - 监听当前文档的转换事件（集成Zustand状态管理） */}
-      <ConversionMonitorWithStore docId={currentDocId} />
+      {/* <ConversionMonitorWithStore docId={currentDocId} /> */}
 
       {/* 根据工作流状态渲染对应的UI组件 */}
       {renderCurrentStage()}
