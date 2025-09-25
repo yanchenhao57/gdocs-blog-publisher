@@ -103,14 +103,14 @@ export default function AnalysisProgressModal({
                   <Loader2 className={styles.iconSpin} size={24} />
                 </div>
               )}
-              {(optimizationChanges.length === 0 && !isAnalyzing) ||
-                (isAnalyzingError && (
-                  <div className={styles.retry}>
-                    <Button size="small" onClick={retryAIAnalysis}>
-                      Retry
-                    </Button>
-                  </div>
-                ))}
+              {((optimizationChanges.length === 0 && !isAnalyzing) ||
+                isAnalyzingError) && (
+                <div className={styles.retry}>
+                  <Button size="small" onClick={retryAIAnalysis}>
+                    Retry
+                  </Button>
+                </div>
+              )}
               {optimizationChanges.length > 0 &&
                 !isAnalyzing &&
                 !isAnalyzingError && (
