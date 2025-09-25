@@ -176,6 +176,12 @@ Anchor text options: ${link.anchorTexts.join(", ")}`
       `📊 Validation: ${validChanges.length}/${aiResult.changes.length} changes are valid`
     );
 
+    if (validChanges.length === 0) {
+      return res.status(400).json({
+        error: "No valid changes found",
+      });
+    }
+
     res.json({ changes: validChanges });
   } catch (error) {
     console.error("❌ Internal Link Optimizer Error:", error);
