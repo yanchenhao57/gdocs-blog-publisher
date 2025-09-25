@@ -37,7 +37,7 @@ export default function PrePublishCheck({
   // Build full_slug based on language and slug
   const fullSlug = useMemo(() => {
     if (!slug.trim()) return "";
-    const prefix = language === "en" ? "blog/en/" : "blog/";
+    const prefix = language === "en" ? "en/blog" : "blog/";
     return `${prefix}${slug.trim()}`;
   }, [slug, language]);
 
