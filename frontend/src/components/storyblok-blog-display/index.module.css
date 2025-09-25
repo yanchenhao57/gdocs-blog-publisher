@@ -222,26 +222,44 @@
 .contentTableWrapper {
   margin: 24px 0;
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .contentTableWrapper table {
   width: 100%;
   border-collapse: collapse;
   margin: 0;
-}
-
-.contentTableWrapper th,
-.contentTableWrapper td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .contentTableWrapper th {
-  background-color: #f9fafb;
+  padding: 16px 20px;
+  text-align: center;
   font-weight: 600;
+  font-size: 16px;
+  color: white;
+  background: linear-gradient(135deg, #4f6feb 0%, #5b73f5 100%);
+  border: none;
+}
+
+.contentTableWrapper td {
+  padding: 20px;
+  text-align: left;
+  border: none;
+  background-color: #f8f9fa;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.contentTableWrapper tbody tr:nth-child(even) td {
+  background-color: #f1f3f4;
+}
+
+.contentTableWrapper tbody tr:nth-child(odd) td {
+  background-color: #ffffff;
 }
 
 .richtext {
