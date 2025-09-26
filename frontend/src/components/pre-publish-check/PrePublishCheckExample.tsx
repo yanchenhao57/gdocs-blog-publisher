@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import PrePublishCheck from "./index";
+import { usePrePublishCheck } from "../../hooks/usePrePublishCheck";
 
 export default function PrePublishCheckExample() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [slug, setSlug] = useState("optimizing-business-decisions-analytics");
   const [language, setLanguage] = useState<"en" | "ja">("en");
-  const [checkResult, setCheckResult] = useState<{
-    exists: boolean;
-    fullSlug: string;
-  } | null>(null);
+  const { lastCheckResult } = usePrePublishCheck();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -20,9 +18,6 @@ export default function PrePublishCheckExample() {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
-  const handleCheckResult = (exists: boolean, fullSlug: string) => {
-    setCheckResult({ exists, fullSlug });
-  };
 
   const sampleSlugs = [
     "optimizing-business-decisions-analytics",
@@ -249,11 +244,10 @@ export default function PrePublishCheckExample() {
           <PrePublishCheck
             slug={slug}
             language={language}
-            onCheckResult={handleCheckResult}
           />
 
           {/* 检查结果反馈 */}
-          {checkResult && (
+          {lastCheckResult && (
             <div
               style={{
                 marginTop: "1rem",
@@ -271,7 +265,7 @@ export default function PrePublishCheckExample() {
                   marginBottom: "0.5rem",
                 }}
               >
-                回调结果:
+                检查结果:
               </h3>
               <pre
                 style={{
@@ -281,7 +275,11 @@ export default function PrePublishCheckExample() {
                   fontFamily: "Monaco, Menlo, Ubuntu Mono, monospace",
                 }}
               >
-                {JSON.stringify(checkResult, null, 2)}
+                {JSON.stringify({
+                  exists: lastCheckResult.exists,
+                  fullSlug: lastCheckResult.full_slug,
+                  story: lastCheckResult.story
+                }, null, 2)}
               </pre>
             </div>
           )}
@@ -354,14 +352,20 @@ export default function PrePublishCheckExample() {
                 color: theme === "dark" ? "#f9fafb" : "#1f2937",
               }}
             >
-              {`<PrePublishCheck
+              {`// 在父组件中使用 hook 获取检查结果
+const { isChecking, lastCheckResult } = usePrePublishCheck();
+
+// 使用组件
+<PrePublishCheck
   slug="your-article-slug"
   language="en"
-  onCheckResult={(exists, fullSlug) => {
-    console.log('URL exists:', exists);
-    console.log('Full slug:', fullSlug);
-  }}
-/>`}
+/>
+
+// 检查结果可以从 lastCheckResult 中获取
+if (lastCheckResult) {
+  console.log('URL exists:', lastCheckResult.exists);
+  console.log('Full slug:', lastCheckResult.full_slug);
+}`}
             </pre>
 
             <h3

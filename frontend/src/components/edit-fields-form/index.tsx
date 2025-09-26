@@ -35,19 +35,16 @@ import Button from "../button";
 import BlogCard from "../blog-card";
 import SeoMetaCard from "../seo-meta-card";
 import PrePublishCheck from "../pre-publish-check";
+import { usePrePublishCheck } from "../../hooks/usePrePublishCheck";
 
 export default function EditFieldsForm() {
   const editableFields = useEditableFields();
   const publishState = usePublishState();
   const canPublish = useCanPublish();
+  const { isChecking: isCheckingUrl, lastCheckResult } = usePrePublishCheck();
   const [previewMode, setPreviewMode] = useState<boolean>(false);
   const [showBackConfirmModal, setShowBackConfirmModal] =
     useState<boolean>(false);
-  const [slugConflict, setSlugConflict] = useState<{
-    exists: boolean;
-    fullSlug: string;
-  } | null>(null);
-  const [isCheckingUrl, setIsCheckingUrl] = useState(false);
 
   // 本地状态管理
   const [currentTabId, setCurrentTabId] = useState<string>("document");
@@ -274,14 +271,14 @@ export default function EditFieldsForm() {
     updateEditableField("canonical", value);
   };
 
-  // 处理 pre-publish 检查结果
-  const handlePrePublishCheckResult = (exists: boolean, fullSlug: string) => {
-    setSlugConflict({ exists, fullSlug });
-  };
-
-  const handleCheckStatusChange = (isChecking: boolean) => {
-    setIsCheckingUrl(isChecking);
-  };
+  // 根据 lastCheckResult 计算 slugConflict
+  const slugConflict = useMemo(() => {
+    if (!lastCheckResult) return null;
+    return {
+      exists: lastCheckResult.exists,
+      fullSlug: lastCheckResult.full_slug,
+    };
+  }, [lastCheckResult]);
 
   // 计算默认Canonical URL
   const defaultCanonicalUrl = useMemo(() => {
@@ -309,7 +306,6 @@ export default function EditFieldsForm() {
   const handleBack = () => {
     if (previewMode) {
       setPreviewMode(false);
-      setSlugConflict(null);
     } else {
       setShowBackConfirmModal(true);
     }
@@ -381,9 +377,6 @@ export default function EditFieldsForm() {
                     <PrePublishCheck
                       slug={editableFields.slug}
                       language={editableFields.language as "en" | "ja"}
-                      onCheckResult={handlePrePublishCheckResult}
-                      onCheckStatusChange={handleCheckStatusChange}
-                      autoCheck={true}
                     />
                   </div>
                 </div>

@@ -225,7 +225,9 @@ export interface ConversionActions {
   publishToStoryblok: () => Promise<void>;
 
   // 检查 Storyblok 中是否已存在该 full_slug
-  checkStoryblokFullSlug: (full_slug: string) => Promise<PrePublishCheckResponse>;
+  checkStoryblokFullSlug: (
+    full_slug: string
+  ) => Promise<PrePublishCheckResponse>;
 }
 
 export type ConversionStore = ConversionState & ConversionActions;
@@ -790,6 +792,7 @@ export const useConversionStore = create<ConversionStore>()(
 
             // 3. 调用API
             const result = await apiService.convertDocument(docId);
+            console.log("🚀 ~ result:", result);
 
             // 4. API调用成功 - 更新转换结果
             get().completeConversion(result);

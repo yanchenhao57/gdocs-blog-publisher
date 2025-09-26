@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { usePrePublishCheck } from "../../hooks/usePrePublishCheck";
 import styles from "./index.module.css";
 
@@ -11,12 +11,6 @@ export interface PrePublishCheckProps {
   language: "en" | "ja";
   /** Custom class name */
   className?: string;
-  /** Callback for check result changes */
-  onCheckResult?: (exists: boolean, fullSlug: string) => void;
-  /** Callback for check status changes */
-  onCheckStatusChange?: (isChecking: boolean) => void;
-  /** Whether to check immediately */
-  autoCheck?: boolean;
 }
 
 /**
@@ -27,40 +21,33 @@ export default function PrePublishCheck({
   slug,
   language,
   className,
-  onCheckResult,
-  onCheckStatusChange,
-  autoCheck = true,
 }: PrePublishCheckProps) {
   const { checkSlug, isChecking, lastCheckResult, clearResult } =
     usePrePublishCheck();
 
+  // 用 ref 来追踪上次检查的 slug，避免重复检查
+  const lastCheckedSlugRef = useRef<string>("");
+
   // Build full_slug based on language and slug
   const fullSlug = useMemo(() => {
     if (!slug.trim()) return "";
-    const prefix = language === "en" ? "en/blog" : "blog/";
+    const prefix = language === "en" ? "en/blog/" : "blog/";
     return `${prefix}${slug.trim()}`;
   }, [slug, language]);
 
-  // Auto-check logic - only check once when component mounts
+  // Auto-check logic - 只有当 slug 真正发生变化时才检查
   useEffect(() => {
-    if (!autoCheck || !fullSlug || isChecking) return;
+    if (!fullSlug) return;
+    
+    // 如果与上次检查的 slug 相同，则跳过检查
+    if (lastCheckedSlugRef.current === fullSlug) return;
+    
+    // 如果正在检查中，则跳过新的检查
+    if (isChecking) return;
 
+    lastCheckedSlugRef.current = fullSlug;
     checkSlug(fullSlug);
-  }, [fullSlug, autoCheck, checkSlug]); // Remove isChecking dependency to avoid repeated checks
-
-  // Notify parent component of check results
-  useEffect(() => {
-    if (lastCheckResult && onCheckResult) {
-      onCheckResult(lastCheckResult.exists, lastCheckResult.full_slug);
-    }
-  }, [lastCheckResult, onCheckResult]);
-
-  // Notify parent component of check status changes
-  useEffect(() => {
-    if (onCheckStatusChange) {
-      onCheckStatusChange(isChecking);
-    }
-  }, [isChecking, onCheckStatusChange]);
+  }, [fullSlug, checkSlug, isChecking]);
 
   // Don't display anything if there's no slug
   if (!slug.trim()) {
