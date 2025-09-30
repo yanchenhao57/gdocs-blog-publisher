@@ -87,7 +87,7 @@ export default function Home() {
       {renderCurrentStage()}
 
       {/* 开发调试信息 */}
-      {process.env.NODE_ENV === "development" && (
+      {/* {process.env.NODE_ENV === "development" && (
         <div
           style={{
             position: "fixed",
@@ -102,7 +102,7 @@ export default function Home() {
         >
           Current Stage: {workflowStage}
         </div>
-      )}
+      )} */}
     </main>
   );
 }
