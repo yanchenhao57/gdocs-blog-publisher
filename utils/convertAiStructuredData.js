@@ -68,6 +68,8 @@ ${sampleText}${markdown.length > 2000 ? "..." : ""}
     const result = await aiStructuredRequest(messages, schema, {
       max_tokens: 100,
       temperature: 0,
+      provider: "openai",
+      model: "gcp-claude-sonnet-4",
     });
     return result.language;
   } catch (error) {
@@ -288,10 +290,11 @@ async function performAiAnalysis(content, userLanguage = null) {
 
   // 执行AI分析
   const aiMeta = await aiStructuredRequest(messages, schema, {
-    max_tokens: 800,
+    max_tokens: 2000,
     temperature: 0,
     retries: 2,
-    model: "mercury-coder-small",
+    model: "gcp-claude-sonnet-4",
+    provider: "openai",
   });
 
   // 验证和修正结果
