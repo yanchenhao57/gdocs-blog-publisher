@@ -8,6 +8,8 @@ import {
   CheckCircle,
   Loader2,
   Rocket,
+  Copy,
+  Check,
 } from "lucide-react";
 
 interface DocInputProps {
@@ -20,6 +22,7 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
   const [isValid, setIsValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [docId, setDocId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // 从链接中提取 Google Docs ID
   const extractDocId = (link: string): string | null => {
@@ -129,6 +132,21 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
     }
   };
 
+  // 复制邮箱地址
+  const handleCopyEmail = async () => {
+    const email = "yanchenhao057@gmail.com";
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000); // 3秒后重置状态
+    } catch (err) {
+      console.error("Failed to copy email:", err);
+      // 如果复制失败，也显示成功状态，因为用户已经点击了
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <div
       className="w-full max-w-2xl"
@@ -152,41 +170,110 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
 
       <div className="space-y-6" style={{ marginBottom: "1.5rem" }}>
         <div>
-          <label
-            htmlFor="doc-link"
-            className="block text-sm font-medium mb-3"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              fontSize: "0.875rem",
-              fontWeight: "500",
-              marginBottom: "0.75rem",
-              color: "#000000",
-            }}
-          >
-            <Link size={16} />
-            <div
+          <div style={{ marginBottom: "0.75rem" }}>
+            <label
+              htmlFor="doc-link"
+              className="block text-sm font-medium mb-2"
               style={{
                 display: "flex",
-                flexDirection: "column",
+                alignItems: "center",
                 gap: "0.5rem",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+                marginBottom: "0.5rem",
+                color: "#000000",
               }}
             >
-              <span>Enter Google Docs Document Link</span>{" "}
-              <span
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: "400",
-                  color: "#666666",
-                }}
-              >
-                You need to share the document with "
-                <strong>yanchenhao05@gmail.com</strong>" first! Then I can
-                convert it.
-              </span>
+              <Link size={16} />
+              <span>Enter Google Docs Document Link</span>
+            </label>
+            
+            <div
+              style={{
+                fontSize: "0.875rem",
+                fontWeight: "400",
+                color: "#666666",
+                marginBottom: "0.5rem",
+                padding: "0.75rem",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "0.5rem",
+                border: "1px solid #e9ecef",
+              }}
+            >
+              <div style={{ marginBottom: "0.5rem" }}>
+                <span style={{ fontWeight: "500", color: "#495057" }}>
+                  📧 Before converting, please share your Google Docs document with:
+                </span>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                    backgroundColor: "#ffffff",
+                    padding: "0.375rem 0.75rem",
+                    borderRadius: "0.375rem",
+                    border: copied ? "2px solid #10b981" : "1px solid #dee2e6",
+                    fontFamily: "monospace",
+                    fontSize: "0.8rem",
+                    transition: "all 0.3s ease",
+                    boxShadow: copied ? "0 0 0 3px rgba(16, 185, 129, 0.1)" : "none",
+                  }}
+                >
+                  <strong style={{ color: copied ? "#10b981" : "#495057" }}>
+                    yanchenhao057@gmail.com
+                  </strong>
+                  <button
+                    onClick={handleCopyEmail}
+                    style={{
+                      background: copied ? "#10b981" : "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "0.25rem",
+                      borderRadius: "0.25rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.3s ease",
+                      minWidth: "20px",
+                      minHeight: "20px",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!copied) {
+                        e.currentTarget.style.backgroundColor = "#f0f0f0";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!copied) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                    }}
+                    title={copied ? "Email copied to clipboard!" : "Click to copy email address"}
+                  >
+                    {copied ? (
+                      <Check 
+                        size={14} 
+                        style={{ 
+                          color: "#ffffff",
+                          transition: "all 0.3s ease"
+                        }} 
+                      />
+                    ) : (
+                      <Copy 
+                        size={14} 
+                        style={{ 
+                          color: "#666666",
+                          transition: "all 0.3s ease"
+                        }} 
+                      />
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
-          </label>
+          </div>
           <input
             id="doc-link"
             type="text"
