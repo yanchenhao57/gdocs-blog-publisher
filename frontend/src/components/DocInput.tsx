@@ -187,7 +187,7 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
               <Link size={16} />
               <span>Enter Google Docs Document Link</span>
             </label>
-            
+
             <div
               style={{
                 fontSize: "0.875rem",
@@ -202,11 +202,19 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
             >
               <div style={{ marginBottom: "0.5rem" }}>
                 <span style={{ fontWeight: "500", color: "#495057" }}>
-                  📧 Before converting, please share your Google Docs document with:
+                  📧 Before converting, please share your Google Docs document
+                  with:
                 </span>
               </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  flexWrap: "wrap",
+                }}
+              >
                 <div
                   style={{
                     display: "flex",
@@ -219,7 +227,9 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
                     fontFamily: "monospace",
                     fontSize: "0.8rem",
                     transition: "all 0.3s ease",
-                    boxShadow: copied ? "0 0 0 3px rgba(16, 185, 129, 0.1)" : "none",
+                    boxShadow: copied
+                      ? "0 0 0 3px rgba(16, 185, 129, 0.1)"
+                      : "none",
                   }}
                 >
                   <strong style={{ color: copied ? "#10b981" : "#495057" }}>
@@ -250,23 +260,27 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
                         e.currentTarget.style.backgroundColor = "transparent";
                       }
                     }}
-                    title={copied ? "Email copied to clipboard!" : "Click to copy email address"}
+                    title={
+                      copied
+                        ? "Email copied to clipboard!"
+                        : "Click to copy email address"
+                    }
                   >
                     {copied ? (
-                      <Check 
-                        size={14} 
-                        style={{ 
+                      <Check
+                        size={14}
+                        style={{
                           color: "#ffffff",
-                          transition: "all 0.3s ease"
-                        }} 
+                          transition: "all 0.3s ease",
+                        }}
                       />
                     ) : (
-                      <Copy 
-                        size={14} 
-                        style={{ 
+                      <Copy
+                        size={14}
+                        style={{
                           color: "#666666",
-                          transition: "all 0.3s ease"
-                        }} 
+                          transition: "all 0.3s ease",
+                        }}
                       />
                     )}
                   </button>
