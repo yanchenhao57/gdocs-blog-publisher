@@ -215,7 +215,7 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
                     backgroundColor: "#ffffff",
                     padding: "0.375rem 0.75rem",
                     borderRadius: "0.375rem",
-                    border: copied ? "2px solid #10b981" : "1px solid #dee2e6",
+                    border: copied ? "1px solid #10b981" : "1px solid #dee2e6",
                     fontFamily: "monospace",
                     fontSize: "0.8rem",
                     transition: "all 0.3s ease",
