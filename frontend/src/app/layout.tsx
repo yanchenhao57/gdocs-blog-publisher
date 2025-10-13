@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/contexts/AppContext";
 import { Toaster } from "sonner";
+import RouterMenu from "@/components/router-menu";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AppProvider>{children}</AppProvider>
+        <AppProvider>
+          <RouterMenu />
+          {children}
+        </AppProvider>
         <Toaster richColors position="top-left" visibleToasts={10} expand />
       </body>
     </html>
