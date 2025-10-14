@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef } from "react";
-import { usePrePublishCheck } from "../../hooks/usePrePublishCheck";
+import { PrePublishCheckResponse } from "../../services/api";
 import styles from "./index.module.css";
 
 export interface PrePublishCheckProps {
@@ -11,6 +11,12 @@ export interface PrePublishCheckProps {
   language: "en" | "ja";
   /** Custom class name */
   className?: string;
+  /** Check function from parent */
+  onCheckSlug: (fullSlug: string) => Promise<PrePublishCheckResponse>;
+  /** Checking state from parent */
+  isChecking: boolean;
+  /** Last check result from parent */
+  lastCheckResult: PrePublishCheckResponse | null;
 }
 
 /**
@@ -21,10 +27,10 @@ export default function PrePublishCheck({
   slug,
   language,
   className,
+  onCheckSlug,
+  isChecking,
+  lastCheckResult,
 }: PrePublishCheckProps) {
-  const { checkSlug, isChecking, lastCheckResult, clearResult } =
-    usePrePublishCheck();
-
   // 用 ref 来追踪上次检查的 slug，避免重复检查
   const lastCheckedSlugRef = useRef<string>("");
 
@@ -46,8 +52,8 @@ export default function PrePublishCheck({
     if (isChecking) return;
 
     lastCheckedSlugRef.current = fullSlug;
-    checkSlug(fullSlug);
-  }, [fullSlug, checkSlug, isChecking]);
+    onCheckSlug(fullSlug);
+  }, [fullSlug, onCheckSlug, isChecking]);
 
   // Don't display anything if there's no slug
   if (!slug.trim()) {

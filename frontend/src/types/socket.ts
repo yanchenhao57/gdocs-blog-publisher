@@ -44,6 +44,9 @@ export interface AiMeta {
   reading_time: number;
   language: string;
   cover_alt: string;
+  _fallback?: boolean; // 标记是否使用了fallback数据
+  _documentType?: string; // 文档类型（用于调试）
+  _keywordCount?: number; // 关键词数量（用于调试）
 }
 
 // 基础通知数据结构

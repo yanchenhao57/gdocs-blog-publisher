@@ -794,13 +794,24 @@ export const useConversionStore = create<ConversionStore>()(
             const result = await apiService.convertDocument(docId);
             console.log("🚀 ~ result:", result);
 
-            // 4. API调用成功 - 更新转换结果
+            // 4. 检查是否使用了fallback数据
+            if (result.aiMeta?._fallback) {
+              get().useAiFallback(
+                result.aiMeta,
+                "AI analysis failed",
+                "Using document structure-based defaults"
+              );
+            } else {
+              get().completeAiAnalysis(result.aiMeta, "AI analysis completed");
+            }
+
+            // 5. API调用成功 - 更新转换结果
             get().completeConversion(result);
 
-            // 5. 使用API返回的真实数据初始化可编辑字段
+            // 6. 使用API返回的真实数据初始化可编辑字段
             get().initializeEditableFields(result.aiMeta, result);
 
-            // 6. 进入编辑字段阶段
+            // 7. 进入编辑字段阶段
             get().enterEditFieldsStage();
 
             console.log("📋 转换完成，API响应:", result);
@@ -838,8 +849,16 @@ export const useConversionStore = create<ConversionStore>()(
               userLanguage
             );
 
-            // 4. 更新AI分析结果
-            get().completeAiAnalysis(response.aiMeta, response.message);
+            // 4. 检查是否使用了fallback数据并更新AI分析结果
+            if (response.aiMeta?._fallback) {
+              get().useAiFallback(
+                response.aiMeta,
+                "AI analysis failed",
+                response.message || "Using document structure-based defaults"
+              );
+            } else {
+              get().completeAiAnalysis(response.aiMeta, response.message);
+            }
 
             // 5. 更新可编辑字段
             const currentResult = get().result;
@@ -848,9 +867,15 @@ export const useConversionStore = create<ConversionStore>()(
             }
 
             // 6. 显示成功Toast
-            ToastUtils.success("🎯 AI Data Regenerated", {
-              description:
-                response.message || "AI analysis completed successfully",
+            const toastMessage = response.aiMeta?._fallback
+              ? "🔄 AI Fallback Applied"
+              : "🎯 AI Data Regenerated";
+            const toastDescription = response.aiMeta?._fallback
+              ? "AI analysis failed, using document structure-based defaults"
+              : response.message || "AI analysis completed successfully";
+            
+            ToastUtils.success(toastMessage, {
+              description: toastDescription,
               duration: 4000,
             });
 

@@ -6,6 +6,7 @@ import {
   usePublishState,
   useCanPublish,
   useConversionStoreClient,
+  useAiAnalysisStatus,
 } from "../../stores/conversionStoreClient";
 import Input from "../input";
 import Tab, { TabItem } from "../tab";
@@ -20,6 +21,7 @@ import {
   ArrowRight,
   Rss,
   SquarePen,
+  AlertTriangle,
 } from "lucide-react";
 import Dropdown, { DropdownOption } from "../dropdown";
 import NumberStepper from "../number-stepper";
@@ -41,7 +43,8 @@ export default function EditFieldsForm() {
   const editableFields = useEditableFields();
   const publishState = usePublishState();
   const canPublish = useCanPublish();
-  const { isChecking: isCheckingUrl, lastCheckResult } = usePrePublishCheck();
+  const aiAnalysis = useAiAnalysisStatus();
+  const { checkSlug, isChecking: isCheckingUrl, lastCheckResult } = usePrePublishCheck();
   const [previewMode, setPreviewMode] = useState<boolean>(false);
   const [showBackConfirmModal, setShowBackConfirmModal] =
     useState<boolean>(false);
@@ -49,6 +52,8 @@ export default function EditFieldsForm() {
   // 本地状态管理
   const [currentTabId, setCurrentTabId] = useState<string>("document");
   const [customTitle, setCustomTitle] = useState<string>("");
+  const [isCanonicalManuallyEdited, setIsCanonicalManuallyEdited] =
+    useState<boolean>(false);
 
   const {
     updateEditableField,
@@ -205,6 +210,8 @@ export default function EditFieldsForm() {
   const handleLanguageChange = (languageId: string, option: DropdownOption) => {
     // 更新语言，useEffect会自动处理作者的更新
     updateEditableField("language", languageId);
+    // 当 language 改变时，重置手动编辑标志，允许自动更新 canonical URL
+    setIsCanonicalManuallyEdited(false);
   };
 
   const handleAuthorChange = (authorId: string, option: DropdownOption) => {
@@ -265,10 +272,14 @@ export default function EditFieldsForm() {
 
   const handleArticleSlugChange = (value: string) => {
     updateEditableField("slug", value);
+    // 当 slug 改变时，重置手动编辑标志，允许自动更新 canonical URL
+    setIsCanonicalManuallyEdited(false);
   };
 
   const handleCanonicalUrlChange = (value: string) => {
     updateEditableField("canonical", value);
+    // 标记 canonical URL 已被用户手动修改
+    setIsCanonicalManuallyEdited(true);
   };
 
   // 根据 lastCheckResult 计算 slugConflict
@@ -280,20 +291,33 @@ export default function EditFieldsForm() {
     };
   }, [lastCheckResult]);
 
-  // 计算默认Canonical URL
+  // 计算默认Canonical URL（纯计算，不包含副作用）
   const defaultCanonicalUrl = useMemo(() => {
     const blogPath =
       editableFields.language === "ja" ? JP_BLOG_PATH : EN_BLOG_PATH;
     const slug = editableFields.slug;
     if (slug) {
-      const canonicalUrl = `${NOTTA_HOST}${blogPath}/${slug}`;
-      updateEditableField("canonical", canonicalUrl);
-      return canonicalUrl;
-    } else {
-      updateEditableField("canonical", "");
-      return "";
+      return `${NOTTA_HOST}${blogPath}/${slug}`;
     }
+    return "";
   }, [editableFields.language, editableFields.slug]);
+
+  // 当 slug 或 language 改变时，自动更新 canonical URL
+  useEffect(() => {
+    // 只有当用户没有手动修改 canonical URL，且计算出的 canonical URL 与当前值不同时才更新
+    if (
+      !isCanonicalManuallyEdited &&
+      defaultCanonicalUrl &&
+      editableFields.canonical !== defaultCanonicalUrl
+    ) {
+      updateEditableField("canonical", defaultCanonicalUrl);
+    }
+  }, [
+    defaultCanonicalUrl,
+    editableFields.canonical,
+    updateEditableField,
+    isCanonicalManuallyEdited,
+  ]);
 
   const handleCoverImageChange = (value: string) => {
     updateEditableField("coverUrl", value);
@@ -326,7 +350,9 @@ export default function EditFieldsForm() {
         <h1 className={styles.title}>
           Configuring Content Fields
           {result?.firstH1Title && (
-            <span className={styles.document_name}>for "{result.firstH1Title}"</span>
+            <span className={styles.document_name}>
+              for "{result.firstH1Title}"
+            </span>
           )}
         </h1>
       </div>
@@ -377,6 +403,9 @@ export default function EditFieldsForm() {
                     <PrePublishCheck
                       slug={editableFields.slug}
                       language={editableFields.language as "en" | "ja"}
+                      onCheckSlug={checkSlug}
+                      isChecking={isCheckingUrl}
+                      lastCheckResult={lastCheckResult}
                     />
                   </div>
                 </div>
@@ -499,6 +528,21 @@ export default function EditFieldsForm() {
         </div>
         <div className={styles.actions_container}>
           <div className={styles.actions_content}>
+            {/* AI Fallback Warning */}
+            {!previewMode && aiAnalysis.usedFallback && (
+              <div className={styles.fallback_warning}>
+                <div className={styles.fallback_warning_header}>
+                  <AlertTriangle size={16} />
+                  <strong>AI Analysis Failed</strong>
+                </div>
+                <p className={styles.fallback_warning_text}>
+                  The AI request failed, and fallback data is being used. You
+                  can manually edit the fields or click the "Regenerate AI"
+                  button below to try again.
+                </p>
+              </div>
+            )}
+
             {/* 发布 */}
             <div className={styles.actions_item}>
               <Button
@@ -550,8 +594,18 @@ export default function EditFieldsForm() {
                   className={styles.actions_button}
                   onClick={handleRegenerateAi}
                   variant="secondary"
+                  disabled={aiAnalysis.isAnalyzing}
                 >
-                  Regenerate AI
+                  <div className={styles.actions_button_container}>
+                    {aiAnalysis.isAnalyzing ? (
+                      <>
+                        <div className={styles.spinner}></div>
+                        Regenerating...
+                      </>
+                    ) : (
+                      <>Regenerate AI</>
+                    )}
+                  </div>
                 </Button>
                 <span className={styles.regenerate_ai_description}>
                   If you are not satisfied with the AI generated content, you
