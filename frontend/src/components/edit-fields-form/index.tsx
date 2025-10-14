@@ -37,14 +37,20 @@ import Button from "../button";
 import BlogCard from "../blog-card";
 import SeoMetaCard from "../seo-meta-card";
 import PrePublishCheck from "../pre-publish-check";
+import StoryblokBlogDisplay from "../storyblok-blog-display";
 import { usePrePublishCheck } from "../../hooks/usePrePublishCheck";
+import type { IBlogStory } from "../../types/storyblok";
 
 export default function EditFieldsForm() {
   const editableFields = useEditableFields();
   const publishState = usePublishState();
   const canPublish = useCanPublish();
   const aiAnalysis = useAiAnalysisStatus();
-  const { checkSlug, isChecking: isCheckingUrl, lastCheckResult } = usePrePublishCheck();
+  const {
+    checkSlug,
+    isChecking: isCheckingUrl,
+    lastCheckResult,
+  } = usePrePublishCheck();
   const [previewMode, setPreviewMode] = useState<boolean>(false);
   const [showBackConfirmModal, setShowBackConfirmModal] =
     useState<boolean>(false);
@@ -291,6 +297,47 @@ export default function EditFieldsForm() {
     };
   }, [lastCheckResult]);
 
+  // 构造预览用的 Storyblok story 数据
+  const previewStoryData = useMemo<IBlogStory | null>(() => {
+    if (!result?.richtext) return null;
+
+    return {
+      id: 0, // 预览用临时ID
+      name: editableFields.heading_h1 || "Preview",
+      slug: editableFields.slug || "preview",
+      full_slug: `blog/${editableFields.slug || "preview"}`,
+      created_at: new Date().toISOString(),
+      published_at: new Date().toISOString(),
+      uuid: "preview-uuid",
+      content: {
+        author_id: editableFields.author_id || "",
+        body: result.richtext,
+        canonical: editableFields.canonical || "",
+        cover: {
+          id: 0,
+          alt: editableFields.coverAlt || "",
+          name: "",
+          focus: "",
+          title: "",
+          source: "",
+          filename: editableFields.coverUrl || "",
+          copyright: "",
+          fieldtype: "asset",
+          meta_data: {},
+          is_external_url: false,
+        },
+        cta: [],
+        date: editableFields.date || new Date().toISOString().split("T")[0],
+        title: editableFields.heading_h1 || "",
+        description: editableFields.seo_description || "",
+        feature_and_summary: [],
+        heading_h1: editableFields.heading_h1 || "",
+        reading_time: editableFields.reading_time.toString() + " min",
+        is_show_newsletter_dialog: editableFields.is_show_newsletter_dialog,
+      },
+    };
+  }, [result?.richtext, editableFields]);
+
   // 计算默认Canonical URL（纯计算，不包含副作用）
   const defaultCanonicalUrl = useMemo(() => {
     const blogPath =
@@ -363,7 +410,7 @@ export default function EditFieldsForm() {
               <>
                 {/* 预览模式 */}
                 <div className={styles.preview_container}>
-                  <div className={styles.preview_card}>
+                  {/* <div className={styles.preview_card}>
                     <BlogCard
                       title={editableFields.heading_h1}
                       description={editableFields.seo_description}
@@ -387,6 +434,16 @@ export default function EditFieldsForm() {
                       coverImage={editableFields.coverUrl}
                       showExternalIcon={true}
                     />
+                  </div> */}
+                  {/* Pre-publish Check */}
+                  <div className={styles.pre_publish_container}>
+                    <PrePublishCheck
+                      slug={editableFields.slug}
+                      language={editableFields.language as "en" | "ja"}
+                      onCheckSlug={checkSlug}
+                      isChecking={isCheckingUrl}
+                      lastCheckResult={lastCheckResult}
+                    />
                   </div>
                   {/* SEO meta */}
                   <div className={styles.seo_meta_container}>
@@ -398,16 +455,12 @@ export default function EditFieldsForm() {
                     />
                   </div>
 
-                  {/* Pre-publish Check */}
-                  <div className={styles.pre_publish_container}>
-                    <PrePublishCheck
-                      slug={editableFields.slug}
-                      language={editableFields.language as "en" | "ja"}
-                      onCheckSlug={checkSlug}
-                      isChecking={isCheckingUrl}
-                      lastCheckResult={lastCheckResult}
-                    />
-                  </div>
+                  {/* Blog Content Preview */}
+                  {previewStoryData && (
+                    <div className={styles.blog_content_preview}>
+                      <StoryblokBlogDisplay storyData={previewStoryData} />
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

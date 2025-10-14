@@ -5,14 +5,14 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
-  max-width: 600px;
   width: 100%;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-color: #d1d5db;
 }
 
@@ -238,24 +238,24 @@
   .card {
     max-width: 100%;
   }
-  
+
   .content {
     padding: 12px;
     gap: 12px;
   }
-  
+
   .header {
     padding: 10px 12px;
   }
-  
+
   .previewContent {
     padding: 12px;
   }
-  
+
   .previewTitle {
     font-size: 16px;
   }
-  
+
   .previewUrl,
   .previewDescription {
     font-size: 13px;
@@ -270,7 +270,8 @@
 
 [data-theme="dark"] .card:hover {
   border-color: #4b5563;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .header {
