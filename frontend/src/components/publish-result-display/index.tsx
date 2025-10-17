@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import copy from "copy-to-clipboard";
 import {
   CheckCircle,
   XCircle,
@@ -25,16 +26,15 @@ export default function PublishResultDisplay() {
     resetWorkflow();
   };
 
-  const handleCopyUrl = async () => {
+  const handleCopyUrl = () => {
     if (publishState.publishResult?.publishedUrl) {
-      try {
-        await navigator.clipboard.writeText(
-          publishState.publishResult.publishedUrl
-        );
+      const success = copy(publishState.publishResult.publishedUrl);
+      
+      if (success) {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
-      } catch (err) {
-        console.error("Failed to copy URL:", err);
+      } else {
+        console.error("Failed to copy URL");
       }
     }
   };

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import copy from "copy-to-clipboard";
 import {
   FileText,
   RotateCcw,
@@ -90,14 +91,15 @@ export default function OutputStep({ onStartOver }: OutputStepProps) {
   };
 
   // 复制链接功能
-  const handleCopyUrl = async () => {
+  const handleCopyUrl = () => {
     if (publishResult?.previewLink) {
-      try {
-        await navigator.clipboard.writeText(publishResult.previewLink);
+      const success = copy(publishResult.previewLink);
+
+      if (success) {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
-      } catch (err) {
-        console.error("Failed to copy URL:", err);
+      } else {
+        console.error("Failed to copy URL");
       }
     }
   };

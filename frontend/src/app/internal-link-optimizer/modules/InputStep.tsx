@@ -133,7 +133,7 @@ export default function InputStep({
             <input
               id="blogUrl"
               type="url"
-              placeholder="https://yourblog.com/post-title"
+              placeholder="https://www.notta.ai/en/blog/post-slug"
               value={blogUrl}
               onChange={(e) => setBlogUrl(e.target.value)}
               className={styles.urlInput}

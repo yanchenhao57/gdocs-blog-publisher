@@ -33,3 +33,46 @@ export const EN_AUTHOR_MAP = {
   "francesca-harrall": "Francesca Harrall",
   "andjela-vasic": "Andjela Vasic",
 };
+
+export const ALL_TAGS = [
+  "Productivity",
+  "効率化",
+  "Transcription",
+  "Meetings",
+  "プロダクト",
+  "文字起こし",
+  "Product",
+  "議事録作成",
+  "会議関連",
+  "インタビュー",
+  "Sales",
+  "営業関連",
+  "マニュアル",
+  "Remote work",
+  "AI最前線レポート",
+  "動画コンテンツ",
+  "お役立ち資料",
+];
+
+export const ALL_TAGS_JP = [
+  "効率化",
+  "プロダクト",
+  "文字起こし",
+  "議事録作成",
+  "会議関連",
+  "インタビュー",
+  "営業関連",
+  "マニュアル",
+  "AI最前線レポート",
+  "動画コンテンツ",
+  "お役立ち資料",
+];
+
+export const ALL_TAGS_EN = [
+  "Productivity",
+  "Transcription",
+  "Meetings",
+  "Product",
+  "Sales",
+  "Remote work",
+];

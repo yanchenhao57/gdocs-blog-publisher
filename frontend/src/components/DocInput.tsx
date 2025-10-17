@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import copy from "copy-to-clipboard";
 import {
   FileText,
   Link,
@@ -133,14 +134,15 @@ const DocInput: React.FC<DocInputProps> = ({ onConvert }) => {
   };
 
   // 复制邮箱地址
-  const handleCopyEmail = async () => {
+  const handleCopyEmail = () => {
     const email = "yanchenhao057@gmail.com";
-    try {
-      await navigator.clipboard.writeText(email);
+    const success = copy(email);
+
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 3000); // 3秒后重置状态
-    } catch (err) {
-      console.error("Failed to copy email:", err);
+    } else {
+      console.error("Failed to copy email");
       // 如果复制失败，也显示成功状态，因为用户已经点击了
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
