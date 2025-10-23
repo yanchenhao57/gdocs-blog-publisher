@@ -61,7 +61,7 @@ const aiRequest = async (messages, options = {}) => {
   let apiKey, apiUrl;
   if (config.provider === "openai") {
     apiKey = process.env.OPENAI_API_KEY;
-    apiUrl = "http://litellm-test.mc-k8s-apn1.notta.io/v1/chat/completions";
+    apiUrl = "http://litellm-dev.mc-k8s-apn1.notta.io/v1/chat/completions";
     if (!apiKey) {
       throw new Error("❌ 缺少 OPENAI_API_KEY 环境变量");
     }
