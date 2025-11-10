@@ -50,6 +50,9 @@ dependencies:
   storyblok-markdown-richtext:
     specifier: ^1.0.3
     version: 1.0.3
+  tiktoken:
+    specifier: ^1.0.22
+    version: 1.0.22
   turndown:
     specifier: ^7.2.0
     version: 7.2.0
@@ -4556,6 +4559,10 @@ packages:
 
   /through@2.3.8:
     resolution: {integrity: sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU=}
+    dev: false
+
+  /tiktoken@1.0.22:
+    resolution: {integrity: sha512-PKvy1rVF1RibfF3JlXBSP0Jrcw2uq3yXdgcEXtKTYn3QJ/cBRBHDnrJ5jHky+MENZ6DIPwNUGWpkVx+7joCpNA==}
     dev: false
 
   /to-regex-range@5.0.1:

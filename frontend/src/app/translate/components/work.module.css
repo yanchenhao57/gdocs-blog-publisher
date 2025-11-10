@@ -1,0 +1,481 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  padding: 24px;
+  overflow: auto;
+}
+
+.mainContent {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: #000000;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+/* 浮动的状态列表容器 */
+.floatingStages {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1000;
+  max-width: 400px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 折叠/展开按钮 */
+.collapseToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+  transition: background-color 0.2s ease;
+}
+
+.collapseToggle:hover {
+  background-color: #e9ecef;
+}
+
+.collapseToggleText {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 阶段列表 */
+.stagesList {
+  padding: 0;
+  margin-left: 20px;
+}
+
+.stageItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.stageItem:last-child {
+  border-bottom: none;
+}
+
+.iconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.functionIcon {
+  color: #64748b;
+}
+
+.stageContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.stageTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111111;
+  margin: 0;
+}
+
+.stageDescription {
+  font-size: 12px;
+  color: #666666;
+  margin: 0;
+}
+
+.statusWrapper {
+  width: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 图标状态样式 */
+.iconSpin {
+  animation: spin 1s linear infinite;
+  color: #3b82f6;
+}
+
+.iconSuccess {
+  color: #22c55e;
+}
+
+.iconError {
+  color: #ef4444;
+}
+
+.iconPending {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #d1d5db;
+  font-size: 24px;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 工作状态额外内容 */
+.workingContent {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+  min-height: 300px;
+}
+
+.workingPlaceholder {
+  text-align: center;
+  color: #6b7280;
+}
+
+.workingPlaceholder p {
+  margin: 0 0 0.5rem 0;
+}
+
+.workingHint {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+/* 错误状态 */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.errorIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #fef2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: #ef4444;
+}
+
+.errorTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111111;
+  margin-bottom: 0.5rem;
+}
+
+.errorMessage {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+  max-width: 400px;
+}
+
+.errorActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.iframe {
+  width: 100%;
+  height: 100vh;
+  border: none;
+}
+
+.selectContainer {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.5;
+  width: 200px;
+}
+
+.selectContainerReady {
+  cursor: pointer;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.resultContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.confirmationContainer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 上传状态内容 */
+.uploadingContent {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.uploadingTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111111;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.uploadingList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.uploadingItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.uploadingItem:hover {
+  background-color: #f1f3f5;
+  border-color: #dee2e6;
+}
+
+.uploadingItemIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.uploadingItemContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.uploadingItemLanguage {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.uploadingItemDetails {
+  font-size: 14px;
+  color: #666666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 状态徽章 */
+.statusBadgePending {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #e9ecef;
+  color: #6c757d;
+}
+
+.statusBadgeLoading {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #dbeafe;
+  color: #3b82f6;
+}
+
+.statusBadgeSuccess {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.statusBadgeError {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.statusBadgeSkipped {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+/* 完成状态 */
+.doneContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  margin-top: 2rem;
+}
+
+.doneIcon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.doneTitle {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #111111;
+  margin-bottom: 0.75rem;
+}
+
+.doneMessage {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.doneSummary {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summaryLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.summaryValue {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #10b981;
+}
+
+.summaryValueError {
+  color: #ef4444;
+}
+
+.doneActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
