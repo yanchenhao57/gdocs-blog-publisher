@@ -1,6 +1,9 @@
 import express from "express";
 import { publishBlogToStoryblok } from "../../utils/publishBlogToStoryblok.js";
-import { getStoryByFullSlugCDN } from "../../utils/storyblokCDNApi.js";
+import {
+  getStoryByFullSlugCDN,
+  publishStoryToStoryblok,
+} from "../../utils/storyblokCDNApi.js";
 import {
   BLOG_JP_PARENT_ID,
   BLOG_EN_PARENT_ID,
@@ -37,8 +40,8 @@ router.post("/pre-publish", async (req, res) => {
     const existingStory = await getStoryByFullSlugCDN(full_slug);
 
     const exists = !!existingStory;
-    
-    console.log(`📊 检查结果: ${exists ? '已存在' : '不存在'}`);
+
+    console.log(`📊 检查结果: ${exists ? "已存在" : "不存在"}`);
     if (exists) {
       console.log(`   - Story ID: ${existingStory.id}`);
       console.log(`   - Story Name: ${existingStory.name}`);
@@ -47,19 +50,20 @@ router.post("/pre-publish", async (req, res) => {
     res.json({
       exists,
       full_slug,
-      story: exists ? {
-        id: existingStory.id,
-        name: existingStory.name,
-        slug: existingStory.slug,
-        full_slug: existingStory.full_slug
-      } : null
+      story: exists
+        ? {
+            id: existingStory.id,
+            name: existingStory.name,
+            slug: existingStory.slug,
+            full_slug: existingStory.full_slug,
+          }
+        : null,
     });
-
   } catch (err) {
     console.error(`❌ Pre-publish 检查失败:`, err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: err.message,
-      exists: false 
+      exists: false,
     });
   }
 });
@@ -144,13 +148,27 @@ router.post("/", async (req, res) => {
 
     // 返回简化的响应信息
     const previewLink = `https://app.storyblok.com/#/me/spaces/${SPACE_ID}/stories/0/0/${result.story.id}`;
-    
+
     res.json({
       success: true,
       previewLink,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * 将一篇 story 设置为发布状态
+ */
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rs = await publishStoryToStoryblok(id);
+    res.json(rs);
+  } catch (err) {
+    console.error("❌ 发布 Storyblok 数据失败:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

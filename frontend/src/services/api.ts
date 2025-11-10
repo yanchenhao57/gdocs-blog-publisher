@@ -122,6 +122,18 @@ export interface InternalLinkOptimizationResponse {
   }>;
 }
 
+export interface TranslateStoryResponse {
+  data: {
+    lng: string;
+    story: StoryblokStory;
+  }[];
+}
+
+export interface UploadStoryToStoryblokResponse {
+  success: boolean;
+  data?: any;
+}
+
 class ApiService {
   private async request<T>(
     endpoint: string,
@@ -181,7 +193,9 @@ class ApiService {
   }
 
   // 检查 Storyblok 中是否已存在该 full_slug
-  async checkStoryblokFullSlug(full_slug: string): Promise<PrePublishCheckResponse> {
+  async checkStoryblokFullSlug(
+    full_slug: string
+  ): Promise<PrePublishCheckResponse> {
     return this.request<PrePublishCheckResponse>("/api/publish/pre-publish", {
       method: "POST",
       body: JSON.stringify({ full_slug }),
@@ -190,16 +204,23 @@ class ApiService {
 
   // 根据 full_slug 获取单个 Storyblok Story
   async getStoryblokStory(full_slug: string): Promise<StoryblokStory> {
-    const response = await this.request<GetStoryResponse>(`/api/storyblok/story/${encodeURIComponent(full_slug)}`);
+    const response = await this.request<GetStoryResponse>(
+      `/api/storyblok/story/${encodeURIComponent(full_slug)}`
+    );
     return response.data.story;
   }
 
   // 批量获取 Storyblok Stories
-  async getStoryblokStories(full_slugs: string[]): Promise<GetStoriesResponse["data"]> {
-    const response = await this.request<GetStoriesResponse>("/api/storyblok/stories", {
-      method: "POST",
-      body: JSON.stringify({ full_slugs }),
-    });
+  async getStoryblokStories(
+    full_slugs: string[]
+  ): Promise<GetStoriesResponse["data"]> {
+    const response = await this.request<GetStoriesResponse>(
+      "/api/storyblok/stories",
+      {
+        method: "POST",
+        body: JSON.stringify({ full_slugs }),
+      }
+    );
     return response.data;
   }
 
@@ -209,10 +230,47 @@ class ApiService {
   }
 
   // 内部链接优化
-  async optimizeInternalLinks(data: InternalLinkOptimizationRequest): Promise<InternalLinkOptimizationResponse> {
-    return this.request<InternalLinkOptimizationResponse>("/api/internal-link-optimizer", {
+  async optimizeInternalLinks(
+    data: InternalLinkOptimizationRequest
+  ): Promise<InternalLinkOptimizationResponse> {
+    return this.request<InternalLinkOptimizationResponse>(
+      "/api/internal-link-optimizer",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
+  async translateStory(
+    story: StoryblokStory,
+    lngInfo: string[]
+  ): Promise<TranslateStoryResponse> {
+    return this.request<TranslateStoryResponse>("/api/translate/generated", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ story, lngInfo }),
+    });
+  }
+
+  // 创建 Storyblok 数据
+  async uploadStoryToStoryblok({
+    story,
+  }: {
+    story: StoryblokStory;
+  }): Promise<UploadStoryToStoryblokResponse> {
+    return this.request<UploadStoryToStoryblokResponse>(
+      "/api/storyblok/upload",
+      {
+        method: "POST",
+        body: JSON.stringify({ story }),
+      }
+    );
+  }
+
+  // 发布 Storyblok 数据
+  async publishStoryToStoryblok(id: number): Promise<any> {
+    return this.request<any>(`/api/publish/${id}`, {
+      method: "GET",
     });
   }
 }

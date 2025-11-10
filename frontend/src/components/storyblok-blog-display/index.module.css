@@ -213,8 +213,7 @@
 
 .blogRichTextIframeWrapper iframe {
   width: 100%;
-  height: auto;
-  min-height: 300px;
+  height: 100vh;
   border: none;
 }
 

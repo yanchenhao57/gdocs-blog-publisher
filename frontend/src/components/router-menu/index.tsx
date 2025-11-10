@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, FileText, Link, X } from "lucide-react";
+import { Menu, FileText, Link, X, Languages } from "lucide-react";
 import styles from "./index.module.css";
 
 interface RouteItem {
@@ -41,6 +41,11 @@ const RouterMenu = () => {
       icon: Link,
       label: "Internal Link Optimizer",
       path: "/internal-link-optimizer",
+    },
+    {
+      icon: Languages,
+      label: "Translate CMS Page",
+      path: "/translate",
     },
   ];
 

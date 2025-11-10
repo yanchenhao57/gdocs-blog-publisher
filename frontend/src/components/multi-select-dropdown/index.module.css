@@ -1,0 +1,380 @@
+.dropdown_container {
+  position: relative;
+  width: 100%;
+  min-width: 200px;
+}
+
+.dropdown_container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 触发按钮样式 */
+.dropdown_trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  outline: none;
+  min-height: 48px;
+}
+
+.multi_select_trigger {
+  align-items: flex-start;
+}
+
+.dropdown_trigger:hover:not(:disabled) {
+  border-color: #d1d5db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown_trigger.open {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dropdown_trigger:disabled {
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}
+
+.trigger_content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.trigger_icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.trigger_label {
+  color: #1f2937;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trigger_placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* 标签容器样式 */
+.tags_container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* 标签样式 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e40af;
+  transition: all 0.2s ease;
+}
+
+.tag:hover {
+  background-color: #dbeafe;
+}
+
+.tag_label {
+  line-height: 1;
+}
+
+.tag_remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  color: #1e40af;
+  transition: all 0.15s ease;
+  line-height: 0;
+}
+
+.tag_remove:hover {
+  background-color: #1e40af;
+  color: #ffffff;
+}
+
+.chevron {
+  color: #6b7280;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.chevron_open {
+  transform: rotate(180deg);
+}
+
+/* 下拉菜单样式 */
+.dropdown_menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  animation: slideIn 0.2s ease;
+}
+
+.dropdown_menu_upward {
+  top: auto;
+  bottom: calc(100% + 4px);
+  animation: slideInUpward 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUpward {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 搜索框样式 */
+.search_container {
+  padding: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.search_input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.search_input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.search_input::placeholder {
+  color: #9ca3af;
+}
+
+/* 选项容器样式 */
+.options_container {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* 自定义滚动条 */
+.options_container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.options_container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.options_container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.options_container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 选项样式 */
+.option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-size: 14px;
+  text-align: left;
+}
+
+.option:hover:not(.option_disabled) {
+  background-color: #f3f4f6;
+}
+
+.option_selected {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.option_selected:hover {
+  background-color: #dbeafe;
+}
+
+.option_disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.option_content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.option_icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.option_label {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.check_icon {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+/* 无选项提示 */
+.no_options {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* 深色模式支持 - 手动控制 */
+[data-theme="dark"] .dropdown_trigger {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .dropdown_trigger:hover:not(:disabled) {
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .dropdown_trigger.open {
+  border-color: #3b82f6;
+}
+
+[data-theme="dark"] .dropdown_trigger:disabled {
+  background-color: #111827;
+}
+
+[data-theme="dark"] .trigger_label {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .trigger_placeholder {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .tag {
+  background-color: #1e3a8a;
+  border-color: #1e40af;
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .tag:hover {
+  background-color: #1e40af;
+}
+
+[data-theme="dark"] .tag_remove {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .tag_remove:hover {
+  background-color: #93c5fd;
+  color: #1e3a8a;
+}
+
+[data-theme="dark"] .dropdown_menu {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .search_container {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .search_input {
+  background-color: #111827;
+  border-color: #374151;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .search_input:focus {
+  border-color: #3b82f6;
+}
+
+[data-theme="dark"] .option:hover:not(.option_disabled) {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .option_selected {
+  background-color: #1e3a8a;
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .option_selected:hover {
+  background-color: #1e40af;
+}
+
+[data-theme="dark"] .no_options {
+  color: #9ca3af;
+}
+
