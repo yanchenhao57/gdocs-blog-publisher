@@ -326,7 +326,9 @@ const sendRequestWithRetry = async (requestBody, config, apiKey, apiUrl) => {
         // 特殊处理上下文长度超限错误
         if (
           response.status === 400 &&
-          errorText.includes("context_length_exceeded")
+          (errorText.includes("context_length_exceeded") ||
+            errorText.includes("Prompt is too long") ||
+            errorText.includes("Prompt too long"))
         ) {
           throw new Error(
             `❌ 请求内容过长，超出模型上下文限制 (${response.status}): ${errorText}`
@@ -352,6 +354,16 @@ const sendRequestWithRetry = async (requestBody, config, apiKey, apiUrl) => {
     } catch (error) {
       lastError = error;
       console.log(`⚠️ 请求失败 (尝试 ${attempt}): ${error}`);
+
+      // 如果是内容过长的错误，不需要重试
+      if (
+        error.message.includes("内容过长") ||
+        error.message.includes("Prompt is too long") ||
+        error.message.includes("Prompt too long")
+      ) {
+        console.log("❌ 内容过长错误，不进行重试");
+        throw error;
+      }
 
       if (attempt < config.retries) {
         console.log(`⏳ ${config.retryDelay}ms 后重试...`);

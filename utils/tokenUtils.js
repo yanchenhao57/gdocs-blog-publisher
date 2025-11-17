@@ -193,6 +193,7 @@ export const MODEL_LIMITS = {
   "gpt-4-32k": 32768,
   "gpt-3.5-turbo": 4096,
   "gpt-3.5-turbo-16k": 16384,
+  "gcp-claude-sonnet-4": 120000, // Reduced from 200K to leave room for system prompt and responses
 };
 
 /**

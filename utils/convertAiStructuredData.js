@@ -106,7 +106,8 @@ async function generateAiStructuredData(
 
   try {
     // 检查 token 限制并截取内容
-    const maxTokens = 100000; // 为 AI 请求预留的最大 token 数
+    // 使用更保守的token限制，留出足够空间给system prompt和其他开销
+    const maxTokens = 80000; // 为 AI 请求预留的最大 token 数
     const tokenEstimate = estimateTokenCount(markdown);
 
     let processedContent = markdown;
@@ -292,9 +293,10 @@ async function performAiAnalysis(content, userLanguage = null) {
   const aiMeta = await aiStructuredRequest(messages, schema, {
     max_tokens: 2000,
     temperature: 0,
-    retries: 2,
+    retries: 1, // 减少重试次数，失败更快进入fallback
     model: "gcp-claude-sonnet-4",
     provider: "openai",
+    autoOptimize: true, // 启用自动优化内容长度
   });
 
   // 验证和修正结果
