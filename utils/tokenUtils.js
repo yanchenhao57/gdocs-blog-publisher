@@ -193,7 +193,9 @@ export const MODEL_LIMITS = {
   "gpt-4-32k": 32768,
   "gpt-3.5-turbo": 4096,
   "gpt-3.5-turbo-16k": 16384,
-  "gcp-claude-sonnet-4": 120000, // Reduced from 200K to leave room for system prompt and responses
+  "gcp-claude-sonnet-4": 200000, // Claude Sonnet 4 via Vertex AI
+  "claude-sonnet-4": 200000,
+  "claude-sonnet-4-5": 200000,
 };
 
 /**
@@ -202,7 +204,20 @@ export const MODEL_LIMITS = {
  * @returns {number} 上下文限制token数
  */
 export function getModelLimit(modelName) {
-  return MODEL_LIMITS[modelName] || 4096; // 默认值
+  // 如果模型名称不在列表中，但包含已知模型名，尝试匹配
+  if (MODEL_LIMITS[modelName]) {
+    return MODEL_LIMITS[modelName];
+  }
+  
+  // 尝试模糊匹配
+  if (modelName.includes("claude-sonnet-4")) return 200000;
+  if (modelName.includes("claude")) return 200000;
+  if (modelName.includes("gpt-4o")) return 128000;
+  if (modelName.includes("mercury")) return 128000;
+  
+  // 默认值使用一个较大的值以避免不必要的截断
+  console.warn(`未知模型 "${modelName}", 使用默认上下文限制 128000 tokens`);
+  return 128000;
 }
 
 /**

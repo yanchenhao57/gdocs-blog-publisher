@@ -1,0 +1,963 @@
+/* 面板通用样式 */
+.editorPanel,
+.rendererPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* 折叠状态 */
+.editorPanel.collapsed {
+  width: 48px;
+  min-width: 48px;
+  background: #f9fafb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* 面板头部 */
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  gap: 16px;
+}
+
+/* 节点标题样式 */
+.nodeTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nodeLabel {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.nodeId {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  font-family: "Monaco", "Courier New", monospace;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  animation: nodeIdPulse 2s ease-in-out infinite;
+}
+
+@keyframes nodeIdPulse {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  }
+}
+
+.panelHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.projectNameDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  flex: 1;
+  justify-content: center;
+  max-width: 400px;
+}
+
+.projectNameDisplay svg {
+  flex-shrink: 0;
+  color: #6b7280;
+}
+
+.projectNameDisplay span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.panelHeader code {
+  background: #e5e7eb;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: "Monaco", "Courier New", monospace;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.collapseButton {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.collapseButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  transform: scale(0);
+  transition: transform 0.3s ease-out;
+}
+
+.collapseButton:hover::before {
+  transform: scale(1);
+}
+
+.collapseButton:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.collapseButton:active {
+  transform: scale(0.9);
+  transition: all 0.1s;
+}
+
+/* 面板底部 */
+.panelFooter {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint svg {
+  flex-shrink: 0;
+}
+
+/* === Mermaid 编辑器 === */
+.codeEditor {
+  flex: 1;
+  overflow: auto !important;
+  background: #fafafa !important;
+  border-radius: 0 !important;
+}
+
+.codeEditorTextarea {
+  outline: none !important;
+  font-family: "Monaco", "Courier New", monospace !important;
+}
+
+.codeEditorTextarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.codeEditorPre {
+  font-family: "Monaco", "Courier New", monospace !important;
+}
+
+/* === Mermaid 渲染器 === */
+.rendererContainer {
+  flex: 1;
+  position: relative;
+  overflow: hidden; /* 改为 hidden，由视口容器处理滚动 */
+  background: #ffffff; /* 纯白背景提高对比度 */
+  user-select: none; /* 拖拽时禁止选中文本 */
+}
+
+/* 视口容器 */
+.viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  will-change: transform;
+  /* 优化渲染性能和质量 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+}
+
+.mermaidOutput {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.mermaidOutput svg {
+  max-width: none; /* 移除最大宽度限制，允许缩放 */
+  height: auto;
+  /* 提高 SVG 渲染质量 */
+  shape-rendering: geometricPrecision;
+  text-rendering: optimizeLegibility;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  /* 强制使用硬件加速 */
+  transform: translateZ(0);
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  /* 确保高 DPI 显示 */
+  image-rendering: high-quality;
+}
+
+/* 优化 SVG 内部文字渲染 */
+.mermaidOutput svg text {
+  font-smooth: always;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: optimizeLegibility;
+  font-weight: 500;
+}
+
+/* 优化 SVG 路径和形状 */
+.mermaidOutput svg path,
+.mermaidOutput svg rect,
+.mermaidOutput svg circle,
+.mermaidOutput svg polygon {
+  shape-rendering: geometricPrecision;
+  vector-effect: non-scaling-stroke;
+}
+
+/* 选中节点的旋转虚线动画效果 */
+.mermaidOutput svg :global(.mermaid-node-selected) rect,
+.mermaidOutput svg :global(.mermaid-node-selected) circle,
+.mermaidOutput svg :global(.mermaid-node-selected) polygon {
+  stroke: #000000 !important;
+  stroke-width: 5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  stroke-dasharray: 15 15 !important;
+  animation: rotateDash 2s linear infinite;
+}
+
+@keyframes rotateDash {
+  to {
+    stroke-dashoffset: 60;
+  }
+}
+
+/* 控制按钮组 */
+.controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.controlButton {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controlButton:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.controlButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controlButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.renderingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 10;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorMessage {
+  padding: 24px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+}
+
+.errorMessage h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorMessage pre {
+  margin: 0;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.selectedNodeBadge {
+  padding: 4px 10px;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.zoomLevel {
+  padding: 4px 10px;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: "Monaco", "Courier New", monospace;
+}
+
+/* === 节点文档编辑器 === */
+.toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  flex-wrap: wrap;
+}
+
+.toolbarButton {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.toolbarButton:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.toolbarButton:active {
+  background: #e5e7eb;
+}
+
+.toolbarButton.active {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  color: #4f46e5;
+}
+
+.toolbarButton.active:hover {
+  background: #c7d2fe;
+  border-color: #4f46e5;
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 32px;
+  background: #e5e7eb;
+  margin: 0 4px;
+}
+
+.contentEditor {
+  flex: 1;
+  padding: 16px;
+  overflow: auto;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #111827;
+  background: #ffffff;
+}
+
+.contentEditor:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.contentEditor img {
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+  border-radius: 4px;
+  display: block;
+  transition: all 0.2s ease;
+  cursor: zoom-in;
+}
+
+.contentEditor img:hover {
+  opacity: 0.95;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.contentEditor h3 {
+  margin: 16px 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.contentEditor ul,
+.contentEditor ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.contentEditor p {
+  margin: 8px 0;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 24px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.emptyState p {
+  font-size: 14px;
+}
+
+/* === 按钮样式 === */
+.saveStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.saveStatus:hover {
+  opacity: 1;
+}
+
+.saveIcon {
+  flex-shrink: 0;
+  color: #6b7280;
+}
+
+.saveText {
+  font-weight: 400;
+}
+
+.deleteButton {
+  padding: 6px 10px;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.deleteButton:hover {
+  background: #fef2f2;
+}
+
+.deleteButton:active {
+  background: #fee2e2;
+}
+
+/* === 图片插入模态框 === */
+.imageModal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.15s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.imageModalContent {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.imageModalContent h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.imageUrlInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.15s;
+  box-sizing: border-box;
+}
+
+.imageUrlInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.imageModalButtons {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.imageModalButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.imageModalButton:hover {
+  background: #2563eb;
+}
+
+.imageModalButton:active {
+  transform: scale(0.98);
+}
+
+.imageModalButtonCancel {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.imageModalButtonCancel:hover {
+  background: #f3f4f6;
+}
+
+.imageModalButtonCancel:active {
+  transform: scale(0.98);
+}
+
+/* === 折叠面板 === */
+.collapsedPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  padding-top: 16px;
+}
+
+.expandButton {
+  width: 36px;
+  height: 80px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.expandButton:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.expandButton:active {
+  transform: scale(0.95);
+}
+
+.expandIcon {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.expandText {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 1px;
+}
+
+/* === Modal 样式 === */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 480px;
+  width: 90%;
+  overflow: hidden;
+}
+
+.modal h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 20px 24px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalContent {
+  padding: 20px 24px;
+}
+
+.modalContent p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.modalContent p:last-child {
+  margin-bottom: 0;
+}
+
+.nodeIdHighlight {
+  font-weight: 600;
+  color: #111827;
+  font-size: 15px;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  margin: 12px 0 !important;
+  word-break: break-all;
+}
+
+.warningText {
+  color: #dc2626 !important;
+  font-size: 13px !important;
+  margin-top: 12px !important;
+}
+
+.modalActions {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f9fafb;
+}
+
+.cancelButton,
+.confirmButton,
+.deleteButtonModal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.cancelButton {
+  background: white;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.cancelButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.confirmButton {
+  background: #111827;
+  border-color: #111827;
+  color: white;
+}
+
+.confirmButton:hover {
+  background: #1f2937;
+  border-color: #1f2937;
+}
+
+.deleteButtonModal {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.deleteButtonModal:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: white;
+}
+
+.deleteButtonModal svg {
+  color: white !important;
+}
+
+.cancelButton:active,
+.confirmButton:active,
+.deleteButtonModal:active {
+  transform: scale(0.98);
+}
+
+/* === Image Preview Modal === */
+.imagePreviewOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.imagePreviewContainer {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagePreviewContent {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.imagePreviewClose {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  z-index: 10002;
+}
+
+.imagePreviewClose:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.imagePreviewClose:active {
+  transform: scale(0.95);
+}
+

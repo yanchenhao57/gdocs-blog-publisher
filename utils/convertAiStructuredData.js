@@ -106,8 +106,9 @@ async function generateAiStructuredData(
 
   try {
     // 检查 token 限制并截取内容
-    // 使用更保守的token限制，留出足够空间给system prompt和其他开销
-    const maxTokens = 80000; // 为 AI 请求预留的最大 token 数
+    // 保守设置为 50000 tokens，为系统提示词和响应预留足够空间
+    // Claude Sonnet 4 的上下文限制是 200k tokens，但我们需要预留空间
+    const maxTokens = 50000; // 为 AI 请求预留的最大 token 数
     const tokenEstimate = estimateTokenCount(markdown);
 
     let processedContent = markdown;

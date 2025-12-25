@@ -78,10 +78,12 @@ const aiRequest = async (messages, options = {}) => {
 
   // 检查并优化内容长度
   if (config.autoOptimize) {
+    // 为响应预留更多空间，至少是 max_tokens + 5000
+    const reservedTokens = Math.max(config.max_tokens + 5000, 10000);
     const optimization = optimizeForModel(
       formattedMessages,
       config.model,
-      config.max_tokens + 1000
+      reservedTokens
     );
 
     if (optimization.optimized) {
@@ -332,6 +334,17 @@ const sendRequestWithRetry = async (requestBody, config, apiKey, apiUrl) => {
         ) {
           throw new Error(
             `❌ 请求内容过长，超出模型上下文限制 (${response.status}): ${errorText}`
+          );
+        }
+
+        // 特殊处理 Vertex AI 的 "Prompt is too long" 错误
+        if (
+          response.status === 500 &&
+          (errorText.includes("Prompt is too long") ||
+            errorText.includes("invalid_request_error"))
+        ) {
+          throw new Error(
+            `❌ 请求内容过长，超出模型上下文限制。请尝试处理更短的文档，或在代码中降低 maxTokens 的值。当前模型: ${requestBody.model}`
           );
         }
 

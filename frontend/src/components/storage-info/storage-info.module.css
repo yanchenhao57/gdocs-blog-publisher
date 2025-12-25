@@ -1,0 +1,140 @@
+.storageInfo {
+  padding: 12px;
+  background: var(--color-bg-secondary, #f8f9fa);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary, #333);
+}
+
+.title {
+  font-size: 14px;
+}
+
+.progressContainer {
+  width: 100%;
+  height: 8px;
+  background: var(--color-bg-tertiary, #e9ecef);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progressBar {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 4px;
+}
+
+.progressBar.safe {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.progressBar.warning {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.progressBar.danger {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.label {
+  color: var(--color-text-secondary, #666);
+  font-size: 12px;
+}
+
+.value {
+  font-weight: 500;
+  color: var(--color-text-primary, #333);
+  font-size: 12px;
+}
+
+.value.safe {
+  color: #10b981;
+}
+
+.value.warning {
+  color: #f59e0b;
+}
+
+.value.danger {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.warningMessage,
+.dangerMessage {
+  margin-top: 12px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.warningMessage {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  color: #92400e;
+}
+
+.dangerMessage {
+  background: #fee2e2;
+  border: 1px solid #f87171;
+  color: #991b1b;
+  font-weight: 500;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .storageInfo {
+    background: var(--color-bg-secondary, #1e1e1e);
+    border-color: var(--color-border, #333);
+  }
+
+  .header,
+  .value {
+    color: var(--color-text-primary, #e0e0e0);
+  }
+
+  .label {
+    color: var(--color-text-secondary, #999);
+  }
+
+  .progressContainer {
+    background: var(--color-bg-tertiary, #2a2a2a);
+  }
+
+  .warningMessage {
+    background: #422006;
+    border-color: #92400e;
+    color: #fbbf24;
+  }
+
+  .dangerMessage {
+    background: #450a0a;
+    border-color: #991b1b;
+    color: #fca5a5;
+  }
+}
+
