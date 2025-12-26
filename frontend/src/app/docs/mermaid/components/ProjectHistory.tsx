@@ -221,7 +221,6 @@ export const ProjectHistory = () => {
               className={styles.actionButton}
               onClick={handleCreateNew}
               title="Create new project"
-              disabled={projectHistory.length >= 10}
             >
               <Plus size={16} />
               New Project
@@ -231,7 +230,6 @@ export const ProjectHistory = () => {
               className={styles.actionButton}
               onClick={handleImportClick}
               title="Import project from file"
-              disabled={projectHistory.length >= 10}
             >
               <Download size={16} />
               Import Project
@@ -363,13 +361,8 @@ export const ProjectHistory = () => {
 
           <div className={styles.dropdownFooter}>
             <span>
-              {projectHistory.length} / 10 projects
+              {projectHistory.length} {projectHistory.length === 1 ? 'project' : 'projects'}
             </span>
-            {projectHistory.length >= 10 && (
-              <p className={styles.limitWarning}>
-                Limit reached. Delete projects to continue.
-              </p>
-            )}
           </div>
         </div>
       )}

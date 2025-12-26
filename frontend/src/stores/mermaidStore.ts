@@ -10,7 +10,6 @@ import {
   loadFromIndexedDB,
   saveHistoryToIndexedDB,
   loadHistoryFromIndexedDB,
-  migrateFromLocalStorage,
 } from "@/utils/indexedDBStorage";
 
 /**
@@ -130,17 +129,10 @@ const initialState: MermaidState = {
 };
 
 /**
- * LocalStorage 键名 (kept for backward compatibility during migration)
- */
-const STORAGE_KEY = "mermaid-docs-tool";
-const HISTORY_KEY = "mermaid-docs-history";
-
-/**
- * 从存储加载数据 (IndexedDB with localStorage fallback)
+ * 从 IndexedDB 加载数据
  */
 const loadFromStorage = async (): Promise<Partial<MermaidState> | null> => {
   try {
-    // Try loading from IndexedDB first
     const data = await loadFromIndexedDB();
     if (data) {
       return {
@@ -150,54 +142,28 @@ const loadFromStorage = async (): Promise<Partial<MermaidState> | null> => {
         lastSavedAt: data.lastSavedAt || null,
       };
     }
-
-    // Fallback to localStorage for backward compatibility
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      console.log("Loading from localStorage (consider migrating to IndexedDB)");
-      const localData = JSON.parse(stored);
-      return {
-        currentProjectId: localData.currentProjectId || null,
-        mermaidCode: localData.mermaidCode || initialState.mermaidCode,
-        nodeDocs: localData.nodeDocs || {},
-        lastSavedAt: localData.lastSavedAt || null,
-      };
-    }
-
     return null;
   } catch (error) {
-    console.error("Failed to load from storage:", error);
+    console.error("Failed to load from IndexedDB:", error);
     return null;
   }
 };
 
 /**
- * 从存储加载项目历史记录 (IndexedDB with localStorage fallback)
+ * 从 IndexedDB 加载项目历史记录
  */
 const loadHistoryFromStorage = async (): Promise<ProjectHistory[]> => {
   try {
-    // Try loading from IndexedDB first
     const history = await loadHistoryFromIndexedDB();
-    if (history && history.length > 0) {
-      return history;
-    }
-
-    // Fallback to localStorage
-    const stored = localStorage.getItem(HISTORY_KEY);
-    if (stored) {
-      console.log("Loading history from localStorage (consider migrating to IndexedDB)");
-      return JSON.parse(stored);
-    }
-
-    return [];
+    return history || [];
   } catch (error) {
-    console.error("Failed to load history from storage:", error);
+    console.error("Failed to load history from IndexedDB:", error);
     return [];
   }
 };
 
 /**
- * 保存到存储 (IndexedDB)
+ * 保存到 IndexedDB
  */
 const saveToStorage = async (state: MermaidState): Promise<boolean> => {
   try {
@@ -210,45 +176,21 @@ const saveToStorage = async (state: MermaidState): Promise<boolean> => {
     const success = await saveToIndexedDB(dataToSave);
     return success;
   } catch (error) {
-    console.error("Failed to save to storage:", error);
-    
-    // Fallback to localStorage if IndexedDB fails (though this might also fail due to quota)
-    try {
-      const dataToSave = {
-        currentProjectId: state.currentProjectId,
-        mermaidCode: state.mermaidCode,
-        nodeDocs: state.nodeDocs,
-        lastSavedAt: Date.now(),
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-      console.warn("Saved to localStorage as fallback");
-      return true;
-    } catch (localStorageError) {
-      console.error("LocalStorage fallback also failed:", localStorageError);
-      return false;
-    }
+    console.error("Failed to save to IndexedDB:", error);
+    return false;
   }
 };
 
 /**
- * 保存项目历史记录到存储 (IndexedDB)
+ * 保存项目历史记录到 IndexedDB
  */
 const saveHistoryToStorage = async (history: ProjectHistory[]): Promise<boolean> => {
   try {
     const success = await saveHistoryToIndexedDB(history);
     return success;
   } catch (error) {
-    console.error("Failed to save history to storage:", error);
-    
-    // Fallback to localStorage
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-      console.warn("Saved history to localStorage as fallback");
-      return true;
-    } catch (localStorageError) {
-      console.error("LocalStorage fallback also failed:", localStorageError);
-      return false;
-    }
+    console.error("Failed to save history to IndexedDB:", error);
+    return false;
   }
 };
 

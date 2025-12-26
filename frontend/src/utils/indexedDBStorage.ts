@@ -221,64 +221,6 @@ export async function loadHistoryFromIndexedDB(): Promise<any[]> {
   }
 }
 
-/**
- * Migrate data from localStorage to IndexedDB
- */
-export async function migrateFromLocalStorage(): Promise<boolean> {
-  try {
-    console.log('🔄 Starting migration from localStorage to IndexedDB...');
-
-    // Check if there's data in localStorage
-    const STORAGE_KEY = 'mermaid-docs-tool';
-    const HISTORY_KEY = 'mermaid-docs-history';
-
-    const localData = localStorage.getItem(STORAGE_KEY);
-    const localHistory = localStorage.getItem(HISTORY_KEY);
-
-    let migrated = false;
-
-    // Migrate main data
-    if (localData) {
-      try {
-        const data = JSON.parse(localData);
-        await saveToIndexedDB({
-          currentProjectId: data.currentProjectId || null,
-          mermaidCode: data.mermaidCode || '',
-          nodeDocs: data.nodeDocs || {},
-        });
-        console.log('✅ Main data migrated');
-        migrated = true;
-      } catch (e) {
-        console.error('Failed to migrate main data:', e);
-      }
-    }
-
-    // Migrate history
-    if (localHistory) {
-      try {
-        const history = JSON.parse(localHistory);
-        await saveHistoryToIndexedDB(history);
-        console.log('✅ History data migrated');
-        migrated = true;
-      } catch (e) {
-        console.error('Failed to migrate history:', e);
-      }
-    }
-
-    if (migrated) {
-      console.log('✅ Migration completed successfully');
-      // Keep localStorage data as backup for now
-      // You can manually clear it later if everything works fine
-    } else {
-      console.log('ℹ️ No data to migrate from localStorage');
-    }
-
-    return migrated;
-  } catch (error) {
-    console.error('Migration failed:', error);
-    return false;
-  }
-}
 
 /**
  * Get storage usage information

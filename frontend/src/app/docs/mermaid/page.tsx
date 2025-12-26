@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMermaidStore } from "@/stores/mermaidStore";
-import { useStorageMigration } from "@/hooks/useStorageMigration";
+import { useStorageInfo } from "@/hooks/useStorageMigration";
 import { MermaidEditor } from "./components/MermaidEditor";
 import { MermaidRenderer } from "./components/MermaidRenderer";
 import { NodeDocEditor } from "./components/NodeDocEditor";
@@ -46,20 +46,21 @@ export default function MermaidDocsPage() {
   const [isDraggingRight, setIsDraggingRight] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 存储迁移（自动从 localStorage 迁移到 IndexedDB）
-  const { migrationStatus, storageInfo } = useStorageMigration();
+  // 获取存储信息
+  const { storageInfo } = useStorageInfo();
+  console.log("🚀 ~ MermaidDocsPage ~ storageInfo:", storageInfo);
 
   // Ensure client-side only
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 页面加载时从本地存储恢复数据（等待迁移完成后）
+  // 页面加载时从本地存储恢复数据
   useEffect(() => {
-    if (isMounted && migrationStatus === 'completed') {
+    if (isMounted) {
       loadFromLocal();
     }
-  }, [isMounted, migrationStatus, loadFromLocal]);
+  }, [isMounted, loadFromLocal]);
 
   // 自动保存（防抖）
   useEffect(() => {
@@ -135,10 +136,15 @@ export default function MermaidDocsPage() {
   // 创建新项目处理
   const handleCreateNewProject = () => {
     if (projectHistory.length >= 10) {
-      toast.error("Maximum 10 projects reached! Please delete some projects before creating a new one.");
+      toast.error(
+        "Maximum 10 projects reached! Please delete some projects before creating a new one."
+      );
       return;
     }
-    const defaultName = `mermaid-docs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+    const defaultName = `mermaid-docs-${new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/:/g, "-")}`;
     setNewProjectName(defaultName);
     setShowCreateDialog(true);
   };
@@ -186,52 +192,52 @@ export default function MermaidDocsPage() {
       {/* 三栏布局 或 项目选择 */}
       {hasCurrentProject ? (
         <main className={styles.mainContent}>
-        {/* 左侧：Mermaid 源码编辑器 */}
-        <div
-          className={`${styles.leftPanel} ${
-            leftCollapsed ? styles.collapsed : ""
-          }`}
-          style={{ width: leftCollapsed ? "48px" : `${leftWidth}%` }}
-        >
-          <MermaidEditor
-            isCollapsed={leftCollapsed}
-            onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)}
-          />
-        </div>
-
-        {/* 左侧分隔条 */}
-        {!leftCollapsed && (
+          {/* 左侧：Mermaid 源码编辑器 */}
           <div
-            className={styles.resizer}
-            onMouseDown={() => setIsDraggingLeft(true)}
-          />
-        )}
+            className={`${styles.leftPanel} ${
+              leftCollapsed ? styles.collapsed : ""
+            }`}
+            style={{ width: leftCollapsed ? "48px" : `${leftWidth}%` }}
+          >
+            <MermaidEditor
+              isCollapsed={leftCollapsed}
+              onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)}
+            />
+          </div>
 
-        {/* 中间：Mermaid 渲染区域 */}
-        <div className={styles.centerPanel}>
-          <MermaidRenderer />
-        </div>
+          {/* 左侧分隔条 */}
+          {!leftCollapsed && (
+            <div
+              className={styles.resizer}
+              onMouseDown={() => setIsDraggingLeft(true)}
+            />
+          )}
 
-        {/* 右侧分隔条 */}
-        {!rightCollapsed && (
+          {/* 中间：Mermaid 渲染区域 */}
+          <div className={styles.centerPanel}>
+            <MermaidRenderer />
+          </div>
+
+          {/* 右侧分隔条 */}
+          {!rightCollapsed && (
+            <div
+              className={styles.resizer}
+              onMouseDown={() => setIsDraggingRight(true)}
+            />
+          )}
+
+          {/* 右侧：节点文档编辑器 */}
           <div
-            className={styles.resizer}
-            onMouseDown={() => setIsDraggingRight(true)}
-          />
-        )}
-
-        {/* 右侧：节点文档编辑器 */}
-        <div
-          className={`${styles.rightPanel} ${
-            rightCollapsed ? styles.collapsed : ""
-          }`}
-          style={{ width: rightCollapsed ? "48px" : `${rightWidth}%` }}
-        >
-          <NodeDocEditor
-            isCollapsed={rightCollapsed}
-            onToggleCollapse={() => setRightCollapsed(!rightCollapsed)}
-          />
-        </div>
+            className={`${styles.rightPanel} ${
+              rightCollapsed ? styles.collapsed : ""
+            }`}
+            style={{ width: rightCollapsed ? "48px" : `${rightWidth}%` }}
+          >
+            <NodeDocEditor
+              isCollapsed={rightCollapsed}
+              onToggleCollapse={() => setRightCollapsed(!rightCollapsed)}
+            />
+          </div>
         </main>
       ) : (
         <main className={styles.projectSelectionContainer}>
@@ -241,13 +247,14 @@ export default function MermaidDocsPage() {
                 <Network size={48} strokeWidth={1.5} />
               </div>
               <h2 className={styles.projectSelectionTitle}>
-                {projectHistory.length === 0 ? 'No Projects Yet' : `Select a Project (${projectHistory.length})`}
+                {projectHistory.length === 0
+                  ? "No Projects Yet"
+                  : `Select a Project (${projectHistory.length})`}
               </h2>
               <p className={styles.projectSelectionDescription}>
-                {projectHistory.length === 0 
-                  ? 'Create a new project or import an existing one to get started.'
-                  : 'Choose a project to open or create a new one.'
-                }
+                {projectHistory.length === 0
+                  ? "Create a new project or import an existing one to get started."
+                  : "Choose a project to open or create a new one."}
               </p>
             </div>
 
@@ -263,10 +270,14 @@ export default function MermaidDocsPage() {
                   >
                     <div className={styles.projectCardHeader}>
                       <Network size={20} />
-                      <span className={styles.projectCardName}>{project.name}</span>
+                      <span className={styles.projectCardName}>
+                        {project.name}
+                      </span>
                     </div>
                     <div className={styles.projectCardMeta}>
-                      <span>Updated: {new Date(project.updatedAt).toLocaleString()}</span>
+                      <span>
+                        Updated: {new Date(project.updatedAt).toLocaleString()}
+                      </span>
                       <span>•</span>
                       <span>{Object.keys(project.nodeDocs).length} docs</span>
                     </div>
@@ -288,16 +299,16 @@ export default function MermaidDocsPage() {
                   className={styles.projectSelectionButton}
                   onClick={() => {
                     // Directly trigger file input for import
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file';
-                    fileInput.accept = '.zip,.mermaid-docs.zip';
+                    const fileInput = document.createElement("input");
+                    fileInput.type = "file";
+                    fileInput.accept = ".zip,.mermaid-docs.zip";
                     fileInput.onchange = async (e) => {
                       const file = (e.target as HTMLInputElement).files?.[0];
                       if (file) {
                         try {
                           await importData(file);
                         } catch (error) {
-                          console.error('Import failed:', error);
+                          console.error("Import failed:", error);
                         }
                       }
                     };
@@ -341,9 +352,9 @@ export default function MermaidDocsPage() {
                   placeholder="Enter project name"
                   autoFocus
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       handleConfirmCreate();
-                    } else if (e.key === 'Escape') {
+                    } else if (e.key === "Escape") {
                       handleCancelCreate();
                     }
                   }}

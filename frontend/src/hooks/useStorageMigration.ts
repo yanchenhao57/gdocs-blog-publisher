@@ -1,10 +1,9 @@
 /**
- * Hook to automatically migrate data from localStorage to IndexedDB
- * and monitor storage usage
+ * Hook to monitor storage usage
  */
 
 import { useEffect, useState } from 'react';
-import { migrateFromLocalStorage, getStorageInfo } from '@/utils/indexedDBStorage';
+import { getStorageInfo } from '@/utils/indexedDBStorage';
 
 export interface StorageInfo {
   usage: number;
@@ -13,46 +12,23 @@ export interface StorageInfo {
   usagePercent: number;
 }
 
-export function useStorageMigration() {
-  const [migrationStatus, setMigrationStatus] = useState<'pending' | 'migrating' | 'completed' | 'error'>('pending');
+export function useStorageInfo() {
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
 
   useEffect(() => {
-    const performMigration = async () => {
+    const loadStorageInfo = async () => {
       try {
-        setMigrationStatus('migrating');
-        
-        // Check if migration has already been done
-        const migrationFlag = localStorage.getItem('indexeddb-migration-completed');
-        
-        if (!migrationFlag) {
-          console.log('🔄 Starting migration from localStorage to IndexedDB...');
-          const migrated = await migrateFromLocalStorage();
-          
-          if (migrated) {
-            localStorage.setItem('indexeddb-migration-completed', 'true');
-            console.log('✅ Migration completed and flagged');
-          }
-        } else {
-          console.log('ℹ️ Migration already completed');
-        }
-
-        // Get storage information
         const info = await getStorageInfo();
         setStorageInfo(info);
-        
-        setMigrationStatus('completed');
       } catch (error) {
-        console.error('Migration error:', error);
-        setMigrationStatus('error');
+        console.error('Failed to get storage info:', error);
       }
     };
 
-    performMigration();
+    loadStorageInfo();
   }, []);
 
   return {
-    migrationStatus,
     storageInfo,
   };
 }
