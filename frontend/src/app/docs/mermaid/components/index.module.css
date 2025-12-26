@@ -418,10 +418,11 @@
 .toolbar {
   display: flex;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
+  background: linear-gradient(to bottom, #ffffff, #f9fafb);
   flex-wrap: wrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .toolbarButton {
@@ -959,5 +960,408 @@
 
 .imagePreviewClose:active {
   transform: scale(0.95);
+}
+
+/* ===== TipTap Editor Styles ===== */
+
+/* Editor container wrapper */
+.editorContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: #ffffff;
+}
+
+/* TipTap editor global styles */
+.editorContainer :global(.tiptap) {
+  outline: none;
+  min-height: 100%;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #1f2937;
+}
+
+/* Placeholder */
+.editorContainer :global(.tiptap p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Typography */
+.editorContainer :global(.tiptap h2) {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 1.5em 0 0.5em;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.editorContainer :global(.tiptap h3) {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 1.2em 0 0.4em;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.editorContainer :global(.tiptap h4) {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 1em 0 0.3em;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.editorContainer :global(.tiptap p) {
+  margin: 0.5em 0;
+}
+
+/* Lists */
+.editorContainer :global(.tiptap ul),
+.editorContainer :global(.tiptap ol) {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.editorContainer :global(.tiptap ul) {
+  list-style-type: disc;
+}
+
+.editorContainer :global(.tiptap ol) {
+  list-style-type: decimal;
+}
+
+.editorContainer :global(.tiptap li) {
+  margin: 0.3em 0;
+}
+
+.editorContainer :global(.tiptap li p) {
+  margin: 0;
+}
+
+/* Text formatting */
+.editorContainer :global(.tiptap strong) {
+  font-weight: 700;
+  color: #111827;
+}
+
+.editorContainer :global(.tiptap em) {
+  font-style: italic;
+}
+
+.editorContainer :global(.tiptap s) {
+  text-decoration: line-through;
+}
+
+.editorContainer :global(.tiptap code) {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #dc2626;
+}
+
+/* Code blocks */
+.editorContainer :global(.tiptap pre) {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+.editorContainer :global(.tiptap pre code) {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* Links */
+.editorContainer :global(.tiptap a),
+.editorContainer :global(.tiptap .custom-link) {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.editorContainer :global(.tiptap a:hover),
+.editorContainer :global(.tiptap .custom-link:hover) {
+  color: #2563eb;
+}
+
+/* Images */
+.editorContainer :global(.tiptap img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.5em 0;
+  display: block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: zoom-in;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.editorContainer :global(.tiptap img:hover) {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tables */
+.editorContainer :global(.tiptap table) {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1em 0;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.editorContainer :global(.tiptap table td),
+.editorContainer :global(.tiptap table th) {
+  min-width: 1em;
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.editorContainer :global(.tiptap table th) {
+  font-weight: 600;
+  text-align: left;
+  background: #f9fafb;
+  color: #111827;
+}
+
+.editorContainer :global(.tiptap table td) {
+  background: #ffffff;
+}
+
+.editorContainer :global(.tiptap table .selectedCell) {
+  background: #dbeafe;
+}
+
+.editorContainer :global(.tiptap table .column-resize-handle) {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #3b82f6;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.editorContainer :global(.tiptap table .column-resize-handle:hover) {
+  opacity: 1;
+}
+
+/* Blockquote */
+.editorContainer :global(.tiptap blockquote) {
+  border-left: 4px solid #3b82f6;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Horizontal rule */
+.editorContainer :global(.tiptap hr) {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2em 0;
+}
+
+/* Selection */
+.editorContainer :global(.tiptap ::selection) {
+  background: #dbeafe;
+}
+
+/* Focus state */
+.editorContainer :global(.tiptap:focus) {
+  outline: none;
+}
+
+/* Disabled buttons */
+.toolbarButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.toolbarButton:disabled:hover {
+  background: transparent;
+  transform: none;
+}
+
+/* Toolbar Groups */
+.toolbarGroup {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+/* Dropdown Wrapper */
+.dropdownWrapper {
+  position: relative;
+}
+
+/* Dropdown Menu */
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+  padding: 4px;
+  animation: fadeIn 0.15s ease;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background: #f3f4f6;
+}
+
+.dropdownItem.active {
+  background: #e0e7ff;
+  color: #3b82f6;
+}
+
+/* Color Picker */
+.colorPicker {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  padding: 8px;
+  animation: fadeIn 0.15s ease;
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.colorButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  padding: 0;
+}
+
+.colorButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Underline support */
+.editorContainer :global(.tiptap u) {
+  text-decoration: underline;
+}
+
+/* Text alignment */
+.editorContainer :global(.tiptap [style*="text-align: center"]) {
+  text-align: center;
+}
+
+.editorContainer :global(.tiptap [style*="text-align: right"]) {
+  text-align: right;
+}
+
+.editorContainer :global(.tiptap [style*="text-align: left"]) {
+  text-align: left;
+}
+
+/* Highlight */
+.editorContainer :global(.tiptap mark) {
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+}
+
+/* Task List */
+.editorContainer :global(.tiptap ul[data-type="taskList"]) {
+  list-style: none;
+  padding-left: 0;
+}
+
+.editorContainer :global(.tiptap ul[data-type="taskList"] li) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.editorContainer :global(.tiptap ul[data-type="taskList"] li > label) {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  user-select: none;
+}
+
+.editorContainer :global(.tiptap ul[data-type="taskList"] li > div) {
+  flex: 1;
+}
+
+.editorContainer :global(.tiptap ul[data-type="taskList"] input[type="checkbox"]) {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* H3 Heading */
+.editorContainer :global(.tiptap h3) {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 1.2em 0 0.4em;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 

@@ -43,16 +43,22 @@ export default function MermaidDocsPage() {
   // 拖动状态
   const [isDraggingLeft, setIsDraggingLeft] = useState(false);
   const [isDraggingRight, setIsDraggingRight] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // 存储迁移（自动从 localStorage 迁移到 IndexedDB）
   const { migrationStatus, storageInfo } = useStorageMigration();
 
+  // Ensure client-side only
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // 页面加载时从本地存储恢复数据（等待迁移完成后）
   useEffect(() => {
-    if (migrationStatus === 'completed') {
+    if (isMounted && migrationStatus === 'completed') {
       loadFromLocal();
     }
-  }, [migrationStatus, loadFromLocal]);
+  }, [isMounted, migrationStatus, loadFromLocal]);
 
   // 自动保存（防抖）
   useEffect(() => {
