@@ -25,6 +25,7 @@ import { LinkModal } from "./editor/LinkModal";
 import { DeleteConfirmModal } from "./editor/DeleteConfirmModal";
 import { ErrorModal } from "./editor/ErrorModal";
 import { SaveStatus } from "./editor/SaveStatus";
+import { ImagePreviewModal } from "./editor/ImagePreviewModal";
 import styles from "./index.module.css";
 
 interface NodeDocEditorProps {
@@ -46,6 +47,10 @@ export function NodeDocEditor(props: NodeDocEditorProps) {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [imagePreview, setImagePreview] = useState<{ show: boolean; src: string }>({
+    show: false,
+    src: "",
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -95,6 +100,21 @@ export function NodeDocEditor(props: NodeDocEditorProps) {
       editorProps: {
         attributes: {
           class: styles.contentEditor,
+        },
+        handleDOMEvents: {
+          dblclick: (view, event) => {
+            const target = event.target as HTMLElement;
+            if (target.tagName === "IMG") {
+              event.preventDefault();
+              const img = target as HTMLImageElement;
+              setImagePreview({
+                show: true,
+                src: img.src,
+              });
+              return true;
+            }
+            return false;
+          },
         },
       },
       onUpdate: ({ editor }) => {
@@ -323,6 +343,13 @@ export function NodeDocEditor(props: NodeDocEditorProps) {
             <ErrorModal
               message={errorMessage}
               onClose={() => setErrorMessage("")}
+            />
+          )}
+
+          {imagePreview.show && (
+            <ImagePreviewModal
+              src={imagePreview.src}
+              onClose={() => setImagePreview({ show: false, src: "" })}
             />
           )}
 

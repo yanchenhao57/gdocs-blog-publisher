@@ -55,11 +55,6 @@ export const ProjectHistory = () => {
 
   const handleImportClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // 检查项目数量限制
-    if (projectHistory.length >= 10) {
-      toast.error("Maximum 10 projects reached! Please delete some projects before importing.");
-      return;
-    }
     fileInputRef.current?.click();
   };
 
@@ -173,11 +168,6 @@ export const ProjectHistory = () => {
 
   const handleCreateNew = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // 检查项目数量限制
-    if (projectHistory.length >= 10) {
-      toast.error("Maximum 10 projects reached! Please delete some projects before creating a new one.");
-      return;
-    }
     // 生成默认名称
     const defaultName = `mermaid-docs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
     setNewProjectName(defaultName);
@@ -223,7 +213,7 @@ export const ProjectHistory = () => {
         <div className={styles.dropdown}>
           <div className={styles.dropdownHeader}>
             <h3>Project History</h3>
-            <p className={styles.subtitle}>Manage up to 10 projects</p>
+            <p className={styles.subtitle}>Manage your projects ({projectHistory.length})</p>
           </div>
 
           <div className={styles.actions}>

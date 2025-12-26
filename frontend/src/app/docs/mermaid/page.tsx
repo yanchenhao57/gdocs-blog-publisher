@@ -9,7 +9,7 @@ import { NodeDocEditor } from "./components/NodeDocEditor";
 import { ExportImportButtons } from "./components/ExportImportButtons";
 import { ProjectHistory } from "./components/ProjectHistory";
 import { StorageInfo } from "@/components/storage-info/StorageInfo";
-import { Network, Plus, X } from "lucide-react";
+import { Network, Plus, X, Upload } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./page.module.css";
 
@@ -26,6 +26,7 @@ export default function MermaidDocsPage() {
     projectHistory,
     loadProjectFromHistory,
     createNewProject,
+    importData,
   } = useMermaidStore();
 
   // 管理面板折叠状态
@@ -240,7 +241,7 @@ export default function MermaidDocsPage() {
                 <Network size={48} strokeWidth={1.5} />
               </div>
               <h2 className={styles.projectSelectionTitle}>
-                {projectHistory.length === 0 ? 'No Projects Yet' : 'Select a Project'}
+                {projectHistory.length === 0 ? 'No Projects Yet' : `Select a Project (${projectHistory.length})`}
               </h2>
               <p className={styles.projectSelectionDescription}>
                 {projectHistory.length === 0 
@@ -280,28 +281,37 @@ export default function MermaidDocsPage() {
                   className={styles.projectSelectionButton}
                   onClick={handleCreateNewProject}
                 >
+                  <Plus size={18} />
                   New Project
                 </button>
-                <span className={styles.orDivider}>or</span>
                 <button
                   className={styles.projectSelectionButton}
                   onClick={() => {
-                    const importButton = document.querySelector('[title="Import project from file"]') as HTMLButtonElement;
-                    if (importButton) {
-                      importButton.click();
-                    } else {
-                      const projectHistory = document.querySelector('[title="Project History"]') as HTMLButtonElement;
-                      projectHistory?.click();
-                    }
+                    // Directly trigger file input for import
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = '.zip,.mermaid-docs.zip';
+                    fileInput.onchange = async (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        try {
+                          await importData(file);
+                        } catch (error) {
+                          console.error('Import failed:', error);
+                        }
+                      }
+                    };
+                    fileInput.click();
                   }}
                 >
+                  <Upload size={18} />
                   Import Project
                 </button>
               </div>
 
               {/* Storage Information */}
               {storageInfo && storageInfo.quota > 0 && (
-                <div style={{ marginTop: '24px', maxWidth: '400px', margin: '24px auto 0' }}>
+                <div className={styles.storageInfoWrapper}>
                   <StorageInfo
                     usage={storageInfo.usage}
                     quota={storageInfo.quota}

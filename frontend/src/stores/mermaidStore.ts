@@ -441,9 +441,15 @@ export const useMermaidStore = create<MermaidStore>()(
           // 导入新数据
           const { mermaidCode, nodeDocs } = await importMermaidDocs(file);
 
+          // 生成新的项目 ID（确保不覆盖现有项目）
+          const now = Date.now();
+          const newProjectId = `project-${now}`;
+          const importedProjectName = projectName || file.name.replace(/\.(zip|mermaid-docs\.zip)$/, '');
+
           // 更新状态
           set(
             {
+              currentProjectId: newProjectId,
               mermaidCode,
               nodeDocs,
               selectedNodeId: null,
@@ -457,7 +463,6 @@ export const useMermaidStore = create<MermaidStore>()(
           get().saveToLocal();
 
           // 自动创建项目历史记录
-          const importedProjectName = projectName || file.name.replace(/\.(zip|mermaid-docs\.zip)$/, '');
           get().saveCurrentAsHistory(importedProjectName);
         },
 
@@ -494,11 +499,6 @@ export const useMermaidStore = create<MermaidStore>()(
           } else {
             // 添加新项目
             newHistory = [newProject, ...state.projectHistory];
-            
-            // 限制最多 10 个历史记录
-            if (newHistory.length > 10) {
-              newHistory = newHistory.slice(0, 10);
-            }
           }
 
           set(
