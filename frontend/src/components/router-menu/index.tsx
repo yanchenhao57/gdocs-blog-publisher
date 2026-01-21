@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, FileText, Link, X, GitBranch, Languages } from "lucide-react";
+import {
+  Menu,
+  FileText,
+  Link,
+  X,
+  GitBranch,
+  Languages,
+  Search,
+} from "lucide-react";
 import styles from "./index.module.css";
 
 interface RouteItem {
@@ -51,6 +59,11 @@ const RouterMenu = () => {
       icon: Languages,
       label: "Translate CMS Page",
       path: "/translate",
+    },
+    {
+      icon: Search,
+      label: "SEO Content Inspector",
+      path: "/seo-inspector",
     },
   ];
 

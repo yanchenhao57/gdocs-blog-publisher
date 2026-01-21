@@ -134,6 +134,64 @@ export interface UploadStoryToStoryblokResponse {
   data?: any;
 }
 
+// SEO Inspector 相关接口
+export interface SeoAnalyzeRequest {
+  url: string;
+}
+
+export interface SeoAnalyzeResponse {
+  url: string;
+  fetch: {
+    status: number;
+    htmlSize: number;
+    headers: Record<string, string>;
+  };
+  htmlContent: {
+    textLength: number;
+    semanticTextLength: number;
+    hiddenTextLength: number;
+    hiddenElementsCount: number;
+    paragraphCount: number;
+    previewText: string;
+    fullText: string;
+  };
+  renderedContent: {
+    enabled: boolean;
+    textLength: number;
+    semanticTextLength: number;
+    hiddenTextLength: number;
+    hiddenElementsCount: number;
+    paragraphCount: number;
+    previewText: string;
+    fullText: string;
+  };
+  metrics: {
+    contentCoverage: number;
+    semanticCoverage: number;
+    htmlSemanticRatio: number;
+    renderedSemanticRatio: number;
+    htmlHiddenRatio: number;
+    renderedHiddenRatio: number;
+  };
+  seoSignals: {
+    title: { exists: boolean; source: string | null };
+    metaDescription: { exists: boolean; source: string | null };
+    h1: { exists: boolean; source: string | null };
+    canonical: { exists: boolean };
+    hreflangCount: number;
+  };
+  diagnosis: {
+    riskLevel: "HIGH" | "MEDIUM" | "LOW";
+    issues: string[];
+    summary: string;
+    recommendation: string;
+  };
+  _meta?: {
+    responseTime: string;
+    timestamp: string;
+  };
+}
+
 class ApiService {
   private async request<T>(
     endpoint: string,
@@ -272,6 +330,140 @@ class ApiService {
     return this.request<any>(`/api/publish/${id}`, {
       method: "GET",
     });
+  }
+
+  // SEO Inspector - 分析 URL
+  async analyzeSeoUrl(url: string): Promise<any> {
+    const response = await this.request<SeoAnalyzeResponse>("/api/analyze", {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    });
+
+    // Transform API response to frontend format
+    return this.transformSeoAnalyzeResponse(response);
+  }
+
+  // 转换后端响应为前端格式
+  private transformSeoAnalyzeResponse(apiData: SeoAnalyzeResponse): any {
+    // 确定状态
+    const statusMap: Record<string, "high-risk" | "warning" | "optimal"> = {
+      HIGH: "high-risk",
+      MEDIUM: "warning",
+      LOW: "optimal",
+    };
+
+    const status = statusMap[apiData.diagnosis.riskLevel] || "warning";
+
+    // 格式化响应大小 - KB/MB 自动转换
+    const sizeInKB = apiData.fetch.htmlSize / 1024;
+    const responseSize =
+      sizeInKB >= 1024
+        ? `${(sizeInKB / 1024).toFixed(1)} MB`
+        : `${sizeInKB.toFixed(1)} KB`;
+
+    // 获取 robots 状态
+    const robotsStatus =
+      apiData.fetch.headers["x-robots-tag"] || "Not specified";
+
+    // 构建 SEO 元素数组
+    const seoElements = [
+      {
+        name: "Title",
+        initialValue:
+          apiData.seoSignals.title.exists &&
+          apiData.seoSignals.title.source === "html"
+            ? this.extractFirstLine(apiData.htmlContent.previewText)
+            : null,
+        renderedValue: apiData.seoSignals.title.exists
+          ? this.extractFirstLine(apiData.htmlContent.previewText)
+          : null,
+        isVisible:
+          apiData.seoSignals.title.exists &&
+          apiData.seoSignals.title.source === "html",
+      },
+      {
+        name: "Meta Description",
+        initialValue:
+          apiData.seoSignals.metaDescription.exists &&
+          apiData.seoSignals.metaDescription.source === "html"
+            ? "Present in HTML"
+            : null,
+        renderedValue: apiData.seoSignals.metaDescription.exists
+          ? "Present"
+          : null,
+        isVisible:
+          apiData.seoSignals.metaDescription.exists &&
+          apiData.seoSignals.metaDescription.source === "html",
+      },
+      {
+        name: "H1",
+        initialValue:
+          apiData.seoSignals.h1.exists &&
+          apiData.seoSignals.h1.source === "html"
+            ? this.extractFirstLine(apiData.htmlContent.fullText)
+            : null,
+        renderedValue: apiData.seoSignals.h1.exists
+          ? this.extractFirstLine(
+              apiData.renderedContent.enabled
+                ? apiData.renderedContent.fullText
+                : apiData.htmlContent.fullText
+            )
+          : null,
+        isVisible:
+          apiData.seoSignals.h1.exists &&
+          apiData.seoSignals.h1.source === "html",
+      },
+      {
+        name: "Canonical",
+        initialValue: apiData.seoSignals.canonical.exists ? apiData.url : null,
+        renderedValue: apiData.seoSignals.canonical.exists ? apiData.url : null,
+        isVisible: apiData.seoSignals.canonical.exists,
+      },
+      {
+        name: "hreflang",
+        initialValue:
+          apiData.seoSignals.hreflangCount > 0
+            ? `${apiData.seoSignals.hreflangCount} links`
+            : null,
+        renderedValue:
+          apiData.seoSignals.hreflangCount > 0
+            ? `${apiData.seoSignals.hreflangCount} links`
+            : null,
+        isVisible: apiData.seoSignals.hreflangCount > 0,
+      },
+    ];
+
+    return {
+      url: apiData.url,
+      timestamp: apiData._meta?.timestamp || new Date().toISOString(),
+      status,
+      httpStatus: apiData.fetch.status,
+      responseSize,
+      robotsStatus,
+      coverage: apiData.metrics.contentCoverage,
+      semanticCoverage: apiData.metrics.semanticCoverage,
+      htmlSemanticRatio: apiData.metrics.htmlSemanticRatio,
+      renderedSemanticRatio: apiData.metrics.renderedSemanticRatio,
+      htmlHiddenRatio: apiData.metrics.htmlHiddenRatio,
+      renderedHiddenRatio: apiData.metrics.renderedHiddenRatio,
+      htmlHiddenTextLength: apiData.htmlContent.hiddenTextLength,
+      htmlHiddenElementsCount: apiData.htmlContent.hiddenElementsCount,
+      renderedHiddenTextLength: apiData.renderedContent.hiddenTextLength,
+      renderedHiddenElementsCount: apiData.renderedContent.hiddenElementsCount,
+      initialHtmlText:
+        apiData.htmlContent.fullText || apiData.htmlContent.previewText,
+      renderedHtmlText: apiData.renderedContent.enabled
+        ? apiData.renderedContent.fullText
+        : apiData.htmlContent.fullText,
+      seoElements,
+    };
+  }
+
+  // 辅助方法：提取第一行文本
+  private extractFirstLine(text: string): string | null {
+    if (!text) return null;
+    const lines = text.split("\n").filter((line) => line.trim().length > 0);
+    return lines.length > 0 ? lines[0].substring(0, 100) : null;
   }
 }
 

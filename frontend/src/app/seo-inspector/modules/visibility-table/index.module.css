@@ -1,0 +1,130 @@
+.container {
+  background-color: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+
+.header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.title {
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.table {
+  width: 100%;
+  text-align: left;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+
+.header_row {
+  background-color: white;
+  border-bottom: 1px solid #f1f5f9;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.th {
+  padding: 1rem 1.5rem;
+}
+
+.th_center {
+  padding: 1rem 1.5rem;
+  text-align: center;
+}
+
+.tbody {
+  border-top: 1px solid #f1f5f9;
+}
+
+.row {
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.row:hover {
+  background-color: #f8fafc;
+}
+
+.td {
+  padding: 1rem 1.5rem;
+}
+
+.td_name {
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.td_center {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.value {
+  color: #475569;
+  display: block;
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.value_rendered {
+  color: #1e293b;
+  font-weight: 500;
+  display: block;
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undefined {
+  color: #cbd5e1;
+  font-style: italic;
+}
+
+.badge_found {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #059669;
+  background-color: #d1fae5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge_missing {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #dc2626;
+  background-color: #fee2e2;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+

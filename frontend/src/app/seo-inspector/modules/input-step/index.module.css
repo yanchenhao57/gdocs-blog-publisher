@@ -1,0 +1,158 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: white;
+}
+
+.nav_center {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo {
+  width: 2rem;
+  height: 2rem;
+  background-color: #0f172a;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo_icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+}
+
+.nav_title {
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: #f8fafc;
+}
+
+.content {
+  max-width: 42rem;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #e2e8f0;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.description {
+  font-size: 1.25rem;
+  color: #475569;
+  margin-bottom: 2.5rem;
+  line-height: 1.75;
+}
+
+.form {
+  position: relative;
+}
+
+.input_wrapper {
+  display: flex;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.input_wrapper:focus-within {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+.input {
+  flex: 1;
+  padding: 1.25rem 1.5rem;
+  font-size: 1.125rem;
+  outline: none;
+  color: #1e293b;
+  border: none;
+}
+
+.input::placeholder {
+  color: #94a3b8;
+}
+
+.button {
+  background-color: #0f172a;
+  color: white;
+  font-weight: 700;
+  padding: 0 2rem;
+  transition: background-color 0.2s;
+  border: none;
+  border-left: 1px solid #334155;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #1e293b;
+}
+
+.hint {
+  position: absolute;
+  bottom: -2rem;
+  left: 0;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hint_icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  background-color: white;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+

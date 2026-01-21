@@ -9,7 +9,8 @@ import convertRouter from "./routes/convert.js";
 import publishRouter from "./routes/publish.js";
 import storyblokRouter from "./routes/storyblok.js";
 import translateRouter from "./routes/translate.js";
-import internalLinkOptimizerRouter from "./routes/internal-link-optimizer.js";  
+import internalLinkOptimizerRouter from "./routes/internal-link-optimizer.js";
+import analyzeRouter from "./routes/analyze.js";  
 
 dotenv.config();
 
@@ -60,6 +61,7 @@ app.use("/api/publish", publishRouter);
 app.use("/api/storyblok", storyblokRouter);
 app.use("/api/internal-link-optimizer", internalLinkOptimizerRouter);
 app.use("/api/translate", translateRouter);
+app.use("/api/analyze", analyzeRouter);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () => {

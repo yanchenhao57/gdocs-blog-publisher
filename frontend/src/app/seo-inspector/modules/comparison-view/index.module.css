@@ -1,0 +1,101 @@
+.container {
+  background-color: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header_left,
+.header_right {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header_left {
+  border-right: 1px solid #e2e8f0;
+}
+
+.badge_raw {
+  padding: 0.125rem 0.5rem;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+}
+
+.badge_rendered {
+  padding: 0.125rem 0.5rem;
+  background-color: #d1fae5;
+  color: #059669;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 500px;
+}
+
+.panel_left,
+.panel_right {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.panel_left {
+  border-right: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.panel_right {
+  background-color: white;
+}
+
+.code {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.75rem;
+  line-height: 1.75;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+/* Custom scrollbar */
+.panel_left::-webkit-scrollbar,
+.panel_right::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panel_left::-webkit-scrollbar-track,
+.panel_right::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.panel_left::-webkit-scrollbar-thumb,
+.panel_right::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.panel_left::-webkit-scrollbar-thumb:hover,
+.panel_right::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
