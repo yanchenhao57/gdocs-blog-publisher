@@ -89,9 +89,8 @@ export const MermaidRenderer: React.FC = () => {
         }
       } catch (err) {
         console.error("Mermaid render error:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to render diagram"
-        );
+        // 静默失败：不设置错误状态，不显示错误信息
+        // 注意：不清空容器，因为有些"错误"实际上图表已经渲染成功了
       } finally {
         setIsRendering(false);
       }
@@ -216,7 +215,8 @@ export const MermaidRenderer: React.FC = () => {
           </div>
         )}
 
-        {error && (
+        {/* 错误提示已禁用 - 静默失败 */}
+        {/* {error && (
           <div className={styles.errorMessage}>
             <h4>
               <AlertTriangle size={18} />
@@ -224,7 +224,7 @@ export const MermaidRenderer: React.FC = () => {
             </h4>
             <pre>{error}</pre>
           </div>
-        )}
+        )} */}
 
         {/* 视口容器（应用缩放和平移） */}
         <div

@@ -43,7 +43,7 @@
     "jszip": "^3.10.1",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.526.0",
-    "mermaid": "^11.4.1",
+    "mermaid": "^11.12.2",
     "next": "15.4.4",
     "prismjs": "^1.30.0",
     "react": "19.1.0",

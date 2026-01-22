@@ -102,7 +102,7 @@ importers:
         specifier: ^0.526.0
         version: 0.526.0(react@19.1.0)
       mermaid:
-        specifier: ^11.4.1
+        specifier: ^11.12.2
         version: 11.12.2
       next:
         specifier: 15.4.4
