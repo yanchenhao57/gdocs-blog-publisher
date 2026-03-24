@@ -8,13 +8,19 @@ class GoogleDocsToStoryblokConverter {
   /**
    * 构造函数
    * @param {Function} imageUploader - 可选，图片上传函数
+   * @param {Object} options - 可选配置项
+   * @param {Object} options.specialHeadings - 特殊标题样式开关
+   * @param {boolean} options.specialHeadings.h2 - H2 使用 special_h2 blok，默认 true
+   * @param {boolean} options.specialHeadings.h3 - H3 使用 special_h3 blok，默认 false
    */
-  constructor(imageUploader) {
+  constructor(imageUploader, options) {
     this.lists = new Map(); // 存储列表信息
     this.namedStyles = new Map(); // 存储命名样式
     this.documentStyle = null; // 文档样式
     this.inlineObjects = {};
     this.imageUploader = imageUploader; // 可选的图片上传函数
+    this.specialHeadings = { h2: true, h3: false, ...options?.specialHeadings };
+    this.h3Counter = 0; // H3 序号计数器，用于 special_h3 的 order 字段
   }
 
   /**
@@ -122,11 +128,15 @@ class GoogleDocsToStoryblokConverter {
     );
 
     if (headingLevel) {
-      // 如果是 H2，添加锚点块
-      // 获取标题文本
       const headingText = content.map((item) => item.text).join("");
 
       if (headingLevel === 2 && headingText.trim() !== "") {
+        // 遇到新 H2 时重置 H3 局部计数器
+        this.h3Counter = 0;
+        if (this.specialHeadings.h2) {
+          return this.buildSpecialH2Blok(headingText);
+        }
+        // H2 关闭特殊样式：保持原有 anchor blok + 普通 heading
         return [
           {
             type: "blok",
@@ -141,19 +151,22 @@ class GoogleDocsToStoryblokConverter {
           },
           {
             type: "heading",
-            attrs: {
-              level: headingLevel,
-            },
+            attrs: { level: headingLevel },
             content: content,
           },
         ];
       }
 
+      if (headingLevel === 3 && headingText.trim() !== "") {
+        if (this.specialHeadings.h3) {
+          this.h3Counter += 1;
+          return this.buildSpecialH3Blok(headingText, this.h3Counter);
+        }
+      }
+
       return {
         type: "heading",
-        attrs: {
-          level: headingLevel,
-        },
+        attrs: { level: headingLevel },
         content: content,
       };
     }
@@ -161,6 +174,60 @@ class GoogleDocsToStoryblokConverter {
     return {
       type: "paragraph",
       content: content,
+    };
+  }
+
+  /**
+   * 构建 H2 特殊样式 blok（anchor + special_h2 合并在同一个 blok）
+   * @param {string} text - 标题文本
+   * @returns {Object} blok 节点
+   */
+  buildSpecialH2Blok(text) {
+    const blokId = crypto.randomUUID();
+    const anchorUid = crypto.randomUUID();
+    const h2Uid = crypto.randomUUID();
+    return {
+      type: "blok",
+      attrs: {
+        id: blokId,
+        body: [
+          {
+            _uid: anchorUid,
+            component: "anchor",
+            description: text,
+          },
+          {
+            _uid: h2Uid,
+            text: text,
+            component: "special_h2",
+          },
+        ],
+      },
+    };
+  }
+
+  /**
+   * 构建 H3 特殊样式 blok（special_h3，含 order 字段）
+   * @param {string} text - 标题文本
+   * @param {number} order - H3 出现顺序（从 1 开始）
+   * @returns {Object} blok 节点
+   */
+  buildSpecialH3Blok(text, order) {
+    const blokId = crypto.randomUUID();
+    const h3Uid = crypto.randomUUID();
+    return {
+      type: "blok",
+      attrs: {
+        id: blokId,
+        body: [
+          {
+            _uid: h3Uid,
+            text: text,
+            order: String(order),
+            component: "special_h3",
+          },
+        ],
+      },
     };
   }
 
@@ -658,10 +725,11 @@ function mergeAdjacentLists(content) {
  * 使用示例
  * @param {Object} docJson - Google Docs API 返回的文档JSON
  * @param {Function} imageUploader - 图片上传函数（可选）
+ * @param {Object} options - 可选配置项（见 GoogleDocsToStoryblokConverter 构造函数）
  * @returns {Promise<Object>} Storyblok Richtext 格式的JSON
  */
-async function convertGoogleDocsToStoryblok(docJson, imageUploader) {
-  const converter = new GoogleDocsToStoryblokConverter(imageUploader);
+async function convertGoogleDocsToStoryblok(docJson, imageUploader, options) {
+  const converter = new GoogleDocsToStoryblokConverter(imageUploader, options);
   const result = await converter.googleDocJsonToRichtext(docJson);
 
   // 合并相邻的列表

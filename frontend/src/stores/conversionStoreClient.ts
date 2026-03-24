@@ -50,6 +50,7 @@ const defaultState = {
     reading_time: 0,
     language: 'en',
     is_show_newsletter_dialog: false,
+    special_headings: { h2: true, h3: false },
   },
   hasUnsavedChanges: false,
 

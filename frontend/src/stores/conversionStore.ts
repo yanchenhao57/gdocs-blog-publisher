@@ -10,6 +10,7 @@ import {
 } from "../services/api";
 import { AiMeta } from "../types/socket";
 import { ToastUtils } from "../utils/toastUtils";
+import { applySpecialHeadings } from "../utils/richtextHeadingTransformer";
 
 // 转换阶段枚举
 export enum ConversionStage {
@@ -52,6 +53,11 @@ export interface ConversionResult extends ConvertResponse {
 }
 
 // 可编辑的发布字段
+export interface SpecialHeadings {
+  h2: boolean;
+  h3: boolean;
+}
+
 export interface EditableFields {
   seo_title: string;
   seo_description: string;
@@ -65,6 +71,7 @@ export interface EditableFields {
   reading_time: number;
   language: string;
   is_show_newsletter_dialog?: boolean;
+  special_headings: SpecialHeadings;
 }
 
 // 发布状态
@@ -274,6 +281,7 @@ const initialState: ConversionState = {
     reading_time: 0,
     language: "en",
     is_show_newsletter_dialog: false,
+    special_headings: { h2: true, h3: false },
   },
   hasUnsavedChanges: false,
 
@@ -638,6 +646,7 @@ export const useConversionStore = create<ConversionStore>()(
                 reading_time: aiMeta.reading_time || 0,
                 language: aiMeta.language || "en",
                 is_show_newsletter_dialog: false,
+                special_headings: { h2: true, h3: false },
               },
               hasUnsavedChanges: false,
             }),
@@ -909,10 +918,14 @@ export const useConversionStore = create<ConversionStore>()(
             // 2. 开始发布流程
             get().startPublishing();
 
-            // 3. 构造发布数据
+            // 3. 构造发布数据（应用 special_headings 开关转换 richtext）
+            const processedRichtext = applySpecialHeadings(
+              state.result.richtext as unknown as { type: string; content: Record<string, unknown>[] },
+              state.editableFields.special_headings ?? { h2: true, h3: false }
+            );
             const publishData = {
               ...state.editableFields,
-              body: state.result.richtext,
+              body: processedRichtext,
               coverUrl: state.editableFields.coverUrl,
               coverAlt: state.editableFields.coverAlt,
             };

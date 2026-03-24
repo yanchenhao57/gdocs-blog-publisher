@@ -40,6 +40,7 @@ import PrePublishCheck from "../pre-publish-check";
 import StoryblokBlogDisplay from "../storyblok-blog-display";
 import { usePrePublishCheck } from "../../hooks/usePrePublishCheck";
 import type { IBlogStory } from "../../types/storyblok";
+import { applySpecialHeadings } from "../../utils/richtextHeadingTransformer";
 
 export default function EditFieldsForm() {
   const editableFields = useEditableFields();
@@ -297,9 +298,18 @@ export default function EditFieldsForm() {
     };
   }, [lastCheckResult]);
 
+  // 根据 special_headings 开关，对 richtext 应用标题节点转换
+  const processedRichtext = useMemo(() => {
+    if (!result?.richtext) return null;
+    return applySpecialHeadings(
+      result.richtext as unknown as { type: string; content: Record<string, unknown>[] },
+      editableFields.special_headings ?? { h2: true, h3: false }
+    );
+  }, [result?.richtext, editableFields.special_headings]);
+
   // 构造预览用的 Storyblok story 数据
   const previewStoryData = useMemo<IBlogStory | null>(() => {
-    if (!result?.richtext) return null;
+    if (!processedRichtext) return null;
 
     return {
       id: 0, // 预览用临时ID
@@ -311,7 +321,7 @@ export default function EditFieldsForm() {
       uuid: "preview-uuid",
       content: {
         author_id: editableFields.author_id || "",
-        body: result.richtext,
+        body: processedRichtext,
         canonical: editableFields.canonical || "",
         cover: {
           id: 0,
@@ -336,7 +346,7 @@ export default function EditFieldsForm() {
         is_show_newsletter_dialog: editableFields.is_show_newsletter_dialog,
       },
     };
-  }, [result?.richtext, editableFields]);
+  }, [processedRichtext, editableFields]);
 
   // 计算默认Canonical URL（纯计算，不包含副作用）
   const defaultCanonicalUrl = useMemo(() => {
@@ -372,6 +382,13 @@ export default function EditFieldsForm() {
 
   const handleCoverImageAltChange = (value: string) => {
     updateEditableField("coverAlt", value);
+  };
+
+  const handleSpecialHeadingToggle = (level: "h2" | "h3", value: boolean) => {
+    updateEditableField("special_headings", {
+      ...editableFields.special_headings,
+      [level]: value,
+    });
   };
 
   const handleBack = () => {
@@ -458,6 +475,40 @@ export default function EditFieldsForm() {
                   {/* Blog Content Preview */}
                   {previewStoryData && (
                     <div className={styles.blog_content_preview}>
+                      {/* Heading Style 开关 */}
+                      <div className={styles.heading_style_toolbar}>
+                        <span className={styles.heading_style_toolbar_title}>
+                          Heading Style
+                        </span>
+                        <div className={styles.heading_style_toggles}>
+                          <div className={styles.heading_style_toggle_item}>
+                            <label className={styles.toggle_switch}>
+                              <input
+                                type="checkbox"
+                                checked={editableFields.special_headings?.h2 ?? true}
+                                onChange={(e) => handleSpecialHeadingToggle("h2", e.target.checked)}
+                              />
+                              <span className={styles.toggle_slider} />
+                            </label>
+                            <span className={styles.heading_style_toggle_label}>
+                              H2 special style
+                            </span>
+                          </div>
+                          <div className={styles.heading_style_toggle_item}>
+                            <label className={styles.toggle_switch}>
+                              <input
+                                type="checkbox"
+                                checked={editableFields.special_headings?.h3 ?? false}
+                                onChange={(e) => handleSpecialHeadingToggle("h3", e.target.checked)}
+                              />
+                              <span className={styles.toggle_slider} />
+                            </label>
+                            <span className={styles.heading_style_toggle_label}>
+                              H3 special style
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                       <StoryblokBlogDisplay storyData={previewStoryData} />
                     </div>
                   )}
@@ -574,6 +625,7 @@ export default function EditFieldsForm() {
                       onChange={handleAuthorChange}
                     />
                   </FormItem>
+
                 </div>
               </>
             )}

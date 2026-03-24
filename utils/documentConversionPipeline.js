@@ -49,7 +49,8 @@ export async function executeDocumentConversion(docId, io) {
     const docJson = await fetchGoogleDoc(docId);
     const richtext = await convertGoogleDocsToStoryblok(
       docJson,
-      createImageUploaderWithNotifications(io, docId)
+      createImageUploaderWithNotifications(io, docId),
+      { specialHeadings: { h2: true, h3: false } }
     );
 
     await sendSocketNotification(io, "storyblok:convert:success", {
