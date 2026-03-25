@@ -15,7 +15,7 @@ import { logFile } from "./logFile.js";
  * AI 请求配置选项
  * @typedef {Object} AIRequestOptions
  * @property {string} [provider='inception'] - AI 服务提供商 ('inception' 或 'openai')
- * @property {string} [model='mercury-coder-small'] - AI 模型名称
+ * @property {string} [model='deepseek-chat'] - AI 模型名称
  * @property {number} [max_tokens=1000] - 最大生成 token 数
  * @property {number} [temperature=0.7] - 生成温度（0-1）
  * @property {number} [timeout=30000] - 请求超时时间（毫秒）
@@ -44,7 +44,7 @@ const aiRequest = async (messages, options = {}) => {
   // 默认配置
   const defaultOptions = {
     provider: "inception", // 默认使用 Inception Labs
-    model: "mercury-coder-small",
+    model: "deepseek-chat",
     max_tokens: 1000,
     temperature: 0,
     timeout: 30000,
@@ -59,18 +59,10 @@ const aiRequest = async (messages, options = {}) => {
 
   // 获取 API Key 根据提供商
   let apiKey, apiUrl;
-  if (config.provider === "openai") {
-    apiKey = process.env.OPENAI_API_KEY;
-    apiUrl = "http://litellm-dev.mc-k8s-apn1.notta.io/v1/chat/completions";
-    if (!apiKey) {
-      throw new Error("❌ 缺少 OPENAI_API_KEY 环境变量");
-    }
-  } else {
-    apiKey = process.env.INCEPTION_API_KEY;
-    apiUrl = "https://api.inceptionlabs.ai/v1/chat/completions";
-    if (!apiKey) {
-      throw new Error("❌ 缺少 INCEPTION_API_KEY 环境变量");
-    }
+  apiKey = process.env.DEEPSEEK_API_KEY;
+  apiUrl = "https://api.deepseek.com/v1/chat/completions";
+  if (!apiKey) {
+    throw new Error("❌ 缺少 DEEPSEEK_API_KEY 环境变量");
   }
 
   // 格式化消息

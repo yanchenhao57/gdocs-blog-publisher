@@ -128,7 +128,7 @@ Anchor text options: ${link.anchorTexts.join(", ")}`
     try {
       aiResult = await aiStructuredRequest(prompt, outputSchema, {
         provider: "openai", // 使用 OpenAI 模型
-        model: "gcp-claude-sonnet-4", // 使用 GPT-4o mini 模型
+        model: "deepseek-chat",
         max_tokens: 10000,
         temperature: 0.3,
         timeout: 60000,

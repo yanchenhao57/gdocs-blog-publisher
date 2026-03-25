@@ -69,7 +69,7 @@ ${sampleText}${markdown.length > 2000 ? "..." : ""}
       max_tokens: 100,
       temperature: 0,
       provider: "openai",
-      model: "gcp-claude-sonnet-4",
+      model: "deepseek-chat",
     });
     return result.language;
   } catch (error) {
@@ -295,8 +295,7 @@ async function performAiAnalysis(content, userLanguage = null) {
     max_tokens: 2000,
     temperature: 0,
     retries: 1, // 减少重试次数，失败更快进入fallback
-    model: "gcp-claude-sonnet-4",
-    provider: "openai",
+    model: "deepseek-chat",
     autoOptimize: true, // 启用自动优化内容长度
   });
 

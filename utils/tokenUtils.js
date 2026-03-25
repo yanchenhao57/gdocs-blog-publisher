@@ -185,6 +185,8 @@ function truncateWithStructure(text, maxTokens, preferStart = true) {
  * 模型的上下文限制配置
  */
 export const MODEL_LIMITS = {
+  "deepseek-chat": 65536,
+  "deepseek-reasoner": 65536,
   "mercury-coder-small": 128000,
   "mercury-coder-large": 128000,
   "gpt-4o-mini": 128000,
@@ -193,7 +195,7 @@ export const MODEL_LIMITS = {
   "gpt-4-32k": 32768,
   "gpt-3.5-turbo": 4096,
   "gpt-3.5-turbo-16k": 16384,
-  "gcp-claude-sonnet-4": 200000, // Claude Sonnet 4 via Vertex AI
+  "gcp-claude-sonnet-4": 200000,
   "claude-sonnet-4": 200000,
   "claude-sonnet-4-5": 200000,
 };
@@ -213,6 +215,7 @@ export function getModelLimit(modelName) {
   if (modelName.includes("claude-sonnet-4")) return 200000;
   if (modelName.includes("claude")) return 200000;
   if (modelName.includes("gpt-4o")) return 128000;
+  if (modelName.includes("deepseek")) return 65536;
   if (modelName.includes("mercury")) return 128000;
   
   // 默认值使用一个较大的值以避免不必要的截断
@@ -229,7 +232,7 @@ export function getModelLimit(modelName) {
  */
 export function optimizeForModel(
   messages,
-  modelName = "mercury-coder-small",
+  modelName = "deepseek-chat",
   reservedTokens = 2000
 ) {
   const modelLimit = getModelLimit(modelName);

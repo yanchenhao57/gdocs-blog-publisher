@@ -149,7 +149,7 @@ async function translateInner(text, uuid, lngInfo, assistanceAnswer = null) {
     const result = await aiStructuredRequest(msgs, aiResponseSchema, {
       temperature: 0.5,
       provider: "openai",
-      model: "gcp-claude-sonnet-4",
+      model: "deepseek-chat",
     });
 
     if (result) {
