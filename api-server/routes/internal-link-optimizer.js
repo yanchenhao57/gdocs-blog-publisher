@@ -127,9 +127,8 @@ Anchor text options: ${link.anchorTexts.join(", ")}`
     let aiResult;
     try {
       aiResult = await aiStructuredRequest(prompt, outputSchema, {
-        provider: "openai", // 使用 OpenAI 模型
         model: "deepseek-chat",
-        max_tokens: 10000,
+        max_tokens: 8192,
         temperature: 0.3,
         timeout: 60000,
         autoOptimize: false,
@@ -143,7 +142,7 @@ Anchor text options: ${link.anchorTexts.join(", ")}`
     }
 
     // 验证AI返回结果
-    if (!aiResult.changes || !Array.isArray(aiResult.changes)) {
+    if (!aiResult || !aiResult.changes || !Array.isArray(aiResult.changes)) {
       console.warn("⚠️ AI returned invalid format, returning empty changes");
       return res.json({ changes: [] });
     }
