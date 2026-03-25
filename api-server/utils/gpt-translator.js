@@ -3,7 +3,8 @@ import * as uuid from "uuid";
 import { LANGUAGE_INFO } from "../../constant/language.js";
 import { aiStructuredRequest } from "../../utils/aiRequest.js";
 
-const ENCODER = tiktoken.encoding_for_model(process.env.OPEN_AI_MODAL_NAME);
+const MODEL_NAME = process.env.OPEN_AI_MODAL_NAME || "gpt-4o";
+const ENCODER = tiktoken.encoding_for_model(MODEL_NAME);
 const TEXT_PER_MAX_LEN = 500;
 
 class NotFunctionException extends Error {}
