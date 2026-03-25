@@ -3,6 +3,15 @@ import { AiMeta } from "../types/socket";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
+const getAuthHeader = (): Record<string, string> => {
+  const user = process.env.NEXT_PUBLIC_AUTH_USER;
+  const pass = process.env.NEXT_PUBLIC_AUTH_PASS;
+  if (!user || !pass) return {};
+  return {
+    Authorization: `Basic ${btoa(`${user}:${pass}`)}`,
+  };
+};
+
 // Storyblok Richtext 内容块接口
 export interface StoryblokRichtextNode {
   type: string;
@@ -144,6 +153,7 @@ class ApiService {
     const defaultOptions: RequestInit = {
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeader(),
       },
       ...options,
     };
