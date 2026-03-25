@@ -29,32 +29,6 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Basic Auth 中间件
-const basicAuth = (req, res, next) => {
-  const authUser = process.env.AUTH_USER;
-  const authPass = process.env.AUTH_PASS;
-
-  // 未配置环境变量时跳过认证
-  if (!authUser || !authPass) return next();
-
-  const authHeader = req.headers["authorization"];
-  if (!authHeader || !authHeader.startsWith("Basic ")) {
-    res.set("WWW-Authenticate", 'Basic realm="Restricted"');
-    return res.status(401).send("Authentication required");
-  }
-
-  const base64 = authHeader.slice(6);
-  const [user, pass] = Buffer.from(base64, "base64").toString().split(":");
-  if (user === authUser && pass === authPass) {
-    return next();
-  }
-
-  res.set("WWW-Authenticate", 'Basic realm="Restricted"');
-  return res.status(401).send("Invalid credentials");
-};
-
-app.use(basicAuth);
-
 // 静态文件服务
 app.use(express.static(join(__dirname, "../public")));
 
