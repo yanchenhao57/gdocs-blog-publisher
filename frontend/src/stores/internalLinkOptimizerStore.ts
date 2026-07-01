@@ -6,6 +6,7 @@ import {
   MarkdownContent,
   OptimizationChange,
 } from "../app/internal-link-optimizer/modules/types";
+import { updateOptimizationChangeModified as updateOptimizationChangeModifiedList } from "../app/internal-link-optimizer/modules/optimizationChangeUtils";
 import { apiService, StoryblokRichtext } from "../services/api";
 import type { IBlogStory } from "../types/storyblok";
 import { extractFullSlugFromUrl } from "../utils/storyblokUtils";
@@ -71,6 +72,7 @@ interface InternalLinkOptimizerState {
     index: number,
     status: "pending" | "accepted" | "rejected" | "undo"
   ) => void;
+  updateOptimizationChangeModified: (index: number, modified: string) => void;
 
   // 发布方法
   setIsPublishing: (publishing: boolean) => void;
@@ -165,6 +167,14 @@ export const useInternalLinkOptimizerStore =
           }
           return { optimizationStatus: newStatus };
         }),
+      updateOptimizationChangeModified: (index, modified) =>
+        set((state) => ({
+          optimizationChanges: updateOptimizationChangeModifiedList(
+            state.optimizationChanges,
+            index,
+            modified
+          ),
+        })),
       // 业务逻辑方法
       fetchStoryblokData: async () => {
         const state = get();

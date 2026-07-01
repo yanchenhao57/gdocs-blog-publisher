@@ -78,6 +78,30 @@
   line-height: 1.6;
 }
 
+.editableContentBox {
+  padding: 0;
+  overflow: hidden;
+}
+
+.editableContent {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 104px;
+  padding: 16px;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  color: #374151;
+  font: inherit;
+  line-height: 1.6;
+  background: transparent;
+}
+
+.editableContent:focus {
+  box-shadow: inset 0 0 0 2px #f59e0b;
+}
+
 .contentBox p {
   margin: 0;
   color: #374151;

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import StoryblokBlogDisplay from "../../../components/storyblok-blog-display";
 import SuggestionsNavigationPanel from "../../../components/suggestions-navigation-panel";
 import { useInternalLinkOptimizerStore } from "../../../stores/internalLinkOptimizerStore";
 import { ArrowRight, CheckCircle } from "lucide-react";
-import type { OptimizationChange } from "./types";
 import styles from "./SuggestionsStep.module.css";
 
 interface SuggestionsStepProps {
@@ -27,21 +26,11 @@ export default function SuggestionsStep({
     optimizationChanges,
     optimizationStatus,
     updateOptimizationStatus,
+    updateOptimizationChangeModified,
   } = useInternalLinkOptimizerStore();
 
   // 用于追踪是否是用户操作触发的状态变化
   const [lastInteractionTime, setLastInteractionTime] = useState<number>(0);
-
-  // 如果没有优化建议数据，不应该显示此组件
-  if (optimizationChanges.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p className={styles.emptyStateText}>
-          No optimization suggestions available. Please go back to analysis.
-        </p>
-      </div>
-    );
-  }
 
   console.log("🔍 SuggestionsStep - storyData:", storyData);
   console.log(
@@ -53,6 +42,10 @@ export default function SuggestionsStep({
     setLastInteractionTime(Date.now());
     updateOptimizationStatus(index, "accepted");
     console.log("Accepted optimization at index:", index);
+  };
+
+  const handleUpdateOptimization = (index: number, modified: string) => {
+    updateOptimizationChangeModified(index, modified);
   };
 
   const handleRejectOptimization = (index: number) => {
@@ -68,11 +61,21 @@ export default function SuggestionsStep({
   };
 
   // 计算待处理的建议数量和进度
-  const pendingCount = optimizationChanges.filter(
-    (change) =>
-      !optimizationStatus[change.index] ||
-      optimizationStatus[change.index] === "pending"
-  ).length;
+  const pendingOptimizationIndexes = useMemo(
+    () =>
+      optimizationChanges
+        .filter(
+          (change) =>
+            !optimizationStatus[change.index] ||
+            optimizationStatus[change.index] === "pending"
+        )
+        .map((change) => change.index)
+        .sort((a, b) => a - b),
+    [optimizationChanges, optimizationStatus]
+  );
+
+  const pendingOptimizationIndexesKey = pendingOptimizationIndexes.join(",");
+  const pendingCount = pendingOptimizationIndexes.length;
 
   const totalCount = optimizationChanges.length;
   const completedCount = totalCount - pendingCount;
@@ -84,24 +87,19 @@ export default function SuggestionsStep({
     // 只在用户交互后触发自动滚动（避免初始加载时的滚动）
     if (lastInteractionTime === 0) return;
 
-    // 获取当前待处理的优化建议
-    const pendingOptimizations = optimizationChanges.filter(
-      (change) =>
-        !optimizationStatus[change.index] ||
-        optimizationStatus[change.index] === "pending"
-    );
+    const currentPendingIndexes = pendingOptimizationIndexesKey
+      ? pendingOptimizationIndexesKey.split(",").map(Number)
+      : [];
 
-    const currentPendingCount = pendingOptimizations.length;
+    const currentPendingCount = currentPendingIndexes.length;
 
     // 如果有待处理项目，自动滚动到下一个
     if (currentPendingCount > 0) {
-      const nextOptimization = pendingOptimizations.sort(
-        (a, b) => a.index - b.index
-      )[0];
+      const nextOptimizationIndex = currentPendingIndexes[0];
 
       setTimeout(() => {
         const element = document.querySelector(
-          `[data-optimization-index="${nextOptimization.index}"]`
+          `[data-optimization-index="${nextOptimizationIndex}"]`
         );
 
         if (element) {
@@ -124,26 +122,21 @@ export default function SuggestionsStep({
       }, 300);
     }
   }, [
-    optimizationStatus,
-    optimizationChanges,
+    pendingOptimizationIndexesKey,
     totalCount,
     lastInteractionTime,
   ]);
 
   // 导航到下一个待处理的建议
-  const scrollToNextOptimization = () => {
-    const pendingOptimizations = optimizationChanges
-      .filter(
-        (change) =>
-          !optimizationStatus[change.index] ||
-          optimizationStatus[change.index] === "pending"
-      )
-      .sort((a, b) => a.index - b.index);
+  const scrollToNextOptimization = useCallback(() => {
+    const pendingIndexes = pendingOptimizationIndexesKey
+      ? pendingOptimizationIndexesKey.split(",").map(Number)
+      : [];
 
-    if (pendingOptimizations.length > 0) {
-      const nextOptimization = pendingOptimizations[0];
+    if (pendingIndexes.length > 0) {
+      const nextOptimizationIndex = pendingIndexes[0];
       const element = document.querySelector(
-        `[data-optimization-index="${nextOptimization.index}"]`
+        `[data-optimization-index="${nextOptimizationIndex}"]`
       );
       if (element) {
         element.scrollIntoView({
@@ -157,16 +150,28 @@ export default function SuggestionsStep({
         }, 2000);
       }
     }
-  };
+  }, [pendingOptimizationIndexesKey]);
 
   // 检查是否所有建议都已决策完毕
   const allDecisionsComplete = totalCount > 0 && pendingCount === 0;
 
   useEffect(() => {
-    setTimeout(() => {
+    const scrollTimer = setTimeout(() => {
       scrollToNextOptimization();
     }, 500);
-  }, []);
+    return () => clearTimeout(scrollTimer);
+  }, [scrollToNextOptimization]);
+
+  // 如果没有优化建议数据，不应该显示此组件
+  if (optimizationChanges.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <p className={styles.emptyStateText}>
+          No optimization suggestions available. Please go back to analysis.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -189,6 +194,7 @@ export default function SuggestionsStep({
             optimizationChanges={optimizationChanges}
             optimizationStatus={optimizationStatus}
             onAcceptOptimization={handleAcceptOptimization}
+            onUpdateOptimization={handleUpdateOptimization}
             onRejectOptimization={handleRejectOptimization}
             onUndoOptimization={handleUndoOptimization}
           />
@@ -224,7 +230,7 @@ export default function SuggestionsStep({
                         </span>
                       </div>
                       <p className={styles.actionDescription}>
-                        You've made decisions on all {totalCount} optimization
+                        You have made decisions on all {totalCount} optimization
                         suggestions. Ready to proceed to the final output.
                       </p>
                     </div>

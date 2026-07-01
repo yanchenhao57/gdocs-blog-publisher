@@ -28,6 +28,7 @@ export default function StoryblokBlogDisplay({
   optimizationChanges = [],
   optimizationStatus = {},
   onAcceptOptimization = () => {},
+  onUpdateOptimization = () => {},
   onRejectOptimization = () => {},
   onUndoOptimization = () => {},
 }: StoryblokBlogDisplayProps) {
@@ -245,6 +246,7 @@ export default function StoryblokBlogDisplay({
               optimizationChanges={optimizationChanges}
               optimizationStatus={optimizationStatus}
               onAcceptOptimization={onAcceptOptimization}
+              onUpdateOptimization={onUpdateOptimization}
               onRejectOptimization={onRejectOptimization}
               onUndoOptimization={onUndoOptimization}
               customResolvers={customResolvers}

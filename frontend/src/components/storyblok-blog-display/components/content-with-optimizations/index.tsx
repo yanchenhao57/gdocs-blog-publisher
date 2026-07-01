@@ -12,6 +12,8 @@ interface ContentWithOptimizationsProps {
   optimizationStatus: Record<number, 'pending' | 'accepted' | 'rejected'>;
   /** 接受优化的回调 */
   onAcceptOptimization: (index: number) => void;
+  /** 更新优化文本的回调 */
+  onUpdateOptimization: (index: number, modified: string) => void;
   /** 拒绝优化的回调 */
   onRejectOptimization: (index: number) => void;
   /** 撤销决策的回调 */
@@ -25,6 +27,7 @@ const ContentWithOptimizations = ({
   optimizationChanges,
   optimizationStatus,
   onAcceptOptimization,
+  onUpdateOptimization,
   onRejectOptimization,
   onUndoOptimization,
   customResolvers = {}
@@ -75,6 +78,7 @@ const ContentWithOptimizations = ({
             change={optimization}
             status={optimizationStatus[index] || 'pending'}
             onAccept={onAcceptOptimization}
+            onUpdate={onUpdateOptimization}
             onReject={onRejectOptimization}
             onUndo={onUndoOptimization}
           />
@@ -88,6 +92,7 @@ const ContentWithOptimizations = ({
     optimizationChanges, 
     optimizationStatus, 
     onAcceptOptimization, 
+    onUpdateOptimization,
     onRejectOptimization,
     onUndoOptimization,
     customResolvers

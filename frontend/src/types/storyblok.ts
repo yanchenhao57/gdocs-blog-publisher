@@ -98,6 +98,8 @@ export interface StoryblokBlogDisplayProps {
   optimizationStatus?: Record<number, 'pending' | 'accepted' | 'rejected'>;
   /** Callback when optimization is accepted */
   onAcceptOptimization?: (index: number) => void;
+  /** Callback when optimization text is updated */
+  onUpdateOptimization?: (index: number, modified: string) => void;
   /** Callback when optimization is rejected */
   onRejectOptimization?: (index: number) => void;
   /** Callback when optimization decision is undone */

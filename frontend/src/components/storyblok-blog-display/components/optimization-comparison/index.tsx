@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { render } from "storyblok-rich-text-react-renderer";
 import { MarkdownConverter } from "../../../../utils/markdownConverter";
 import { Card, CardContent } from "../../../ui/card";
@@ -10,6 +10,7 @@ import type { OptimizationChange } from "../../../../app/internal-link-optimizer
 interface OptimizationComparisonProps {
   change: OptimizationChange;
   onAccept: (index: number) => void;
+  onUpdate: (index: number, modified: string) => void;
   onReject: (index: number) => void;
   onUndo: (index: number) => void;
   status?: "pending" | "accepted" | "rejected";
@@ -18,6 +19,7 @@ interface OptimizationComparisonProps {
 const OptimizationComparison = ({
   change,
   onAccept,
+  onUpdate,
   onReject,
   onUndo,
   status = "pending",
@@ -83,8 +85,24 @@ const OptimizationComparison = ({
 
         {/* AI 建议内容 */}
         <div className={styles.contentSection}>
-          <div className={styles.contentBox}>
-            {renderContent(change.modified)}
+          <div
+            className={`${styles.contentBox} ${
+              status === "pending" ? styles.editableContentBox : ""
+            }`}
+          >
+            {status === "pending" ? (
+              <textarea
+                className={styles.editableContent}
+                value={change.modified}
+                onChange={(event) =>
+                  onUpdate(change.index, event.target.value)
+                }
+                aria-label="Suggested optimized content"
+                spellCheck={false}
+              />
+            ) : (
+              renderContent(change.modified)
+            )}
           </div>
         </div>
 
